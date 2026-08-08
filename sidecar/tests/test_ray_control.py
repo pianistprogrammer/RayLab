@@ -258,6 +258,7 @@ def test_stop_uses_force_and_verifies_local_shutdown(tmp_path: Path, monkeypatch
     controller = RayController(store, FakeSecrets(), runner=runner)  # type: ignore[arg-type]
     monkeypatch.setattr(controller, "_local_ray_processes", lambda: [])
     monkeypatch.setattr(controller, "_tcp_open", lambda host, port: False)
+    monkeypatch.setattr(controller, "_ray_status_ok", lambda config: False)
 
     status = controller.stop()
 

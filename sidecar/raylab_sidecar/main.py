@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
 from .diagnostics import diagnostics, has_ray, ray_version, worker_account_setup_commands
-from .discovery import detect_lan_ip, discover_coordinators, is_loopback_host
+from .discovery import detect_lan_ip, discover_coordinators, discovery_debug, is_loopback_host
 from .hardware import detect_hardware
 from .installer import RayInstaller
 from .models import AppConfig, AppMode, AuditEvent, ClusterState, HealthResponse, JobResponse, JobSubmission, SubmitterCreate, SubmitterWithToken
@@ -113,6 +113,11 @@ def hardware() -> Any:
 @app.get("/discovery/coordinators")
 def discovery_coordinators() -> Any:
     return discover_coordinators(store.load())
+
+
+@app.get("/discovery/debug")
+def get_discovery_debug() -> Any:
+    return discovery_debug(store.load())
 
 
 @app.get("/setup/worker-account")

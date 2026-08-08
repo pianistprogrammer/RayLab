@@ -28,6 +28,7 @@
     "targets": "all",
     "macOS": {
       "signingIdentity": "Developer ID Application: Jeremiah Abimbola (2JA6D4683T)",
+      "entitlements": "Entitlements.plist",
       "hardenedRuntime": true
     },
     "resources": ["../sidecar", "../sidecar-bin", "../vendor"],
