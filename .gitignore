@@ -1,0 +1,26 @@
+# Node
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+frontend/dist/
+
+# Tauri / Rust
+src-tauri/target/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+sidecar/.venv/
+
+# Sidecar binary build artifacts
+sidecar-bin/
+*.spec
+
+# OS
+.DS_Store
+generated-archive/

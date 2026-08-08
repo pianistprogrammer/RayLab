@@ -1,0 +1,22 @@
+{
+  "name": "raylab-cluster-manager",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @raylab/frontend dev",
+    "tauri:dev": "pnpm --filter @raylab/frontend tauri:dev",
+    "build": "pnpm --filter @raylab/frontend build",
+    "tauri:build": "pnpm --filter @raylab/frontend tauri:build",
+    "test": "pnpm --filter @raylab/frontend test && pnpm sidecar:test",
+    "sidecar:dev": "python3 -m uvicorn raylab_sidecar.main:app --app-dir sidecar --host 127.0.0.1 --port 8765 --reload",
+    "sidecar:test": "PYTHONPATH=sidecar python3 -m pytest sidecar/tests"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.2.7"
+  },
+  "packageManager": "pnpm@9.12.1",
+  "workspaces": [
+    "frontend"
+  ]
+}
