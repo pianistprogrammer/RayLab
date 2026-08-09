@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { invoke } from "@tauri-apps/api/core";
 import { api } from "./api";
 import type { AppConfig, AppMode, AuditEvent, ClusterStatus, HardwareInfo, InstallStatus, NodeInfo, SetupRunStatus, TerminalLogEntry } from "./types";
 
@@ -96,9 +95,9 @@ let consecutiveFailCount = 0;
 // Held in the store closure — not in state so it never triggers re-renders.
 let pendingMode: AppMode | null = null;
 
-async function tauriSidecarStatus(): Promise<{ running: boolean; error?: string | null } | null> {
+async function electronSidecarStatus(): Promise<{ running: boolean; error?: string | null } | null> {
   try {
-    return await invoke<{ running: boolean; error?: string | null }>("sidecar_status");
+    return await window.electronAPI.invoke("sidecar_status") as { running: boolean; error?: string | null };
   } catch {
     return null;
   }
@@ -126,7 +125,7 @@ export const useStore = create<AppState>((set, get) => ({
   refresh: async () => {
     let sidecarStartupError: string | null = null;
     try {
-      const sidecarStatus = await tauriSidecarStatus();
+      const sidecarStatus = await electronSidecarStatus();
       sidecarStartupError = sidecarStatus?.error ?? null;
       const [nextConfig, nextStatus] = await Promise.all([api.getConfig(), api.status()]);
       const [nodesResult, auditResult, installResult, setupResult, hardwareResult, terminalResult] = await Promise.allSettled([

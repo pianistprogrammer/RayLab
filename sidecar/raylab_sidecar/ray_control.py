@@ -25,6 +25,8 @@ from .storage import ConfigStore, SecretStore
 
 SENSITIVE_FLAGS = {"--redis-password", "--token"}
 ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+RAYLAB_MIN_WORKER_PORT = 20000
+RAYLAB_MAX_WORKER_PORT = 29999
 RAY_PROCESS_NAMES = {
     "raylet",
     "gcs_server",
@@ -597,6 +599,10 @@ class RayController:
             str(config.coordinator.dashboard_port),
             "--ray-client-server-port",
             str(config.coordinator.client_port),
+            "--min-worker-port",
+            str(RAYLAB_MIN_WORKER_PORT),
+            "--max-worker-port",
+            str(RAYLAB_MAX_WORKER_PORT),
             "--num-cpus",
             str(int(config.resource_caps.cpus)),
             "--num-gpus",
@@ -626,6 +632,10 @@ class RayController:
             "start",
             "--address",
             config.coordinator.ray_address,
+            "--min-worker-port",
+            str(RAYLAB_MIN_WORKER_PORT),
+            "--max-worker-port",
+            str(RAYLAB_MAX_WORKER_PORT),
             "--num-cpus",
             str(int(config.resource_caps.cpus)),
             "--num-gpus",

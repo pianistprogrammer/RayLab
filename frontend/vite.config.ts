@@ -8,10 +8,10 @@ export default defineConfig({
     port: 1420,
     strictPort: true,
   },
-  envPrefix: ["VITE_", "TAURI_"],
+  envPrefix: ["VITE_"],
   build: {
     target: "es2020",
-    minify: process.env.TAURI_ENV_DEBUG ? false : "esbuild",
-    sourcemap: Boolean(process.env.TAURI_ENV_DEBUG),
+    minify: process.env.NODE_ENV === "development" ? false : "esbuild",
+    sourcemap: process.env.NODE_ENV === "development",
   },
 });

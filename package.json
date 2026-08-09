@@ -4,19 +4,22 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @raylab/frontend dev",
-    "tauri:dev": "pnpm --filter @raylab/frontend tauri:dev",
-    "build": "pnpm --filter @raylab/frontend build",
-    "tauri:build": "pnpm --filter @raylab/frontend tauri:build",
+    "dev": "concurrently \"pnpm --filter @raylab/frontend dev\" \"sleep 3 && pnpm --filter @raylab/electron dev\"",
+    "electron:dev": "pnpm --filter @raylab/electron dev",
+    "frontend:dev": "pnpm --filter @raylab/frontend dev",
+    "build": "pnpm --filter @raylab/frontend build && pnpm --filter @raylab/electron build",
+    "frontend:build": "pnpm --filter @raylab/frontend build",
+    "electron:build": "pnpm --filter @raylab/electron build",
     "test": "pnpm --filter @raylab/frontend test && pnpm sidecar:test",
     "sidecar:dev": "python3 -m uvicorn raylab_sidecar.main:app --app-dir sidecar --host 127.0.0.1 --port 8765 --reload",
     "sidecar:test": "PYTHONPATH=sidecar python3 -m pytest sidecar/tests"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.2.7"
+    "concurrently": "^9.1.2"
   },
   "packageManager": "pnpm@9.12.1",
   "workspaces": [
-    "frontend"
+    "frontend",
+    "electron"
   ]
 }

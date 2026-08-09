@@ -11,15 +11,15 @@ pnpm sidecar:dev
 pnpm dev
 ```
 
-For the native shell:
+For the Electron desktop shell:
 
 ```bash
-pnpm tauri:dev
+pnpm electron:dev
 ```
 
 ## Safety Model
 
-- Ray is controlled only by the Python FastAPI sidecar.
+- Ray is controlled only by RayLab's local desktop backend.
 - Node sharing requires a dedicated `raylab-worker` account.
 - Coordinator networking is private-VLAN only by default.
 - Job data should come from a lab object store, not owner home directories.

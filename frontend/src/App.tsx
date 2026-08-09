@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import {
   Activity,
   AlertTriangle,
@@ -354,7 +353,7 @@ function CoordinatorHome() {
 
   async function openDashboard() {
     try {
-      await invoke("open_dashboard", { url: `http://${config.coordinator.head_host}:${config.coordinator.dashboard_port}` });
+      await window.electronAPI.invoke("open_dashboard", { url: `http://${config.coordinator.head_host}:${config.coordinator.dashboard_port}` });
     } catch {
       window.open(`http://${config.coordinator.head_host}:${config.coordinator.dashboard_port}`, "_blank");
     }
@@ -414,7 +413,7 @@ function ClusterGraphView() {
 
   async function openDashboard() {
     try {
-      await invoke("open_dashboard", { url: `http://${config.coordinator.head_host}:${config.coordinator.dashboard_port}` });
+      await window.electronAPI.invoke("open_dashboard", { url: `http://${config.coordinator.head_host}:${config.coordinator.dashboard_port}` });
     } catch {
       window.open(`http://${config.coordinator.head_host}:${config.coordinator.dashboard_port}`, "_blank");
     }

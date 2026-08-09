@@ -10,7 +10,7 @@ Author: Jerry (Jeremiah Abimbola)
 
 Your lab has many RTX-equipped Windows/Linux machines, some in the server room, most idle outside working hours. The goal is a desktop app that lets any machine owner opt their GPU in or out of a shared Ray cluster, so idle capacity can be borrowed for ML/LLM/compute jobs by other lab members, without owners losing control over their machine or exposing their personal files.
 
-**Recommendation up front, before the details:** build **one application**, not two. It ships in two roles — **Coordinator** (one instance, run by whoever hosts the head node) and **Node** (every participating machine) — selected at first launch and switchable later. Use **Tauri (Rust shell) + a Python sidecar** for the UI, and treat Ray's own security model as insufficient on its own — real node-level privacy requires OS-level sandboxing, not just Ray's scheduling hints. That correction is important enough that it gets its own section below before anything else, because it changes the architecture.
+**Recommendation up front, before the details:** build **one application**, not two. It ships in two roles — **Coordinator** (one instance, run by whoever hosts the head node) and **Node** (every participating machine) — selected at first launch and switchable later. The current implementation uses **Electron with a local backend exposed through a narrow IPC bridge**, and treats Ray's own security model as insufficient on its own — real node-level privacy requires OS-level sandboxing, not just Ray's scheduling hints. That correction is important enough that it gets its own section below before anything else, because it changes the architecture.
 
 ---
 
@@ -70,29 +70,28 @@ These can be the same person on different days, which is exactly why one app wit
 
 ## 7. Architecture
 
-### 7.1 Shell: Tauri, not Electron
+### 7.1 Shell: Electron Desktop App
 
-Ray's control plane and worker processes are Python; the UI should stay out of their way rather than compete for the same RTX GPUs it's trying to manage.
+RayLab now runs as an Electron desktop app. The frontend is isolated from privileged operations, and Ray control is exposed through a small allowlisted IPC surface rather than direct renderer access to Node or shell commands.
 
-- <cite index="8-1">Electron gives you Node.js inside a browser window — if you misconfigure context isolation or preload bridges, arbitrary JS effectively gets broad access, and it is an opt-in security model, not locked-down by default, which matters when an app handles private data.</cite> That's a bad default for something that will run with the trust to toggle a shared GPU pool.
-- <cite index="7-1">Tauri is an open-source framework for building cross-platform desktop apps using a web frontend, targeting Linux, macOS, Windows, Android, and iOS</cite>, with a Rust backend rather than a bundled Chromium+Node runtime, which keeps the idle footprint small — the whole point of a system-tray utility that shouldn't compete with the ML jobs it's managing for CPU/RAM.
-- The reference pattern for what you want already exists: a Tauri shell spawning a Python subprocess ("sidecar") that runs a local FastAPI server, with the frontend talking to it over `localhost` HTTP. <cite index="4-1">This is a native app built with Tauri that spawns a Python sub-process (sidecar) which starts a FastAPI server</cite>, and <cite index="6-1">Tauri's API lets the frontend communicate with any runtime and gives it access to the OS disk and other native hardware features, defined explicitly in tauri.conf.json</cite> — i.e., permissions are declared, not implicit, which is the property you want for something that manages file/GPU access.
-- Practical gotcha worth knowing in advance: <cite index="6-1">for single-file PyInstaller executables run as a sidecar, Tauri only knows the PID of the PyInstaller bootloader process, not the actual sidecar's child process, so you can't just call process.kill() to shut it down cleanly</cite> — plan for an explicit shutdown command over the sidecar's local HTTP API (e.g., `POST /shutdown`) rather than relying on process-tree kill from the Tauri side.
+- Electron gives the app a predictable cross-platform desktop runtime and packaging path while keeping the Ray control plane in one local backend layer.
+- The preload bridge should remain narrow and explicit: renderer code asks for app operations such as diagnostics, hardware detection, setup status, discovery, and Ray start/stop; it should not receive broad filesystem or process access.
+- Ray process management, setup checks, port diagnostics, local storage, hardware detection, and cluster discovery belong in the Electron backend modules. The UI should render state and send user intent, not assemble shell commands itself.
+- Any Python utilities used by the app are implementation details of the backend/runtime setup. The user-facing product should never depend on a system Python or a manually installed `ray` executable.
 
 ### 7.2 Components
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│  RayLab (Tauri app, same binary everywhere)                  │
+│  RayLab (Electron app, same binary everywhere)               │
 │                                                                │
-│  ┌──────────────┐   local HTTP    ┌─────────────────────┐   │
-│  │  Rust/Tauri   │◄───────────────►│  Python sidecar       │   │
-│  │  shell + UI   │   (127.0.0.1)   │  (FastAPI)            │   │
-│  │  (system tray,│                 │  - ray start/stop      │   │
-│  │   settings,   │                 │  - policy engine        │   │
-│  │   node table) │                 │  - job submission client│   │
+│  ┌──────────────┐       IPC       ┌─────────────────────┐   │
+│  │  Renderer UI  │◄───────────────►│  Electron backend    │   │
+│  │  (React)      │                 │  - ray start/stop    │   │
+│  │  (settings,   │                 │  - setup checks      │   │
+│  │   node table) │                 │  - discovery/status  │   │
 │  └──────┬───────┘                 └─────────┬──────────────┘   │
-│         │ OS APIs (tray, notifications,      │ Ray Client / Job │
+│         │ OS APIs (tray, notifications,      │ Ray CLI / Job    │
 │         │ autostart, secure storage)          │ Submission API   │
 └─────────┼──────────────────────────────────────┼───────────────┘
           │                                       │
@@ -102,17 +101,17 @@ Ray's control plane and worker processes are Python; the UI should stay out of t
                                            lab's private network/VLAN
 ```
 
-- **Rust/Tauri layer**: window, system tray icon (green/amber/red = connected/idle/off), OS notifications, autostart-on-boot toggle, secure local credential storage for the cluster token.
-- **Python sidecar**: the only thing that touches Ray. Owns starting/stopping `ray start`, enforcing the local policy (schedule windows, resource caps, folder allowlists — Section 8), and talking to the Ray Job Submission API for the Coordinator's job-launch panel.
-- **No direct Rust↔Ray communication** — keeping Ray control entirely in the Python sidecar means one code path to audit for "what can this app actually do to the cluster," instead of two.
+- **Electron shell**: window, system tray icon (green/amber/red = connected/idle/off), OS notifications, autostart-on-boot toggle, secure local credential storage for the cluster token.
+- **Electron backend**: the only layer that touches Ray. Owns starting/stopping `ray start`, setup/readiness checks, enforcing the local policy (schedule windows, resource caps, folder allowlists — Section 8), and talking to the Ray Job Submission API for the Coordinator's job-launch panel.
+- **No direct renderer-to-Ray communication** — keeping Ray control entirely behind backend handlers means one code path to audit for "what can this app actually do to the cluster," instead of scattering shell access through the UI.
 
 ### 7.3 Ray dashboard access
 
-Don't embed it as a first-class tab inside the app's webview. Ray's dashboard is its own full web app with its own auth flow, and Tauri's webview isn't meant to proxy someone else's SPA reliably across versions. Instead:
+Don't embed it as a first-class tab inside the app's webview. Ray's dashboard is its own full web app with its own auth flow, and the RayLab UI should not proxy someone else's SPA reliably across versions. Instead:
 
 - A **"Open Dashboard"** button opens the Ray dashboard in the user's default system browser at `http://<head-ip>:8265`, the same way you already open the token dashboard today.
-- The Coordinator's sidecar can pre-fetch the auth token and either copy it to the clipboard with a toast ("Token copied — paste when prompted") or, if you want to go further later, run local port-forwarding for remote nodes so people don't need direct network access to 8265. <cite index="18-1">Connecting to the Ray dashboard this way configures secure SSH port forwarding between the local machine and the Ray cluster, and the token gets stored as a cookie for up to 30 days</cite>, so this is a one-time-per-month annoyance at worst, not a recurring one.
-- v2 idea, not v1: an *optional* embedded read-only summary panel (node list, GPU utilization sparkline) built by polling the dashboard's REST API directly from the Python sidecar and rendering it in your own styled widgets — gives you the "beautiful modern UI" without trying to reskin Ray's own dashboard.
+- The Coordinator backend can pre-fetch the auth token and either copy it to the clipboard with a toast ("Token copied — paste when prompted") or, if you want to go further later, run local port-forwarding for remote nodes so people don't need direct network access to 8265. <cite index="18-1">Connecting to the Ray dashboard this way configures secure SSH port forwarding between the local machine and the Ray cluster, and the token gets stored as a cookie for up to 30 days</cite>, so this is a one-time-per-month annoyance at worst, not a recurring one.
+- v2 idea, not v1: an *optional* embedded read-only summary panel (node list, GPU utilization sparkline) built by polling the dashboard's REST API directly from the local backend and rendering it in your own styled widgets — gives you the "beautiful modern UI" without trying to reskin Ray's own dashboard.
 
 ---
 
@@ -166,14 +165,14 @@ Professional, calm, information-dense but not cluttered — think a lightweight 
 - **Home screen (Node mode)**: one big status card ("Sharing — 8GB GPU offered, 2 jobs running"), the master toggle, and a compact schedule/resource-cap panel below it.
 - **Home screen (Coordinator mode)**: a node grid/table — one row per machine, live GPU/CPU/RAM sparkline, status, owner, last-seen — plus a "Submit job" panel and the "Open Dashboard" button from 7.3.
 - **Settings**: privacy controls from Section 8.3 front and center, not buried — this is the trust-building surface, so it should look considered, not like an afterthought settings page.
-- Use `frontend-design` conventions for actual implementation (type scale, spacing, restrained color palette) when you're ready to build the Tauri webview UI — happy to build the first screens as an artifact once the direction here is confirmed.
+- Use `frontend-design` conventions for actual implementation (type scale, spacing, restrained color palette) when building the Electron renderer UI.
 
 ---
 
 ## 11. Phased roadmap
 
 **Phase 1 — Trusted core (MVP)**
-Single Tauri+Python app, mode picker, master toggle, resource caps, token-authenticated cluster join, dedicated unprivileged worker account, "Open Dashboard" button, basic node table for coordinator.
+Single Electron app, mode picker, master toggle, resource caps, token-authenticated cluster join, dedicated unprivileged worker account, "Open Dashboard" button, basic node table for coordinator.
 
 **Phase 2 — Real privacy hardening**
 Container/sandbox execution per job, per-node audit log UI, submitter allowlist management, schedule windows + idle-only auto-join.
@@ -203,4 +202,4 @@ Embedded read-only cluster summary widgets (pulled from dashboard REST API), not
 
 ---
 
-Want me to turn Section 10 into an actual clickable UI mockup next (I can build the Tauri-style screens as an interactive artifact), or start with the sidecar's policy-engine schema (the JSON that encodes Section 8's settings) so you have something concrete to start coding against?
+This PRD should stay aligned with the Electron implementation as the product hardens.

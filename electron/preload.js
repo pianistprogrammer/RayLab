@@ -1,0 +1,24 @@
+'use strict';
+
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  invoke(channel, args) {
+    const allowed = [
+      'open_dashboard', 'sidecar_status',
+      'health', 'get_config', 'save_config',
+      'cluster_status', 'diagnostics', 'hardware', 'terminal_logs',
+      'discovery_coordinators',
+      'ray_install_status', 'install_ray',
+      'setup_status', 'run_setup',
+      'cluster_start', 'cluster_stop', 'cluster_panic',
+      'nodes', 'audit',
+      'create_submitter', 'revoke_submitter',
+      'submit_job', 'kill_job',
+    ];
+    if (!allowed.includes(channel)) {
+      return Promise.reject(new Error(`Unknown IPC channel: ${channel}`));
+    }
+    return ipcRenderer.invoke(channel, args);
+  },
+});

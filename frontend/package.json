@@ -7,12 +7,9 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
     "test": "vitest run"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.2.0",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

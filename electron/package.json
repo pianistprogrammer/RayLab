@@ -1,0 +1,60 @@
+{
+  "name": "@raylab/electron",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "keytar": "^7.9.0",
+    "systeminformation": "^5.25.11"
+  },
+  "build": {
+    "appId": "lab.raylab.cluster-manager",
+    "productName": "RayLab",
+    "directories": {
+      "buildResources": "build-resources",
+      "output": "../dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*"
+    ],
+    "extraResources": [
+      { "from": "../frontend/dist", "to": "frontend/dist" },
+      {
+        "from": "../sidecar",
+        "to": "sidecar",
+        "filter": [
+          "**/*",
+          "!.venv/**",
+          "!.pytest_cache/**",
+          "!**/__pycache__/**",
+          "!**/*.pyc"
+        ]
+      },
+      { "from": "../vendor", "to": "vendor" }
+    ],
+    "mac": {
+      "icon": "build-resources/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build-resources/entitlements.mac.plist",
+      "entitlementsInherit": "build-resources/entitlements.mac.plist",
+      "extendInfo": {
+        "NSLocalNetworkUsageDescription": "RayLab scans your local network to find reachable Ray coordinators and connect worker nodes."
+      }
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build-resources/icon.png"
+    }
+  }
+}

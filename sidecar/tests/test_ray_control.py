@@ -60,6 +60,7 @@ def test_coordinator_start_builds_real_ray_head_command(tmp_path: Path, monkeypa
     runner = FakeRunner()
     controller = RayController(store, FakeSecrets(), runner=runner)  # type: ignore[arg-type]
     monkeypatch.setattr(controller, "_ray_status_ok", lambda config: False)
+    monkeypatch.setattr(controller, "_wait_for_local_start", lambda config, timeout=8: True)
 
     controller.start()
 
@@ -67,6 +68,8 @@ def test_coordinator_start_builds_real_ray_head_command(tmp_path: Path, monkeypa
     assert command[:3] == ["/app/runtime/bin/ray", "start", "--head"]
     assert "--redis-password" not in command
     assert "--dashboard-host" in command
+    assert command[command.index("--min-worker-port") + 1] == "20000"
+    assert command[command.index("--max-worker-port") + 1] == "29999"
     assert command[command.index("--num-cpus") + 1] == "4"
     assert any("Starting Ray" in entry.message for entry in controller.terminal_logs())
     assert any("Ray is running" in entry.message for entry in controller.terminal_logs())
@@ -95,6 +98,27 @@ def test_external_coordinator_start_saves_detected_join_address(tmp_path: Path, 
     assert status.address == "192.168.1.44:6379"
     command = runner.commands[0]
     assert command[command.index("--node-ip-address") + 1] == "192.168.1.44"
+
+
+def test_node_start_uses_reserved_worker_port_range(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("raylab_sidecar.ray_control.has_worker_account", lambda account: True)
+    monkeypatch.setattr("raylab_sidecar.ray_control.has_worker_launch_permission", lambda account: True)
+    monkeypatch.setattr("raylab_sidecar.ray_control.ray_command", lambda: "/app/runtime/bin/ray")
+    monkeypatch.setattr("raylab_sidecar.ray_control.ensure_ray_runtime", lambda on_output=None: BootstrapResult(True, "ready", "/app/runtime/bin/ray", "2.56.1"))
+    store = ConfigStore(tmp_path / "config.json")
+    config = AppConfig(app_mode=AppMode.node)
+    config.coordinator.head_host = "192.168.33.14"
+    store.save(config)
+    runner = FakeRunner()
+    controller = RayController(store, FakeSecrets(), runner=runner)  # type: ignore[arg-type]
+    monkeypatch.setattr(controller, "_ray_status_ok", lambda config: False)
+    monkeypatch.setattr(controller, "_wait_for_local_start", lambda config, timeout=8: True)
+
+    controller.start()
+
+    command = runner.commands[0]
+    assert command[command.index("--min-worker-port") + 1] == "20000"
+    assert command[command.index("--max-worker-port") + 1] == "29999"
 
 
 def test_external_coordinator_status_repairs_loopback_join_address(tmp_path: Path, monkeypatch) -> None:
