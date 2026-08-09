@@ -49,6 +49,21 @@ def is_port_reachable(host: str, port: int, timeout: float = 1.0) -> bool:
         return False
 
 
+def is_coordinator_reachable(config: AppConfig, timeout: float = 1.0) -> bool:
+    try:
+        from .discovery import _probe_user, _tcp_open
+
+        return _tcp_open(
+            config.coordinator.head_host,
+            config.coordinator.ray_port,
+            timeout,
+            allow_cli_fallback=True,
+            cli_user=_probe_user(config),
+        )
+    except Exception:
+        return is_port_reachable(config.coordinator.head_host, config.coordinator.ray_port, timeout)
+
+
 def find_available_port(host: str, preferred: int, limit: int = 200) -> int:
     for port in range(preferred, preferred + limit):
         if is_port_available(host, port):
@@ -79,6 +94,18 @@ def has_worker_account(account: str) -> bool:
         return True
     except KeyError:
         return False
+
+
+def has_worker_launch_permission(account: str) -> bool:
+    if not account or platform.system() == "Windows":
+        return True
+    if platform.system() != "Darwin":
+        return True
+    try:
+        result = subprocess.run(["sudo", "-n", "-u", account, "--", "true"], check=False, capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
 
 
 def container_runtime_status(runtime: str) -> tuple[bool, str]:
@@ -138,7 +165,7 @@ def diagnostics(config: AppConfig) -> list[DiagnosticCheck]:
         )
     )
     if config.app_mode.value == "node":
-        reachable = is_port_reachable(config.coordinator.head_host, config.coordinator.ray_port)
+        reachable = is_coordinator_reachable(config)
         checks.append(
             DiagnosticCheck(
                 id="ray_port",
@@ -164,20 +191,31 @@ def diagnostics(config: AppConfig) -> list[DiagnosticCheck]:
             )
         )
     account_ok = has_worker_account(config.privacy.worker_account)
+    launch_ok = not account_ok or has_worker_launch_permission(config.privacy.worker_account)
     coordinator_mac = config.app_mode.value == "coordinator" and platform.system() == "Darwin"
+    node_mac_missing_permission = config.app_mode.value == "node" and platform.system() == "Darwin" and account_ok and not launch_ok
     checks.append(
         DiagnosticCheck(
             id="worker_account",
             label="Dedicated worker account",
-            status="pass" if account_ok else ("warn" if coordinator_mac else "fail"),
+            status="fail" if node_mac_missing_permission else "pass" if account_ok else ("warn" if coordinator_mac else "fail"),
             detail=(
+                f"Account {config.privacy.worker_account} exists, but RayLab needs administrator approval to launch worker processes"
+                if node_mac_missing_permission
+                else
                 f"Account {config.privacy.worker_account} exists"
                 if account_ok
                 else "macOS Coordinator/UI mode can continue; production GPU worker isolation is Windows/Linux only"
                 if coordinator_mac
                 else f"Account {config.privacy.worker_account} does not exist"
             ),
-            fix="Use a Linux/Windows worker node for GPU sharing." if coordinator_mac and not account_ok else "Create the raylab-worker account using the OS setup guide before enabling sharing.",
+            fix=(
+                "Run Full machine setup and approve the macOS administrator prompt."
+                if node_mac_missing_permission
+                else "Use a Linux/Windows worker node for GPU sharing."
+                if coordinator_mac and not account_ok
+                else "Create the raylab-worker account using the OS setup guide before enabling sharing."
+            ),
         )
     )
     runtime_ok, runtime_detail = container_runtime_status(config.privacy.container_runtime)

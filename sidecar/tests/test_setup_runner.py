@@ -71,7 +71,7 @@ def test_node_setup_warns_when_coordinator_is_unreachable_without_scanning_local
     config.coordinator.head_host = "192.168.33.17"
     store.save(config)
     runner = SetupRunner(store)
-    monkeypatch.setattr("raylab_sidecar.setup_runner.is_port_reachable", lambda host, port: False)
+    monkeypatch.setattr("raylab_sidecar.setup_runner.is_coordinator_reachable", lambda config: False)
 
     next_config = runner._ensure_ports(config)
 
@@ -87,7 +87,7 @@ def test_node_setup_passes_when_coordinator_is_reachable(tmp_path: Path, monkeyp
     config.coordinator.head_host = "192.168.33.17"
     store.save(config)
     runner = SetupRunner(store)
-    monkeypatch.setattr("raylab_sidecar.setup_runner.is_port_reachable", lambda host, port: True)
+    monkeypatch.setattr("raylab_sidecar.setup_runner.is_coordinator_reachable", lambda config: True)
 
     runner._ensure_ports(config)
 

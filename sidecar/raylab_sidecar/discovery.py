@@ -29,19 +29,10 @@ def discover_coordinators(config: AppConfig, timeout: float = 0.6) -> list[Disco
     configured_host = config.coordinator.head_host.strip()
     if configured_host and not is_loopback_host(configured_host):
         configured = _probe_host_ports(configured_host, ray_ports, dashboard_ports, max(timeout, 1.0), allow_cli_fallback=True, cli_user=cli_user)
-        if not configured:
-            configured = DiscoveryCandidate(
-                host=configured_host,
-                ray_port=config.coordinator.ray_port,
-                dashboard_port=None,
-                dashboard_url=None,
-                confidence=55,
-                detail="Saved coordinator address",
-            )
-        else:
+        if configured:
             configured.confidence = max(configured.confidence, 98)
             configured.detail = "Saved coordinator address is reachable"
-        candidates[configured.host] = configured
+            candidates[configured.host] = configured
 
     priority_hosts = _priority_hosts(config)
     if configured_host:

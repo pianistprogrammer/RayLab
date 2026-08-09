@@ -9,9 +9,10 @@ import sys
 import threading
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 
 from .bootstrap import PINNED_PYTHON, PINNED_RAY_VERSION, ensure_ray_runtime, python_version
-from .diagnostics import container_runtime_status, find_available_port, gpu_runtime_status, has_worker_account, is_port_available, is_port_reachable, is_private_host, ray_version
+from .diagnostics import container_runtime_status, find_available_port, gpu_runtime_status, has_worker_account, is_coordinator_reachable, is_port_available, is_private_host, ray_version
 from .models import AppConfig, AppMode, AuditEvent, SetupRunStatus, SetupTask
 from .storage import ConfigStore, config_dir
 
@@ -31,8 +32,9 @@ TASKS = [
 
 
 class SetupRunner:
-    def __init__(self, store: ConfigStore) -> None:
+    def __init__(self, store: ConfigStore, on_log: Callable[[str, str], None] | None = None) -> None:
         self.store = store
+        self.on_log = on_log
         self._lock = threading.Lock()
         self._status = SetupRunStatus(tasks=[SetupTask(id=task_id, label=label) for task_id, label in TASKS])
 
@@ -56,6 +58,9 @@ class SetupRunner:
         return self.status()
 
     def _set_task(self, task_id: str, status: str, detail: str, fix: str | None = None) -> None:
+        self._log(f"Setup {task_id}: {status} - {detail}", "stderr" if status == "fail" else "system")
+        if fix:
+            self._log(f"Setup {task_id} fix: {fix}", "stderr" if status == "fail" else "system")
         with self._lock:
             for task in self._status.tasks:
                 if task.id == task_id:
@@ -68,15 +73,26 @@ class SetupRunner:
             self._status.message = detail
 
     def _run_command(self, command: list[str], timeout: int = 600) -> tuple[bool, str]:
+        self._log(f"$ {' '.join(command)}")
         try:
             result = subprocess.run(command, check=False, capture_output=True, text=True, timeout=timeout)
         except Exception as exc:
+            self._log(str(exc), "stderr")
             return False, str(exc)
         output = "\n".join(part for part in [result.stdout.strip(), result.stderr.strip()] if part)
+        if output:
+            self._log(output[-1200:], "stderr" if result.returncode else "stdout")
+        if result.returncode != 0:
+            self._log(f"Command failed with exit code {result.returncode}", "stderr")
         return result.returncode == 0, output[-1200:]
+
+    def _log(self, message: str, stream: str = "system") -> None:
+        if self.on_log:
+            self.on_log(message, stream)
 
     def _run(self) -> None:
         config = self.store.load()
+        self._log("Full machine setup started")
         try:
             self._check_python()
             self._ensure_ray()
@@ -88,6 +104,7 @@ class SetupRunner:
             self._check_object_store(config)
             self._finish(config)
         except Exception as exc:  # pragma: no cover - defensive final guard
+            self._log(f"Setup failed unexpectedly: {exc}", "stderr")
             self._set_task("final", "fail", f"Setup failed unexpectedly: {exc}")
             self._complete(False, False, f"Setup failed unexpectedly: {exc}")
 
@@ -132,7 +149,7 @@ class SetupRunner:
         self._set_task("ports", "running", "Checking Ray ports...")
         host = config.coordinator.head_host
         if config.app_mode == AppMode.node:
-            if is_port_reachable(host, config.coordinator.ray_port):
+            if is_coordinator_reachable(config):
                 self._set_task("ports", "pass", f"Coordinator is reachable at {config.coordinator.ray_address}")
             else:
                 self._set_task(
@@ -308,6 +325,7 @@ EOF
             self._complete(True, can_continue, message)
 
     def _complete(self, succeeded: bool, can_continue: bool, message: str) -> None:
+        self._log(f"Full machine setup finished: {message}", "system" if succeeded else "stderr")
         with self._lock:
             self._status.running = False
             self._status.succeeded = succeeded

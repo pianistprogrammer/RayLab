@@ -73,7 +73,7 @@ def test_discovery_returns_reachable_configured_host_even_when_lan_scan_is_empty
     assert candidates[0].detail == "Saved coordinator address is reachable"
 
 
-def test_discovery_surfaces_saved_host_even_when_probe_is_inconclusive(monkeypatch) -> None:
+def test_discovery_does_not_surface_saved_host_when_probe_is_inconclusive(monkeypatch) -> None:
     config = AppConfig(app_mode=AppMode.node)
     config.coordinator.head_host = "192.168.33.17"
     monkeypatch.setattr("raylab_sidecar.discovery._arp_neighbor_hosts", lambda: set())
@@ -82,7 +82,4 @@ def test_discovery_surfaces_saved_host_even_when_probe_is_inconclusive(monkeypat
 
     candidates = discover_coordinators(config)
 
-    assert len(candidates) == 1
-    assert candidates[0].host == "192.168.33.17"
-    assert candidates[0].confidence == 55
-    assert candidates[0].detail == "Saved coordinator address"
+    assert candidates == []

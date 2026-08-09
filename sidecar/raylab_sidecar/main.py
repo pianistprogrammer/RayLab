@@ -21,8 +21,8 @@ from .storage import ConfigStore, SecretStore
 store = ConfigStore()
 secrets = SecretStore()
 controller = RayController(store, secrets)
-ray_installer = RayInstaller(store)
-setup_runner = SetupRunner(store)
+ray_installer = RayInstaller(store, on_log=controller.log)
+setup_runner = SetupRunner(store, on_log=controller.log)
 
 app = FastAPI(title="RayLab Sidecar", version=__version__)
 app.add_middleware(
@@ -35,6 +35,7 @@ app.add_middleware(
 
 
 def api_error(exc: Exception) -> HTTPException:
+    controller.log(str(exc), "stderr")
     return HTTPException(status_code=400, detail=str(exc))
 
 
@@ -62,6 +63,7 @@ def put_config(config: AppConfig) -> AppConfig:
             if not config.coordinator.node_ip_address.strip():
                 config.coordinator.node_ip_address = lan_ip
     store.save(config)
+    controller.log(f"Configuration saved for {config.app_mode.value} mode")
     store.append_audit(AuditEvent(event_type="config_updated", actor="owner", message="Configuration updated"))
     return store.load()
 
@@ -112,16 +114,19 @@ def hardware() -> Any:
 
 @app.get("/discovery/coordinators")
 def discovery_coordinators() -> Any:
+    controller.log("LAN coordinator scan started")
     return discover_coordinators(store.load())
 
 
 @app.get("/discovery/debug")
 def get_discovery_debug() -> Any:
+    controller.log("Discovery debug requested")
     return discovery_debug(store.load())
 
 
 @app.get("/setup/worker-account")
 def setup_commands() -> Any:
+    controller.log("Worker account setup commands requested")
     return [command.__dict__ for command in worker_account_setup_commands(store.load().privacy.worker_account)]
 
 
@@ -132,6 +137,7 @@ def ray_install_status() -> Any:
 
 @app.post("/setup/ray-install")
 def install_ray() -> Any:
+    controller.log("Ray runtime install requested")
     return ray_installer.start()
 
 
@@ -142,6 +148,7 @@ def setup_run_status() -> Any:
 
 @app.post("/setup/run")
 def run_full_setup() -> Any:
+    controller.log("Full machine setup requested")
     return setup_runner.start()
 
 
@@ -183,6 +190,7 @@ def create_submitter(payload: SubmitterCreate) -> SubmitterWithToken:
     secrets.set(submitter.token_ref, token)
     config.submitters.append(submitter)
     store.save(config)
+    controller.log(f"Submitter created: {payload.name}")
     store.append_audit(AuditEvent(event_type="submitter_created", actor="coordinator", message=f"Created submitter {payload.name}"))
     return SubmitterWithToken(**submitter.model_dump(), token=token)
 
@@ -194,6 +202,7 @@ def revoke_submitter(submitter_id: str) -> AppConfig:
         if submitter.id == submitter_id:
             submitter.revoked = True
             store.save(config)
+            controller.log(f"Submitter revoked: {submitter.name}")
             store.append_audit(AuditEvent(event_type="submitter_revoked", actor="coordinator", message=f"Revoked submitter {submitter.name}"))
             return store.load()
     raise HTTPException(status_code=404, detail="Submitter not found")

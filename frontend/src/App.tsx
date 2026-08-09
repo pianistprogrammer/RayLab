@@ -30,7 +30,7 @@ import { api } from "./api";
 import { cacheConfig, useStore } from "./store";
 import type { AppConfig, AppMode, AuditEvent, ClusterState, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NodeInfo, ScheduleWindow, SetupRunStatus, SetupTask, TerminalLogEntry } from "./types";
 
-type View = "home" | "graph" | "submit-job" | "submitters" | "setup" | "diagnostics" | "settings" | "audit";
+type View = "home" | "graph" | "submit-job" | "submitters" | "setup" | "settings" | "audit";
 
 function cls(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -123,10 +123,11 @@ export function App() {
   const isStopping = state === "stopping";
   const isStopped = state === "stopped";
   const coordinatorReachable = status?.diagnostics.some((check) => check.id === "ray_port" && check.status === "pass") ?? false;
-  const setupRequired = config.app_mode === "node" && !setupRun?.can_continue && !coordinatorReachable;
+  const workerAccountReady = status?.diagnostics.some((check) => check.id === "worker_account" && check.status === "pass") ?? false;
+  const setupRequired = config.app_mode === "node" && !setupRun?.can_continue && (!coordinatorReachable || !workerAccountReady);
   const startDisabled = !actionsReady || anyBusy || setupRequired || isRunning || isStarting || isStopping;
   const stopDisabled = !actionsReady || anyBusy || isStopped || isStarting || isStopping;
-  const startTitle = !actionsReady ? "Waiting for the app to finish starting" : setupRequired ? "Run setup or enter a reachable coordinator address before starting" : "Start Ray";
+  const startTitle = !actionsReady ? "Waiting for the app to finish starting" : setupRequired ? "Run setup and choose a reachable coordinator before starting" : "Start Ray";
   const stopTitle = !actionsReady ? "Waiting for the app to finish starting" : "Stop Ray";
 
   if (config.app_mode === "unconfigured") {
@@ -142,7 +143,6 @@ export function App() {
         {config.app_mode === "coordinator" && <button className={cls("nav", view === "submit-job" && "active")} onClick={() => setView("submit-job")}><Terminal size={18} />Submit Job</button>}
         {config.app_mode === "coordinator" && <button className={cls("nav", view === "submitters" && "active")} onClick={() => setView("submitters")}><KeyRound size={18} />Submitters</button>}
         <button className={cls("nav", view === "setup" && "active")} onClick={() => setView("setup")}><ListChecks size={18} />Setup</button>
-        <button className={cls("nav", view === "diagnostics" && "active")} onClick={() => setView("diagnostics")}><AlertTriangle size={18} />Diagnostics</button>
         <button className={cls("nav", view === "settings" && "active")} onClick={() => setView("settings")}><Settings size={18} />Settings</button>
         <button className={cls("nav", view === "audit" && "active")} onClick={() => setView("audit")}><Activity size={18} />Audit</button>
         <SidebarStatus />
@@ -187,7 +187,6 @@ export function App() {
         {view === "submit-job" && config.app_mode === "coordinator" && <SubmitJobView />}
         {view === "submitters" && config.app_mode === "coordinator" && <SubmittersView />}
         {view === "setup" && <SetupView />}
-        {view === "diagnostics" && <DiagnosticsView />}
         {view === "settings" && <SettingsView />}
         {view === "audit" && <AuditView />}
         {terminalOpen && <TerminalDock close={() => setTerminalOpen(false)} />}
@@ -933,27 +932,19 @@ function SettingsView() {
 
 function SetupView() {
   const setupRun = useStore((s) => s.setupRun);
-  const refresh = useStore((s) => s.refresh);
-  return (
-    <div className="single-view">
-      <div className="view-title"><ListChecks size={20} /><h2>Full Machine Setup</h2></div>
-      <SetupPanel setupRun={setupRun} refresh={refresh} />
-    </div>
-  );
-}
-
-function DiagnosticsView() {
   const diagnostics = useStore((s) => s.status?.diagnostics ?? []);
   const rayInstall = useStore((s) => s.rayInstall);
   const refresh = useStore((s) => s.refresh);
   const summary = useMemo(() => summarizeDiagnostics(diagnostics), [diagnostics]);
   return (
     <div className="single-view">
+      <div className="view-title"><ListChecks size={20} /><h2>Setup</h2></div>
       <section className="panel wide">
-        <div className="panel-title"><AlertTriangle size={19} /><h2>Diagnostics</h2><button className="ghost" onClick={() => void refresh()}><RefreshCw size={16} />Refresh</button></div>
+        <div className="panel-title"><ShieldCheck size={19} /><h2>Readiness Checks</h2><button className="ghost" onClick={() => void refresh()}><RefreshCw size={16} />Refresh</button></div>
         <p className="panel-copy">{summary}</p>
         <DiagnosticsList diagnostics={diagnostics} rayInstall={rayInstall} refresh={refresh} />
       </section>
+      <SetupPanel setupRun={setupRun} refresh={refresh} showTaskList={false} />
     </div>
   );
 }
@@ -979,14 +970,14 @@ function TerminalDock({ close }: { close: () => void }) {
   return (
     <section className="terminal-dock" role="region" aria-label="Terminal logs">
       <div className="terminal-dock-title">
-        <div><Terminal size={17} /><strong>Terminal</strong><span>Start/stop logs</span></div>
+        <div><Terminal size={17} /><strong>Terminal</strong><span>Sidecar, setup, and Ray logs</span></div>
         <div className="terminal-dock-actions">
           <button className="ghost" onClick={() => void refresh()}><RefreshCw size={16} />Refresh</button>
           <button className="ghost close-terminal" title="Close terminal" onClick={close}><X size={17} />Close</button>
         </div>
       </div>
       <div className="terminal-output" ref={outputRef}>
-        {logs.length === 0 && <div className="terminal-empty">No cluster command logs yet.</div>}
+        {logs.length === 0 && <div className="terminal-empty">No sidecar logs yet.</div>}
         {logs.map((entry) => (
           <div className={cls("terminal-line", entry.stream === "stderr" && "error-line")} key={entry.timestamp}>
             <span>{new Date(entry.timestamp).toLocaleTimeString()}</span><code>{entry.message}</code>
@@ -1035,7 +1026,7 @@ function AuditView() {
   );
 }
 
-function SetupPanel({ setupRun, refresh, status = null, compact = false }: { setupRun: SetupRunStatus | null; refresh: () => Promise<void>; status?: ClusterStatus | null; compact?: boolean }) {
+function SetupPanel({ setupRun, refresh, status = null, compact = false, showTaskList = true }: { setupRun: SetupRunStatus | null; refresh: () => Promise<void>; status?: ClusterStatus | null; compact?: boolean; showTaskList?: boolean }) {
   const [running, setRunning] = useState(false);
 
   async function runSetup() {
@@ -1058,12 +1049,13 @@ function SetupPanel({ setupRun, refresh, status = null, compact = false }: { set
         return ["fail", "warn"].includes(task.status);
       })
     : tasks;
+  const currentTask = tasks.find((task) => task.status === "running") ?? null;
   return (
     <section className={cls("setup-panel", compact && "compact")}>
       <div className="setup-head">
         <div>
-          <strong>Full machine setup</strong>
-          <span>{setupRun?.message ?? "Run setup to install Ray and check local prerequisites."}</span>
+          <strong>Machine setup</strong>
+          <span>{setupRun?.message ?? "Run setup to prepare this machine for RayLab."}</span>
         </div>
         <button className="ghost" onClick={() => void runSetup()} disabled={isRunning}>
           {isRunning ? <Spinner size={16} /> : <Play size={16} />}{isRunning ? "Running…" : "Run setup"}
@@ -1071,7 +1063,8 @@ function SetupPanel({ setupRun, refresh, status = null, compact = false }: { set
       </div>
       <div className="progress-track"><div className="progress-fill" style={{ width: `${setupRun?.progress ?? 0}%` }} /></div>
       <div className="progress-meta"><span>{setupRun?.progress ?? 0}% complete</span><span>{setupRun?.can_continue ? "Ready to continue" : "Not ready yet"}</span></div>
-      {visibleTasks.length > 0 && <div className="setup-tasks">{visibleTasks.map((task) => <SetupTaskRow task={task} key={task.id} />)}</div>}
+      {!showTaskList && currentTask && <div className="setup-current"><Spinner size={16} /><span>{currentTask.label}: {currentTask.detail}</span></div>}
+      {showTaskList && visibleTasks.length > 0 && <div className="setup-tasks">{visibleTasks.map((task) => <SetupTaskRow task={task} key={task.id} />)}</div>}
     </section>
   );
 }

@@ -17,7 +17,7 @@ import psutil
 import requests
 
 from .bootstrap import ensure_ray_runtime, ray_command
-from .diagnostics import diagnostics, has_worker_account, is_port_available, is_private_host
+from .diagnostics import diagnostics, has_worker_account, has_worker_launch_permission, is_port_available, is_private_host
 from .discovery import detect_lan_ip, is_loopback_host
 from .models import AppConfig, AppMode, AuditEvent, ClusterState, ClusterStatus, JobResponse, JobSubmission, NodeInfo, TerminalLogEntry
 from .storage import ConfigStore, SecretStore
@@ -61,6 +61,15 @@ def _hostname_from_ray_resources(resources: dict[str, float]) -> str | None:
         if key.startswith("node:"):
             return key.removeprefix("node:")
     return None
+
+
+def _node_sort_rank(node: NodeInfo) -> tuple[int, str]:
+    status = node.status.lower()
+    if status == "alive" or status == "active":
+        return (0, node.hostname)
+    if status in {"dead", "inactive"}:
+        return (2, node.hostname)
+    return (1, node.hostname)
 
 
 def redact_command(command: list[str]) -> list[str]:
@@ -174,6 +183,9 @@ class RayController:
     def terminal_logs(self) -> list[TerminalLogEntry]:
         return self.logs[-500:]
 
+    def log(self, message: str, stream: str = "system") -> None:
+        self._log(message, stream)
+
     def _log(self, message: str, stream: str = "system") -> None:
         message = ANSI_RE.sub("", message)
         self.logs.append(TerminalLogEntry(stream=stream, message=message))
@@ -186,6 +198,9 @@ class RayController:
         if self.state in {ClusterState.stopped, ClusterState.error} and local_running:
             self.state = ClusterState.running
             self.message = "Ray is running"
+        elif self.state == ClusterState.error and not local_running:
+            self.state = ClusterState.stopped
+            self.message = "Ray is not running locally"
         elif self.state == ClusterState.running and not local_running:
             self.state = ClusterState.stopped
             self.message = "Ray is not running locally"
@@ -220,20 +235,34 @@ class RayController:
         config = self.store.load()
         config = self._normalize_external_coordinator(config)
         if config.app_mode == AppMode.unconfigured:
-            raise ValueError("Choose Coordinator or Node mode before starting Ray.")
+            message = "Choose Coordinator or Node mode before starting Ray."
+            self._log(message, "stderr")
+            raise ValueError(message)
         if self._ray_status_ok(config):
             self.state = ClusterState.running
             self.message = "Ray is already running"
             return self.status()
         if config.coordinator.bind_private_only and not is_private_host(config.coordinator.head_host):
-            raise ValueError("Refusing to start Ray on a non-private coordinator address.")
+            message = "Refusing to start Ray on a non-private coordinator address."
+            self._log(message, "stderr")
+            raise ValueError(message)
         coordinator_mac = config.app_mode == AppMode.coordinator and platform.system() == "Darwin"
         if config.privacy.worker_account_required and config.app_mode == AppMode.node and not has_worker_account(config.privacy.worker_account):
             if platform.system() == "Darwin":
-                raise ValueError("Run Full machine setup and approve the macOS administrator prompt so RayLab can create the hidden raylab-worker account.")
-            raise ValueError("Run Full machine setup to create the dedicated raylab-worker account before sharing.")
+                message = "Run Full machine setup and approve the macOS administrator prompt so RayLab can create the hidden raylab-worker account."
+                self._log(message, "stderr")
+                raise ValueError(message)
+            message = "Run Full machine setup to create the dedicated raylab-worker account before sharing."
+            self._log(message, "stderr")
+            raise ValueError(message)
+        if config.privacy.worker_account_required and config.app_mode == AppMode.node and not has_worker_launch_permission(config.privacy.worker_account):
+            message = "Run Full machine setup and approve the macOS administrator prompt so RayLab can launch Ray as raylab-worker without asking for a terminal password."
+            self._log(message, "stderr")
+            raise ValueError(message)
         if config.privacy.worker_account_required and config.app_mode == AppMode.coordinator and not coordinator_mac and not has_worker_account(config.privacy.worker_account):
-            raise ValueError("Dedicated raylab-worker account is required before hosting production worker-capable head nodes.")
+            message = "Dedicated raylab-worker account is required before hosting production worker-capable head nodes."
+            self._log(message, "stderr")
+            raise ValueError(message)
 
         self._clear_or_report_port_conflicts(config)
 
@@ -245,6 +274,9 @@ class RayController:
             self._audit("ray_bootstrap_failed", "system", self.message, {"command": bootstrap.command})
             raise RuntimeError(bootstrap.message)
 
+        if config.app_mode == AppMode.node:
+            self._cleanup_stale_worker_ray(config)
+
         command = self._head_command(config) if config.app_mode == AppMode.coordinator else self._node_command(config)
         as_worker = config.app_mode == AppMode.node
         self.state = ClusterState.starting
@@ -255,6 +287,12 @@ class RayController:
             self.state = ClusterState.error
             self.message = result.stderr or result.stdout or "Ray start failed"
             self._log(f"Ray start failed with exit code {result.returncode}", "stderr")
+            self._audit("cluster_start_failed", "system", self.message, {"command": result.command})
+            raise RuntimeError(self.message)
+        if config.app_mode == AppMode.node and not self._wait_for_local_start(config, timeout=8):
+            self.state = ClusterState.error
+            self.message = "Ray worker exited before it became visible locally"
+            self._log(self.message, "stderr")
             self._audit("cluster_start_failed", "system", self.message, {"command": result.command})
             raise RuntimeError(self.message)
         self.state = ClusterState.running
@@ -342,6 +380,27 @@ class RayController:
                 return
             time.sleep(0.25)
 
+    def _wait_for_local_start(self, config: AppConfig, timeout: float) -> bool:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self._local_ray_running(config):
+                return True
+            time.sleep(0.25)
+        return False
+
+    def _cleanup_stale_worker_ray(self, config: AppConfig) -> None:
+        if not self._local_ray_processes():
+            return
+        self._log("Clearing stale local Ray worker processes before joining the coordinator")
+        stop_command = [ray_command(), "stop", "--force"]
+        self.runner.run(stop_command, as_worker=True, worker_account=config.privacy.worker_account, timeout=30, on_output=lambda line: self._log(line, "stdout"))
+        self._wait_for_local_stop(config, timeout=4)
+        if self._local_ray_processes():
+            killed = self._kill_worker_ray_processes(config.privacy.worker_account)
+            if killed:
+                self._log(f"Fallback cleanup signaled stale worker Ray processes for {config.privacy.worker_account}")
+            self._wait_for_local_stop(config, timeout=3)
+
     def _local_ray_running(self, config: AppConfig) -> bool:
         procs = self._local_ray_processes()
         if config.app_mode == AppMode.node:
@@ -359,7 +418,16 @@ class RayController:
 
     def _ps_has_raylet(self, config: AppConfig) -> bool:
         address = config.coordinator.ray_address.lower()
-        return any("/raylet" in line and f"--gcs-address={address}" in line for line in self._ps_command_lines())
+        return any(self._ps_line_is_raylet(line) and f"--gcs-address={address}" in line for line in self._ps_command_lines())
+
+    def _ps_line_is_raylet(self, line: str) -> bool:
+        text = line.strip().lower()
+        if not text:
+            return False
+        excluded = ("grep ", "ssh ", "sshd ", "curl ", "tail ", "raylab-sidecar", "zsh -", "bash -")
+        if any(item in text for item in excluded):
+            return False
+        return "/site-packages/ray/core/src/ray/raylet/raylet " in text or text.endswith("/site-packages/ray/core/src/ray/raylet/raylet")
 
     def _ps_has_head(self, config: AppConfig) -> bool:
         host = config.coordinator.node_ip_address.strip() or config.coordinator.head_host
@@ -418,6 +486,32 @@ class RayController:
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
         return len(procs)
+
+    def _kill_worker_ray_processes(self, worker_account: str) -> int:
+        if platform.system() == "Windows" or not worker_account:
+            return 0
+        patterns = [
+            "[r]ay/core/src/ray/raylet/raylet",
+            "[r]ay/core/src/ray/gcs/gcs_server",
+            "[r]ay/_private/log_monitor.py",
+            "[r]ay/_private/runtime_env/agent/main.py",
+            "[r]ay/dashboard/dashboard.py",
+        ]
+        killed = 0
+        for pattern in patterns:
+            try:
+                result = subprocess.run(
+                    ["sudo", "-n", "-u", worker_account, "--", "pkill", "-f", pattern],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                continue
+            if result.returncode == 0:
+                killed += 1
+        return killed
 
     def _tcp_open(self, host: str, port: int) -> bool:
         targets = [host]
@@ -544,6 +638,9 @@ class RayController:
 
     def nodes(self) -> list[NodeInfo]:
         config = self.store.load()
+        state_nodes = self._nodes_from_state_api(config)
+        if state_nodes:
+            return state_nodes
         try:
             response = requests.get(f"{config.coordinator.dashboard_url}/api/cluster_status", timeout=5)
             response.raise_for_status()
@@ -591,6 +688,34 @@ class RayController:
                 )
             )
         return nodes
+
+    def _nodes_from_state_api(self, config: AppConfig) -> list[NodeInfo]:
+        try:
+            response = requests.get(f"{config.coordinator.dashboard_url}/api/v0/nodes", timeout=5)
+            response.raise_for_status()
+            data = response.json()
+        except Exception:
+            return []
+        raw_nodes = data.get("data", {}).get("result", {}).get("result", [])
+        by_host: dict[str, NodeInfo] = {}
+        for raw in raw_nodes:
+            if not isinstance(raw, dict) or raw.get("is_head_node"):
+                continue
+            resources = raw.get("resources_total", {}) or {}
+            hostname = str(raw.get("node_name") or raw.get("node_ip") or raw.get("node_id") or "unknown")
+            node = NodeInfo(
+                node_id=str(raw.get("node_id") or hostname),
+                hostname=hostname,
+                status=str(raw.get("state") or "unknown").lower(),
+                cpus_total=float(resources.get("CPU", 0)),
+                gpus_total=float(resources.get("GPU", 0)),
+                memory_total_gb=float(resources.get("memory", 0)) / 1024 / 1024 / 1024 if resources.get("memory") else 0,
+                last_seen=datetime.utcnow(),
+            )
+            previous = by_host.get(hostname)
+            if previous is None or _node_sort_rank(node) < _node_sort_rank(previous):
+                by_host[hostname] = node
+        return sorted(by_host.values(), key=_node_sort_rank)
 
     def submit_job(self, job: JobSubmission) -> JobResponse:
         config = self.store.load()

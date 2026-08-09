@@ -161,6 +161,26 @@ def test_running_node_status_marks_coordinator_reachable(tmp_path: Path, monkeyp
     assert ray_port.detail == "Connected to coordinator at 192.168.33.17:6379"
 
 
+def test_error_status_recovers_to_stopped_when_ray_is_gone(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("raylab_sidecar.diagnostics.ray_version", lambda: "2.56.1")
+    monkeypatch.setattr("raylab_sidecar.diagnostics.python_version", lambda: "3.11.14")
+    monkeypatch.setattr("raylab_sidecar.diagnostics.resolved_ray_executable", lambda: "/runtime/bin/ray")
+    monkeypatch.setattr("raylab_sidecar.ray_control.has_worker_account", lambda account: True)
+    store = ConfigStore(tmp_path / "config.json")
+    config = AppConfig(app_mode=AppMode.node)
+    config.coordinator.head_host = "192.168.33.14"
+    store.save(config)
+    controller = RayController(store, FakeSecrets(), runner=FakeRunner())  # type: ignore[arg-type]
+    controller.state = ClusterState.error
+    controller.message = "Ray stop incomplete"
+    monkeypatch.setattr(controller, "_ray_status_ok", lambda config: False)
+
+    status = controller.status()
+
+    assert status.state == ClusterState.stopped
+    assert status.message == "Ray is not running locally"
+
+
 def test_node_running_requires_raylet_not_log_monitor(tmp_path: Path, monkeypatch) -> None:
     store = ConfigStore(tmp_path / "config.json")
     config = AppConfig(app_mode=AppMode.node)
@@ -182,9 +202,50 @@ def test_node_running_uses_ps_fallback_for_worker_account_raylet(tmp_path: Path,
     store.save(config)
     controller = RayController(store, FakeSecrets(), runner=FakeRunner())  # type: ignore[arg-type]
     monkeypatch.setattr(controller, "_local_ray_processes", lambda: [])
-    monkeypatch.setattr(controller, "_ps_command_lines", lambda: ["/path/raylet --gcs-address=192.168.33.14:6379"])
+    monkeypatch.setattr(
+        controller,
+        "_ps_command_lines",
+        lambda: ["/runtime/lib/python3.11/site-packages/ray/core/src/ray/raylet/raylet --gcs-address=192.168.33.14:6379"],
+    )
 
     assert controller._local_ray_running(config) is True
+
+
+def test_node_running_ignores_raylet_text_from_shell_commands(tmp_path: Path, monkeypatch) -> None:
+    store = ConfigStore(tmp_path / "config.json")
+    config = AppConfig(app_mode=AppMode.node)
+    config.coordinator.head_host = "192.168.33.14"
+    store.save(config)
+    controller = RayController(store, FakeSecrets(), runner=FakeRunner())  # type: ignore[arg-type]
+    monkeypatch.setattr(controller, "_local_ray_processes", lambda: [])
+    monkeypatch.setattr(
+        controller,
+        "_ps_command_lines",
+        lambda: ["ssh host tail /tmp/ray/session_latest/logs/raylet.err --gcs-address=192.168.33.14:6379"],
+    )
+
+    assert controller._local_ray_running(config) is False
+
+
+def test_node_start_requires_worker_launch_permission(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("raylab_sidecar.ray_control.has_worker_account", lambda account: True)
+    monkeypatch.setattr("raylab_sidecar.ray_control.has_worker_launch_permission", lambda account: False)
+    store = ConfigStore(tmp_path / "config.json")
+    config = AppConfig(app_mode=AppMode.node)
+    config.coordinator.head_host = "192.168.33.14"
+    store.save(config)
+    controller = RayController(store, FakeSecrets(), runner=FakeRunner())  # type: ignore[arg-type]
+    monkeypatch.setattr(controller, "_ray_status_ok", lambda config: False)
+
+    try:
+        controller.start()
+    except ValueError as exc:
+        message = str(exc)
+    else:  # pragma: no cover - defensive
+        raise AssertionError("expected worker launch permission error")
+
+    assert "Run Full machine setup" in message
+    assert "raylab-worker" in message
 
 
 def test_nodes_parse_ray_256_cluster_status_usage_by_node(tmp_path: Path, monkeypatch) -> None:
@@ -233,6 +294,63 @@ def test_nodes_parse_ray_256_cluster_status_usage_by_node(tmp_path: Path, monkey
     assert nodes[0].status == "active"
     assert nodes[0].cpus_total == 4
     assert nodes[0].gpus_total == 1
+
+
+def test_nodes_parse_ray_state_api_and_dedupe_by_machine(tmp_path: Path, monkeypatch) -> None:
+    store = ConfigStore(tmp_path / "config.json")
+    config = AppConfig(app_mode=AppMode.coordinator)
+    config.coordinator.head_host = "192.168.33.14"
+    store.save(config)
+    controller = RayController(store, FakeSecrets(), runner=FakeRunner())  # type: ignore[arg-type]
+
+    class Response:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, object]:
+            return {
+                "data": {
+                    "result": {
+                        "result": [
+                            {
+                                "node_ip": "192.168.33.14",
+                                "node_name": "192.168.33.14",
+                                "node_id": "head",
+                                "state": "ALIVE",
+                                "is_head_node": True,
+                                "resources_total": {"CPU": 8.0},
+                            },
+                            {
+                                "node_ip": "192.168.33.16",
+                                "node_name": "192.168.33.16",
+                                "node_id": "old-dead",
+                                "state": "DEAD",
+                                "is_head_node": False,
+                                "resources_total": {"CPU": 4.0, "GPU": 1.0, "memory": 17179869184.0},
+                            },
+                            {
+                                "node_ip": "192.168.33.16",
+                                "node_name": "192.168.33.16",
+                                "node_id": "new-alive",
+                                "state": "ALIVE",
+                                "is_head_node": False,
+                                "resources_total": {"CPU": 8.0, "GPU": 1.0, "memory": 8589934592.0},
+                            },
+                        ]
+                    }
+                }
+            }
+
+    monkeypatch.setattr("raylab_sidecar.ray_control.requests.get", lambda url, timeout: Response())
+
+    nodes = controller.nodes()
+
+    assert len(nodes) == 1
+    assert nodes[0].node_id == "new-alive"
+    assert nodes[0].hostname == "192.168.33.16"
+    assert nodes[0].status == "alive"
+    assert nodes[0].cpus_total == 8
+    assert nodes[0].memory_total_gb == 8
 
 
 def test_audit_append_is_capped(tmp_path: Path) -> None:
