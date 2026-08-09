@@ -2,6 +2,7 @@ import type { AppConfig, AuditEvent, ClusterStatus, DiagnosticCheck, DiscoveryCa
 
 const BASE_URL = "http://127.0.0.1:8765";
 const FETCH_TIMEOUT_MS = 4000;   // per-request timeout
+const DISCOVERY_TIMEOUT_MS = 45000;
 const SIDECAR_RETRY_COUNT = 2;   // retries for transient failures
 const SIDECAR_RETRY_DELAY_MS = 300;
 
@@ -9,7 +10,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, init?: RequestInit, timeoutMs = FETCH_TIMEOUT_MS): Promise<T> {
   const headers = init?.body
     ? { "Content-Type": "application/json", ...(init?.headers ?? {}) }
     : init?.headers;
@@ -17,7 +18,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let lastError: unknown = null;
   for (let attempt = 0; attempt <= SIDECAR_RETRY_COUNT; attempt += 1) {
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetch(`${BASE_URL}${path}`, {
         ...init,
@@ -47,7 +48,7 @@ export const api = {
   diagnostics: () => request<DiagnosticCheck[]>("/diagnostics"),
   hardware: () => request<HardwareInfo>("/hardware"),
   terminalLogs: () => request<TerminalLogEntry[]>("/terminal/logs"),
-  discoverCoordinators: () => request<DiscoveryCandidate[]>("/discovery/coordinators"),
+  discoverCoordinators: () => request<DiscoveryCandidate[]>("/discovery/coordinators", undefined, DISCOVERY_TIMEOUT_MS),
   rayInstallStatus: () => request<InstallStatus>("/setup/ray-install"),
   installRay: () => request<InstallStatus>("/setup/ray-install", { method: "POST" }),
   setupStatus: () => request<SetupRunStatus>("/setup/run"),

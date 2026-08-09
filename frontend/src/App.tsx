@@ -795,11 +795,13 @@ function ScheduleWindowsEditor({ windows, onChange }: { windows: ScheduleWindow[
 
 function DiscoveryPanel() {
   const config = useStore((s) => s.config);
+  const status = useStore((s) => s.status);
   const setConfig = useStore((s) => s.setConfig);
   const saveConfig = useStore((s) => s.saveConfig);
   const [candidates, setCandidates] = useState<DiscoveryCandidate[]>([]);
   const [scanning, setScanning] = useState(false);
   const [scanMessage, setScanMessage] = useState("Scan this machine's LAN for reachable Ray coordinators.");
+  const rayRunning = status?.state === "running" || status?.state === "starting";
 
   async function scan() {
     setScanning(true);
@@ -816,6 +818,10 @@ function DiscoveryPanel() {
   }
 
   function useCandidate(candidate: DiscoveryCandidate) {
+    if (rayRunning) {
+      setScanMessage("Stop Ray before changing coordinator. Scan does not interrupt the current connection.");
+      return;
+    }
     const next = {
       ...config,
       coordinator: {
@@ -838,6 +844,7 @@ function DiscoveryPanel() {
         </button>
       </div>
       <p className="panel-copy">{scanMessage}</p>
+      {rayRunning && <p className="panel-copy">Ray is running. Scan is safe, but switching coordinator is disabled until you stop Ray.</p>}
       {candidates.length > 0 && (
         <div className="discovery-list">
           {candidates.map((candidate) => (
@@ -847,7 +854,7 @@ function DiscoveryPanel() {
                 <span>{candidate.detail}</span>
                 {candidate.dashboard_url && <small>{candidate.dashboard_url}</small>}
               </div>
-            <div className="confidence"><button onClick={() => useCandidate(candidate)}>Use</button></div>
+            <div className="confidence"><button onClick={() => useCandidate(candidate)} disabled={rayRunning}>{rayRunning ? "Stop Ray first" : "Use"}</button></div>
             </div>
           ))}
         </div>

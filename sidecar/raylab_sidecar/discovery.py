@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipaddress
 import math
 import platform
+import re
 import shutil
 import socket
 import subprocess
@@ -23,10 +24,11 @@ MAX_SCAN_WORKERS = 64
 def discover_coordinators(config: AppConfig, timeout: float = 0.6) -> list[DiscoveryCandidate]:
     ray_ports = _ordered_ports(config.coordinator.ray_port, COMMON_RAY_PORTS)
     dashboard_ports = _ordered_ports(config.coordinator.dashboard_port, COMMON_DASHBOARD_PORTS)
+    cli_user = _probe_user(config)
     candidates: dict[str, DiscoveryCandidate] = {}
     configured_host = config.coordinator.head_host.strip()
     if configured_host and not is_loopback_host(configured_host):
-        configured = _probe_host_ports(configured_host, ray_ports, dashboard_ports, max(timeout, 1.0), allow_cli_fallback=True)
+        configured = _probe_host_ports(configured_host, ray_ports, dashboard_ports, max(timeout, 1.0), allow_cli_fallback=True, cli_user=cli_user)
         if not configured:
             configured = DiscoveryCandidate(
                 host=configured_host,
@@ -44,10 +46,11 @@ def discover_coordinators(config: AppConfig, timeout: float = 0.6) -> list[Disco
     priority_hosts = _priority_hosts(config)
     if configured_host:
         priority_hosts = [host for host in priority_hosts if host != configured_host]
-    _probe_hosts_concurrently(priority_hosts, ray_ports, dashboard_ports, max(timeout, 1.0), candidates, allow_cli_fallback=True)
+    _probe_hosts_concurrently(priority_hosts, ray_ports, dashboard_ports, max(timeout, 1.0), candidates, allow_cli_fallback=True, cli_user=cli_user)
 
     hosts = _candidate_hosts(config)
-    hosts = [host for host in hosts if host not in candidates and host != configured_host]
+    already_probed = {configured_host, *priority_hosts, *candidates.keys()}
+    hosts = [host for host in hosts if host not in already_probed]
     if not hosts:
         return _sorted_candidates(candidates.values())
 
@@ -68,13 +71,14 @@ def _probe_hosts_concurrently(
     timeout: float,
     candidates: dict[str, DiscoveryCandidate],
     allow_cli_fallback: bool = False,
+    cli_user: str | None = None,
 ) -> None:
     host_list = [host for host in hosts if host not in candidates]
     if not host_list:
         return
     with ThreadPoolExecutor(max_workers=min(MAX_SCAN_WORKERS, len(host_list))) as executor:
         futures = {
-            executor.submit(_probe_host_ports, host, ray_ports, dashboard_ports, timeout, allow_cli_fallback): host
+            executor.submit(_probe_host_ports, host, ray_ports, dashboard_ports, timeout, allow_cli_fallback, cli_user): host
             for host in host_list
         }
         for future in as_completed(futures):
@@ -93,15 +97,18 @@ def discovery_debug(config: AppConfig, timeout: float = 1.0) -> dict[str, object
     probes = []
     ray_ports = _ordered_ports(config.coordinator.ray_port, COMMON_RAY_PORTS)
     dashboard_ports = _ordered_ports(config.coordinator.dashboard_port, COMMON_DASHBOARD_PORTS)
+    cli_user = _probe_user(config)
     for host in hosts[:16]:
         probes.append(
             {
                 "host": host,
                 "socket_ray": _tcp_open(host, config.coordinator.ray_port, timeout, allow_cli_fallback=False),
                 "cli_ray": _tcp_open_with_nc(host, config.coordinator.ray_port, timeout),
+                "worker_cli_ray": _tcp_open_with_nc(host, config.coordinator.ray_port, timeout, cli_user),
                 "socket_dashboard": _tcp_open(host, config.coordinator.dashboard_port, timeout, allow_cli_fallback=False),
                 "cli_dashboard": _tcp_open_with_nc(host, config.coordinator.dashboard_port, timeout),
-                "candidate": (_probe_host_ports(host, ray_ports, dashboard_ports, timeout, allow_cli_fallback=True) or None),
+                "worker_cli_dashboard": _tcp_open_with_nc(host, config.coordinator.dashboard_port, timeout, cli_user),
+                "candidate": (_probe_host_ports(host, ray_ports, dashboard_ports, timeout, allow_cli_fallback=True, cli_user=cli_user) or None),
             }
         )
     return {
@@ -110,6 +117,7 @@ def discovery_debug(config: AppConfig, timeout: float = 1.0) -> dict[str, object
         "nc_path": _command_path("nc", ["/usr/bin/nc", "/bin/nc"]),
         "arp_path": _command_path("arp", ["/usr/sbin/arp", "/usr/bin/arp", "/sbin/arp"]),
         "configured_host": configured_host,
+        "worker_probe_user": cli_user,
         "arp_hosts": sorted(_arp_neighbor_hosts()),
         "priority_hosts": priority_hosts,
         "probes": probes,
@@ -130,11 +138,12 @@ def _probe_host_ports(
     dashboard_ports: Iterable[int],
     timeout: float,
     allow_cli_fallback: bool = False,
+    cli_user: str | None = None,
 ) -> DiscoveryCandidate | None:
-    ray_port = next((port for port in ray_ports if _tcp_open(host, port, timeout, allow_cli_fallback)), None)
+    ray_port = next((port for port in ray_ports if _tcp_open(host, port, timeout, allow_cli_fallback, cli_user)), None)
     if ray_port is None:
         return None
-    dashboard_port = next((port for port in dashboard_ports if _tcp_open(host, port, timeout, allow_cli_fallback)), None)
+    dashboard_port = next((port for port in dashboard_ports if _tcp_open(host, port, timeout, allow_cli_fallback, cli_user)), None)
     dashboard_open = dashboard_port is not None
     confidence = 95 if dashboard_open else 70
     detail = "Ray head and dashboard ports are reachable on the LAN" if dashboard_open else "Ray head port is reachable on the LAN"
@@ -164,23 +173,38 @@ def _probe_host_legacy(host: str, ray_port: int, dashboard_port: int, timeout: f
     )
 
 
-def _tcp_open(host: str, port: int, timeout: float, allow_cli_fallback: bool = False) -> bool:
+def _tcp_open(host: str, port: int, timeout: float, allow_cli_fallback: bool = False, cli_user: str | None = None) -> bool:
     try:
         with socket.create_connection((host, port), timeout=timeout):
             return True
     except OSError:
         if allow_cli_fallback:
-            return _tcp_open_with_nc(host, port, timeout)
+            return _tcp_open_with_nc(host, port, timeout, cli_user)
         return False
 
 
-def _tcp_open_with_nc(host: str, port: int, timeout: float) -> bool:
+def _tcp_open_with_nc(host: str, port: int, timeout: float, cli_user: str | None = None) -> bool:
     nc_path = _command_path("nc", ["/usr/bin/nc", "/bin/nc"])
     if platform.system() != "Darwin" or not nc_path:
         return False
+    args = [nc_path, "-z", "-G", str(max(1, math.ceil(timeout))), host, str(port)]
     try:
         result = subprocess.run(
-            [nc_path, "-z", "-G", str(max(1, math.ceil(timeout))), host, str(port)],
+            args,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=max(2, math.ceil(timeout) + 1),
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        result = None
+    if result and result.returncode == 0:
+        return True
+    if not cli_user or not _valid_local_user(cli_user) or not shutil.which("sudo"):
+        return False
+    try:
+        worker_result = subprocess.run(
+            ["sudo", "-n", "-u", cli_user, "--", *args],
             check=False,
             capture_output=True,
             text=True,
@@ -188,7 +212,16 @@ def _tcp_open_with_nc(host: str, port: int, timeout: float) -> bool:
         )
     except (OSError, subprocess.TimeoutExpired):
         return False
-    return result.returncode == 0
+    return worker_result.returncode == 0
+
+
+def _probe_user(config: AppConfig) -> str | None:
+    worker_account = config.privacy.worker_account.strip()
+    return worker_account if _valid_local_user(worker_account) else None
+
+
+def _valid_local_user(value: str) -> bool:
+    return bool(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]{0,63}", value))
 
 
 def _candidate_hosts(config: AppConfig | None = None) -> list[str]:

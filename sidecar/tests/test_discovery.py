@@ -3,7 +3,7 @@ from raylab_sidecar.models import AppConfig, AppMode
 
 
 def test_probe_host_returns_candidate_when_ray_port_open(monkeypatch) -> None:
-    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False: port == 6379)
+    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False, cli_user=None: port == 6379)
 
     candidate = _probe_host("192.168.1.20", 6379, 8265, 0.01)
 
@@ -15,7 +15,7 @@ def test_probe_host_returns_candidate_when_ray_port_open(monkeypatch) -> None:
 
 
 def test_probe_host_includes_dashboard_when_reachable(monkeypatch) -> None:
-    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False: True)
+    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False, cli_user=None: True)
 
     candidate = _probe_host("192.168.1.20", 6379, 8265, 0.01)
 
@@ -26,7 +26,7 @@ def test_probe_host_includes_dashboard_when_reachable(monkeypatch) -> None:
 
 def test_probe_host_ports_finds_non_default_ray_port(monkeypatch) -> None:
     open_ports = {6382, 8266}
-    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False: port in open_ports)
+    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False, cli_user=None: port in open_ports)
 
     candidate = _probe_host_ports("192.168.1.20", [6379, 6382], [8265, 8266], 0.01)
 
@@ -63,7 +63,7 @@ def test_discovery_returns_reachable_configured_host_even_when_lan_scan_is_empty
     config.coordinator.head_host = "192.168.33.17"
     monkeypatch.setattr("raylab_sidecar.discovery._arp_neighbor_hosts", lambda: set())
     monkeypatch.setattr("raylab_sidecar.discovery.psutil.net_if_addrs", lambda: {})
-    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False: host == "192.168.33.17" and port == 6379)
+    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False, cli_user=None: host == "192.168.33.17" and port == 6379)
 
     candidates = discover_coordinators(config)
 
@@ -78,7 +78,7 @@ def test_discovery_surfaces_saved_host_even_when_probe_is_inconclusive(monkeypat
     config.coordinator.head_host = "192.168.33.17"
     monkeypatch.setattr("raylab_sidecar.discovery._arp_neighbor_hosts", lambda: set())
     monkeypatch.setattr("raylab_sidecar.discovery.psutil.net_if_addrs", lambda: {})
-    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False: False)
+    monkeypatch.setattr("raylab_sidecar.discovery._tcp_open", lambda host, port, timeout, allow_cli_fallback=False, cli_user=None: False)
 
     candidates = discover_coordinators(config)
 
