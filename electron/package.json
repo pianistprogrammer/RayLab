@@ -29,17 +29,6 @@
     ],
     "extraResources": [
       { "from": "../frontend/dist", "to": "frontend/dist" },
-      {
-        "from": "../sidecar",
-        "to": "sidecar",
-        "filter": [
-          "**/*",
-          "!.venv/**",
-          "!.pytest_cache/**",
-          "!**/__pycache__/**",
-          "!**/*.pyc"
-        ]
-      },
       { "from": "../vendor", "to": "vendor" }
     ],
     "mac": {

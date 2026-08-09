@@ -58,7 +58,7 @@ export function cacheConfig(config: AppConfig) {
   try {
     window.localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(config));
   } catch {
-    // The sidecar remains the source of truth; this cache only avoids reload flicker.
+    // The local backend remains the source of truth; this cache only avoids reload flicker.
   }
 }
 
@@ -71,7 +71,7 @@ interface AppState {
   setupRun: SetupRunStatus | null;
   hardware: HardwareInfo | null;
   terminalLogs: TerminalLogEntry[];
-  sidecarReady: boolean;
+  backendReady: boolean;
   // Which named action is in flight — null when idle.
   activeAction: string | null;
   modeSaving: boolean;
@@ -88,16 +88,16 @@ interface AppState {
 }
 
 // Only surface a fetch error after this many consecutive poll failures.
-// Transient blips (sidecar briefly busy, app waking from sleep) are swallowed.
+// Transient blips (backend briefly busy, app waking from sleep) are swallowed.
 const CONSECUTIVE_FAIL_THRESHOLD = 3;
 let consecutiveFailCount = 0;
 
 // Held in the store closure — not in state so it never triggers re-renders.
 let pendingMode: AppMode | null = null;
 
-async function electronSidecarStatus(): Promise<{ running: boolean; error?: string | null } | null> {
+async function electronBackendStatus(): Promise<{ running: boolean; error?: string | null } | null> {
   try {
-    return await window.electronAPI.invoke("sidecar_status") as { running: boolean; error?: string | null };
+    return await window.electronAPI.invoke("backend_status") as { running: boolean; error?: string | null };
   } catch {
     return null;
   }
@@ -112,7 +112,7 @@ export const useStore = create<AppState>((set, get) => ({
   setupRun: null,
   hardware: null,
   terminalLogs: [],
-  sidecarReady: false,
+  backendReady: false,
   activeAction: null,
   modeSaving: false,
   error: null,
@@ -123,10 +123,10 @@ export const useStore = create<AppState>((set, get) => ({
   setNotice: (notice) => set({ notice }),
 
   refresh: async () => {
-    let sidecarStartupError: string | null = null;
+    let backendStartupError: string | null = null;
     try {
-      const sidecarStatus = await electronSidecarStatus();
-      sidecarStartupError = sidecarStatus?.error ?? null;
+      const backendStatus = await electronBackendStatus();
+      backendStartupError = backendStatus?.error ?? null;
       const [nextConfig, nextStatus] = await Promise.all([api.getConfig(), api.status()]);
       const [nodesResult, auditResult, installResult, setupResult, hardwareResult, terminalResult] = await Promise.allSettled([
         api.nodes(),
@@ -170,14 +170,14 @@ export const useStore = create<AppState>((set, get) => ({
         setupRun: nextSetup,
         hardware: nextHardware,
         terminalLogs: nextTerminalLogs,
-        sidecarReady: true,
+        backendReady: true,
         error: null,
       });
     } catch (err) {
       consecutiveFailCount += 1;
-      set({ sidecarReady: false });
+      set({ backendReady: false });
       if (consecutiveFailCount >= CONSECUTIVE_FAIL_THRESHOLD) {
-        set({ error: sidecarStartupError ?? (err instanceof Error ? err.message : "App is not reachable") });
+        set({ error: backendStartupError ?? (err instanceof Error ? err.message : "App is not reachable") });
       }
     }
   },

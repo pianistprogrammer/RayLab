@@ -31,8 +31,8 @@ ipcMain.handle('open_dashboard', async (_event, args) => {
   await shell.openExternal(url);
 });
 
-// sidecar_status now reflects the Node.js backend being always ready.
-ipcMain.handle('sidecar_status', () => {
+// backend_status reflects the in-process Node.js backend being ready.
+ipcMain.handle('backend_status', () => {
   return { running: true, error: null };
 });
 

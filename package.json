@@ -10,9 +10,7 @@
     "build": "pnpm --filter @raylab/frontend build && pnpm --filter @raylab/electron build",
     "frontend:build": "pnpm --filter @raylab/frontend build",
     "electron:build": "pnpm --filter @raylab/electron build",
-    "test": "pnpm --filter @raylab/frontend test && pnpm sidecar:test",
-    "sidecar:dev": "python3 -m uvicorn raylab_sidecar.main:app --app-dir sidecar --host 127.0.0.1 --port 8765 --reload",
-    "sidecar:test": "PYTHONPATH=sidecar python3 -m pytest sidecar/tests"
+    "test": "pnpm --filter @raylab/frontend test"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

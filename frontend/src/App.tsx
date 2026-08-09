@@ -43,7 +43,7 @@ function Spinner({ size = 17 }: { size?: number }) {
 export function App() {
   const config = useStore((s) => s.config);
   const status = useStore((s) => s.status);
-  const sidecarReady = useStore((s) => s.sidecarReady);
+  const backendReady = useStore((s) => s.backendReady);
   const activeAction = useStore((s) => s.activeAction);
   const modeSaving = useStore((s) => s.modeSaving);
   const error = useStore((s) => s.error);
@@ -77,17 +77,17 @@ export function App() {
       nodeSetupStarted.current = false;
       return;
     }
-    if (!sidecarReady || !setupRun || setupRun.running || setupRun.can_continue || nodeSetupStarted.current) return;
+    if (!backendReady || !setupRun || setupRun.running || setupRun.can_continue || nodeSetupStarted.current) return;
     nodeSetupStarted.current = true;
     const timer = window.setTimeout(() => {
       void api.runSetup().then(() => refresh()).catch(() => refresh());
     }, 750);
     return () => window.clearTimeout(timer);
-  }, [config.app_mode, refresh, setupRun, sidecarReady]);
+  }, [config.app_mode, refresh, setupRun, backendReady]);
 
   const state = status?.state ?? "stopped";
   const anyBusy = activeAction !== null;
-  const actionsReady = sidecarReady && status !== null;
+  const actionsReady = backendReady && status !== null;
 
   function changeMode(mode: AppMode) {
     if (mode !== config.app_mode && config.app_mode !== "unconfigured" && state !== "stopped" && state !== "error") {
@@ -130,7 +130,7 @@ export function App() {
   const stopTitle = !actionsReady ? "Waiting for the app to finish starting" : "Stop Ray";
 
   if (config.app_mode === "unconfigured") {
-    return <RolePicker onChoose={changeMode} busy={!sidecarReady || anyBusy || modeSaving} />;
+    return <RolePicker onChoose={changeMode} busy={!backendReady || anyBusy || modeSaving} />;
   }
 
   return (
@@ -225,8 +225,8 @@ function NoticeBanner({ message, onDone }: { message: string; onDone: () => void
 function SidebarStatus() {
   const config = useStore((s) => s.config);
   const status = useStore((s) => s.status);
-  const sidecarReady = useStore((s) => s.sidecarReady);
-  const state = sidecarReady && status ? status.state : "starting";
+  const backendReady = useStore((s) => s.backendReady);
+  const state = backendReady && status ? status.state : "starting";
   const label = state === "running"
     ? "Ray is running"
     : state === "error"
@@ -236,7 +236,7 @@ function SidebarStatus() {
         : state === "stopping"
           ? "Stopping"
           : "Not running";
-  const detail = sidecarReady ? (config.app_mode === "coordinator" ? "Host mode" : "Join mode") : "Starting app";
+  const detail = backendReady ? (config.app_mode === "coordinator" ? "Host mode" : "Join mode") : "Starting app";
   const joinAddress = config.app_mode === "coordinator" && state === "running"
     ? status?.address ?? `${config.coordinator.head_host}:${config.coordinator.ray_port}`
     : null;
@@ -969,14 +969,14 @@ function TerminalDock({ close }: { close: () => void }) {
   return (
     <section className="terminal-dock" role="region" aria-label="Terminal logs">
       <div className="terminal-dock-title">
-        <div><Terminal size={17} /><strong>Terminal</strong><span>Sidecar, setup, and Ray logs</span></div>
+        <div><Terminal size={17} /><strong>Terminal</strong><span>Setup and Ray logs</span></div>
         <div className="terminal-dock-actions">
           <button className="ghost" onClick={() => void refresh()}><RefreshCw size={16} />Refresh</button>
           <button className="ghost close-terminal" title="Close terminal" onClick={close}><X size={17} />Close</button>
         </div>
       </div>
       <div className="terminal-output" ref={outputRef}>
-        {logs.length === 0 && <div className="terminal-empty">No sidecar logs yet.</div>}
+        {logs.length === 0 && <div className="terminal-empty">No logs yet.</div>}
         {logs.map((entry) => (
           <div className={cls("terminal-line", entry.stream === "stderr" && "error-line")} key={entry.timestamp}>
             <span>{new Date(entry.timestamp).toLocaleTimeString()}</span><code>{entry.message}</code>

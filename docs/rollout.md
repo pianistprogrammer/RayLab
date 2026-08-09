@@ -4,7 +4,7 @@ This app is intentionally conservative: it refuses safe-looking shortcuts that w
 
 ## Required Baseline
 
-- Ray 2.52+ installed in the Python environment used by the sidecar. If Ray is missing, use the app's Diagnostics panel to run the built-in Ray installer.
+- Ray 2.52+ installed in RayLab's managed runtime. If Ray is missing, use the app's Diagnostics panel to run the built-in Ray installer.
 - A fixed server-room Coordinator address on a private lab VLAN.
 - No public exposure of Ray ports `6379`, `8265`, `10001`, `8076`, or `8077`.
 - A dedicated local `raylab-worker` account on every participating machine.
@@ -38,7 +38,7 @@ Windows Node mode requires a service or scheduled-task wrapper that runs Ray as 
 
 ## Network
 
-Coordinator mode must use a private IP or DNS name. The sidecar rejects non-private head addresses when `Private VLAN only` is enabled.
+Coordinator mode must use a private IP or DNS name. The local backend rejects non-private head addresses when `Private VLAN only` is enabled.
 
 Recommended firewall stance:
 

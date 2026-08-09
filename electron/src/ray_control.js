@@ -62,7 +62,7 @@ function _isRayLine(line) {
 function _isIgnoredLine(line) {
   return line.includes('ray status') || line.includes('ray stop') || line.includes('ray start')
     || line.includes('grep ') || line.includes('ssh ') || line.includes('sshd ')
-    || line.includes('raylab-sidecar') || line.includes('electron ');
+    || line.includes('electron ');
 }
 
 function _localRayProcesses() {

@@ -5,9 +5,7 @@ Desktop app for opt-in/opt-out sharing of university lab GPU machines through Ra
 ## Development
 
 ```bash
-python3 -m pip install -e "sidecar[test]"
 pnpm install
-pnpm sidecar:dev
 pnpm dev
 ```
 

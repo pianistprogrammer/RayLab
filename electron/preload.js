@@ -5,7 +5,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   invoke(channel, args) {
     const allowed = [
-      'open_dashboard', 'sidecar_status',
+      'open_dashboard', 'backend_status',
       'health', 'get_config', 'save_config',
       'cluster_status', 'diagnostics', 'hardware', 'terminal_logs',
       'discovery_coordinators',
