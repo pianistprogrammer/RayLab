@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       'cluster_status', 'diagnostics', 'hardware', 'terminal_logs',
       'discovery_coordinators',
       'ray_install_status', 'install_ray',
-      'setup_status', 'run_setup',
+      'setup_status', 'run_setup', 'create_worker_account', 'install_docker',
       'cluster_start', 'cluster_port_conflicts', 'cluster_clear_port_conflicts', 'cluster_stop', 'cluster_panic',
       'nodes', 'audit',
       'create_submitter', 'revoke_submitter',

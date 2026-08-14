@@ -2,9 +2,11 @@
 
 const { spawn, spawnSync } = require('child_process');
 const os = require('os');
-const { hasCompatibleRay, ensureRayRuntime, pythonVersion, rayVersion, PINNED_RAY_VERSION, PINNED_PYTHON, which } = require('./bootstrap');
+const { hasCompatibleRay, ensureRayRuntime, pythonVersion, rayVersion, PINNED_RAY_VERSION, PINNED_PYTHON, findUv, which } = require('./bootstrap');
 const { configDir, save, appendAudit, makeAuditEvent } = require('./storage');
 const { isPrivateHost, isPortAvailable, findAvailablePort, isCoordinatorReachable, hasWorkerAccount, hasWorkerLaunchPermission } = require('./diagnostics');
+const { createWorkerAccount } = require('./worker_account');
+const { installDocker } = require('./docker_installer');
 
 const SETUP_TASKS = [
   { id: 'python',         label: 'Python environment' },
@@ -32,10 +34,24 @@ class SetupRunner {
       tasks: SETUP_TASKS.map((t) => ({ ...t, status: 'pending', detail: 'Waiting', fix: null })),
     };
     this._running = false;
+    this._logs = [];
   }
 
   status() {
     return { ...this._status, tasks: this._status.tasks.map((t) => ({ ...t })) };
+  }
+
+  _log(message, stream = 'setup') {
+    this._logs.push({ timestamp: new Date().toISOString(), stream, message });
+    if (this._logs.length > 500) this._logs.shift();
+  }
+
+  terminalLogs() {
+    return this._logs.slice(-500);
+  }
+
+  logMessage(message, stream = 'setup') {
+    this._log(message, stream);
   }
 
   start(configLoader) {
@@ -52,6 +68,7 @@ class SetupRunner {
       finished_at: null,
       tasks: SETUP_TASKS.map((t) => ({ ...t, status: 'pending', detail: 'Waiting', fix: null })),
     };
+    this._log('Running full machine setup...');
     this._run(configLoader).catch(() => {});
     return this.status();
   }
@@ -61,19 +78,28 @@ class SetupRunner {
     if (task) { task.status = st; task.detail = detail; task.fix = fix; }
   }
 
+  markWorkerAccountReady(message) {
+    this._setTask('worker_account', 'pass', message || 'Dedicated worker account is ready');
+    this._log(message || 'Dedicated worker account is ready');
+  }
+
   async _run(configLoader) {
     const tasks = this._status.tasks;
     let config = configLoader();
 
     const step = async (id, fn) => {
       this._setTask(id, 'running', 'Running...');
+      const label = SETUP_TASKS.find((t) => t.id === id)?.label || id;
+      this._log(`${label}: running...`);
       this._status.progress = Math.floor((tasks.findIndex((t) => t.id === id) / tasks.length) * 100);
       try {
         const result = await fn();
         this._setTask(id, result.status, result.detail, result.fix || null);
+        this._log(`${label}: ${result.status} - ${result.detail}`, result.status === 'fail' ? 'stderr' : 'setup');
         return result;
       } catch (err) {
         this._setTask(id, 'fail', err.message, null);
+        this._log(`${label}: failed - ${err.message}`, 'stderr');
         return { status: 'fail', detail: err.message };
       }
     };
@@ -81,7 +107,12 @@ class SetupRunner {
     // Step 1 — Python
     await step('python', async () => {
       const pv = pythonVersion();
-      if (!pv) return { status: 'warn', detail: 'Could not determine Python version; venv will be created during Ray install', fix: null };
+      if (!pv && findUv()) {
+        return { status: 'pass', detail: `Managed Python ${PINNED_PYTHON} will be installed by RayLab setup` };
+      }
+      if (!pv) {
+        return { status: 'fail', detail: 'No bundled Python installer was found', fix: 'Reinstall RayLab with the bundled uv runtime, then run setup again.' };
+      }
       return { status: 'pass', detail: `Python ${pv} is ready` };
     });
 
@@ -93,6 +124,7 @@ class SetupRunner {
         logTail.push(line.slice(0, 240));
         if (logTail.length > 5) logTail.shift();
         this._setTask('ray', 'running', line.slice(0, 240));
+        this._log(line.slice(0, 500));
       };
       const result = await ensureRayRuntime(onOutput);
       if (result.succeeded) return { status: 'pass', detail: result.message };
@@ -117,6 +149,9 @@ class SetupRunner {
     await step('ports', async () => {
       const mode = config.app_mode;
       if (mode === 'node') {
+        if (process.platform === 'win32') {
+          await _ensureWindowsWorkerFirewall(config, (line) => this._log(line));
+        }
         const reachable = await isCoordinatorReachable(config);
         if (reachable) return { status: 'pass', detail: `Coordinator reachable at ${config.coordinator.head_host}:${config.coordinator.ray_port}` };
         return { status: 'warn', detail: 'Coordinator not reachable yet', fix: 'Start the host in External workers mode or save the host machine\'s LAN IP address.' };
@@ -127,6 +162,8 @@ class SetupRunner {
         { field: 'ray_port', host: coord.head_host, preferred: 6380 },
         { field: 'dashboard_port', host: coord.dashboard_host, preferred: 8266 },
         { field: 'client_port', host: coord.head_host, preferred: 10002 },
+        { field: 'node_manager_port', host: coord.head_host, preferred: 18076 },
+        { field: 'object_manager_port', host: coord.head_host, preferred: 18077 },
       ];
       for (const def of portDefs) {
         const current = coord[def.field];
@@ -139,7 +176,13 @@ class SetupRunner {
       }
       if (changes.length > 0) {
         await save(config);
+        if (process.platform === 'win32') {
+          await _ensureWindowsCoordinatorFirewall(config, (line) => this._log(line));
+        }
         return { status: 'pass', detail: `Updated occupied ports: ${changes.join(', ')}` };
+      }
+      if (process.platform === 'win32') {
+        await _ensureWindowsCoordinatorFirewall(config, (line) => this._log(line));
       }
       return { status: 'pass', detail: 'Required Ray ports are available' };
     });
@@ -156,27 +199,35 @@ class SetupRunner {
       }
       if (exists && canLaunch) return { status: 'pass', detail: `Dedicated account ${account} is ready` };
       if (process.platform === 'darwin' && mode === 'node') {
-        await _createMacosWorkerAccount(account);
+        await createWorkerAccount(account);
         const nowExists = hasWorkerAccount(account);
         const nowCanLaunch = hasWorkerLaunchPermission(account);
         if (nowExists && nowCanLaunch) return { status: 'pass', detail: `Account ${account} created and configured` };
         return { status: 'fail', detail: `Account creation attempted but ${account} not fully configured`, fix: 'Approve the macOS administrator prompt when it appears.' };
       }
+      if (process.platform === 'win32') {
+        await createWorkerAccount(account);
+        if (hasWorkerAccount(account)) return { status: 'pass', detail: `Dedicated account ${account} is ready` };
+        return { status: 'fail', detail: `Account creation attempted but ${account} was not found`, fix: 'Approve the Windows administrator prompt and try again.' };
+      }
       if (process.platform === 'linux') {
-        await _createLinuxWorkerAccount(account);
+        await createWorkerAccount(account);
         if (hasWorkerAccount(account)) return { status: 'pass', detail: `Account ${account} created` };
         return { status: 'fail', detail: `Failed to create ${account} on Linux`, fix: 'Run as root or with sudo access.' };
       }
-      return { status: 'fail', detail: `Account ${account} does not exist`, fix: 'Run the OS worker-account setup from docs/rollout.md' };
+      return { status: 'fail', detail: `Account ${account} does not exist`, fix: 'Use Create account from the Dedicated worker account check.' };
     });
 
     // Step 7 — Container
     const { containerRuntimeStatus } = require('./diagnostics');
-    const runtime = config.privacy.container_runtime || 'docker';
+    const runtime = 'docker';
     const containerResult = await step('container', async () => {
       const s = containerRuntimeStatus(runtime);
       if (s.ok) return { status: 'pass', detail: s.detail };
-      return { status: 'fail', detail: s.detail, fix: 'Install Docker/Podman and configure it for the dedicated worker account.' };
+      const result = await installDocker((line) => this._log(line.slice(0, 500)));
+      const next = containerRuntimeStatus(runtime);
+      if (next.ok) return { status: 'pass', detail: next.detail };
+      return { status: 'fail', detail: result.message, fix: 'Use Install Docker, then start Docker Desktop or restart Windows if prompted.' };
     });
 
     // Step 8 — GPU container
@@ -222,6 +273,178 @@ class SetupRunner {
 
     await appendAudit(makeAuditEvent('full_setup_finished', this._status.message, { succeeded: this._status.succeeded }));
   }
+}
+
+async function _ensureWindowsWorkerFirewall(config, onOutput) {
+  const coord = config.coordinator;
+  const ports = [coord.node_manager_port, coord.object_manager_port]
+    .map((port) => Number(port))
+    .filter((port) => Number.isInteger(port) && port > 0);
+  if (ports.length === 0) return;
+
+  const scriptPath = require('path').join(os.tmpdir(), 'raylab-worker-firewall.ps1');
+  const ps = `
+$ErrorActionPreference = 'Stop'
+$configuredRemote = '${_psString(coord.head_host)}'
+$resolvedRemotes = @()
+try {
+  $parsed = [System.Net.IPAddress]::Parse($configuredRemote)
+  if ($parsed.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork) { $resolvedRemotes += $parsed.ToString() }
+} catch {
+  try {
+    $resolvedRemotes += Resolve-DnsName -Name $configuredRemote -Type A -ErrorAction Stop |
+      Where-Object { $_.IPAddress } |
+      ForEach-Object { $_.IPAddress }
+  } catch {
+    try {
+      $resolvedRemotes += [System.Net.Dns]::GetHostAddresses($configuredRemote) |
+        Where-Object { $_.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork } |
+        ForEach-Object { $_.ToString() }
+    } catch {}
+  }
+}
+$resolvedRemotes = @($resolvedRemotes | Where-Object { $_ } | Select-Object -Unique)
+$routeTarget = if ($resolvedRemotes.Count -gt 0) { $resolvedRemotes[0] } else { $null }
+$workerPorts = '20000-29999'
+$remoteAddresses = @($resolvedRemotes + 'LocalSubnet') | Select-Object -Unique
+
+try {
+  $route = if ($routeTarget) {
+    Get-NetRoute -RemoteIPAddress $routeTarget -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+    Sort-Object RouteMetric, InterfaceMetric |
+    Select-Object -First 1
+  } else { $null }
+  if ($route) {
+    $profile = Get-NetConnectionProfile -InterfaceIndex $route.InterfaceIndex -ErrorAction SilentlyContinue
+    if ($profile -and $profile.NetworkCategory -eq 'Public') {
+      Set-NetConnectionProfile -InterfaceIndex $route.InterfaceIndex -NetworkCategory Private
+      Write-Output "RayLab set $($profile.InterfaceAlias) network profile to Private for worker callbacks"
+    }
+  }
+  Set-NetFirewallProfile -Profile Private,Public -AllowInboundRules True -AllowLocalFirewallRules True
+} catch {
+  Write-Output "RayLab firewall profile tuning warning: $($_.Exception.Message)"
+}
+
+$rules = @(
+  @{ Name = 'RayLab Worker Node Manager'; Ports = '${ports[0]}' },
+  @{ Name = 'RayLab Worker Object Manager'; Ports = '${ports[1] || ports[0]}' },
+  @{ Name = 'RayLab Worker Task Ports'; Ports = $workerPorts }
+)
+foreach ($rule in $rules) {
+  Get-NetFirewallRule -DisplayName $rule.Name -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+  New-NetFirewallRule -DisplayName $rule.Name -Direction Inbound -Action Allow -Protocol TCP -LocalPort $rule.Ports -RemoteAddress $remoteAddresses -Profile Any | Out-Null
+}
+
+$runtimeBin = Join-Path $env:APPDATA 'raylab-cluster-manager\runtime\venv\Scripts'
+$programRules = @(
+  @{ Name = 'RayLab Python Program'; Path = (Join-Path $runtimeBin 'python.exe') },
+  @{ Name = 'RayLab Ray Program'; Path = (Join-Path $runtimeBin 'ray.exe') }
+)
+foreach ($programRule in $programRules) {
+  if (Test-Path $programRule.Path) {
+    Get-NetFirewallRule -DisplayName $programRule.Name -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+    New-NetFirewallRule -DisplayName $programRule.Name -Direction Inbound -Action Allow -Program $programRule.Path -RemoteAddress $remoteAddresses -Profile Any | Out-Null
+  }
+}
+
+Write-Output "RayLab firewall rules allow the coordinator/local subnet to reach TCP ${ports.join(', ')} and $workerPorts"
+`.trim();
+
+  require('fs').writeFileSync(scriptPath, ps, 'utf8');
+  try {
+    onOutput?.('Configuring Windows firewall for Ray worker callback ports...');
+    await _runElevatedPowerShell(scriptPath);
+  } finally {
+    try { require('fs').rmSync(scriptPath, { force: true }); } catch (_) {}
+  }
+}
+
+async function _ensureWindowsCoordinatorFirewall(config, onOutput) {
+  const coord = config.coordinator;
+  const ports = [
+    coord.ray_port,
+    coord.dashboard_port,
+    coord.client_port,
+    coord.node_manager_port,
+    coord.object_manager_port,
+  ].map((port) => Number(port)).filter((port) => Number.isInteger(port) && port > 0);
+  if (ports.length === 0) return;
+
+  const scriptPath = require('path').join(os.tmpdir(), 'raylab-coordinator-firewall.ps1');
+  const ps = `
+$ErrorActionPreference = 'Stop'
+$rayPorts = @(${ports.map((port) => `'${port}'`).join(', ')})
+$workerPorts = '20000-29999'
+
+try {
+  $profiles = Get-NetConnectionProfile -ErrorAction SilentlyContinue |
+    Where-Object { $_.IPv4Connectivity -ne 'Disconnected' }
+  foreach ($profile in $profiles) {
+    if ($profile.NetworkCategory -eq 'Public') {
+      Set-NetConnectionProfile -InterfaceIndex $profile.InterfaceIndex -NetworkCategory Private
+      Write-Output "RayLab set $($profile.InterfaceAlias) network profile to Private for coordinator access"
+    }
+  }
+  Set-NetFirewallProfile -Profile Private,Public -AllowInboundRules True -AllowLocalFirewallRules True
+} catch {
+  Write-Output "RayLab coordinator firewall profile tuning warning: $($_.Exception.Message)"
+}
+
+$rules = @(
+  @{ Name = 'RayLab Coordinator Core Ports'; Ports = $rayPorts },
+  @{ Name = 'RayLab Coordinator Worker Ports'; Ports = $workerPorts }
+)
+foreach ($rule in $rules) {
+  Get-NetFirewallRule -DisplayName $rule.Name -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+  New-NetFirewallRule -DisplayName $rule.Name -Direction Inbound -Action Allow -Protocol TCP -LocalPort $rule.Ports -RemoteAddress LocalSubnet -Profile Any | Out-Null
+}
+
+$runtimeBin = Join-Path $env:APPDATA 'raylab-cluster-manager\runtime\venv\Scripts'
+$programRules = @(
+  @{ Name = 'RayLab Coordinator Python Program'; Path = (Join-Path $runtimeBin 'python.exe') },
+  @{ Name = 'RayLab Coordinator Ray Program'; Path = (Join-Path $runtimeBin 'ray.exe') }
+)
+foreach ($programRule in $programRules) {
+  if (Test-Path $programRule.Path) {
+    Get-NetFirewallRule -DisplayName $programRule.Name -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+    New-NetFirewallRule -DisplayName $programRule.Name -Direction Inbound -Action Allow -Program $programRule.Path -RemoteAddress LocalSubnet -Profile Any | Out-Null
+  }
+}
+
+Write-Output "RayLab firewall rules allow local subnet access to coordinator TCP ${ports.join(', ')} and worker ports"
+`.trim();
+
+  require('fs').writeFileSync(scriptPath, ps, 'utf8');
+  try {
+    onOutput?.('Configuring Windows firewall for Ray coordinator ports...');
+    await _runElevatedPowerShell(scriptPath);
+  } finally {
+    try { require('fs').rmSync(scriptPath, { force: true }); } catch (_) {}
+  }
+}
+
+function _runElevatedPowerShell(scriptPath) {
+  return new Promise((resolve, reject) => {
+    const escaped = scriptPath.replace(/'/g, "''");
+    const command = `$p = Start-Process -FilePath powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File "${escaped}"' -Verb RunAs -Wait -PassThru; exit $p.ExitCode`;
+    const proc = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', command], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    let output = '';
+    proc.stdout.on('data', (d) => { output += d.toString(); });
+    proc.stderr.on('data', (d) => { output += d.toString(); });
+    proc.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error((output.trim() || `PowerShell exited with code ${code}`).slice(-500)));
+    });
+    proc.on('error', reject);
+  });
+}
+
+function _psString(value) {
+  return String(value || '').replace(/'/g, "''");
 }
 
 // ─── Worker account creation ──────────────────────────────────────────────────

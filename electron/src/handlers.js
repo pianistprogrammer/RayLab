@@ -9,6 +9,8 @@ const { SetupRunner } = require('./setup_runner');
 const { diagnostics } = require('./diagnostics');
 const { detectHardware } = require('./hardware');
 const { discoverCoordinators } = require('./discovery');
+const { createWorkerAccount } = require('./worker_account');
+const { installDocker } = require('./docker_installer');
 
 // Module-level singletons — shared state across all IPC calls.
 const controller = new RayController();
@@ -28,6 +30,7 @@ function coordinatorProps(config) {
 function sanitizeConfig(config) {
   // Always force worker_account to the expected value.
   if (config.privacy) config.privacy.worker_account = 'raylab-worker';
+  if (config.privacy) config.privacy.container_runtime = 'docker';
   return config;
 }
 
@@ -118,7 +121,9 @@ async function handleClusterPanic() {
 // ─── Terminal logs ────────────────────────────────────────────────────────────
 
 function handleTerminalLogs() {
-  return controller.terminalLogs();
+  return [...controller.terminalLogs(), ...setupRunner.terminalLogs()]
+    .sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+    .slice(-500);
 }
 
 // ─── Diagnostics ─────────────────────────────────────────────────────────────
@@ -159,6 +164,32 @@ function handleSetupStatus() {
 
 function handleRunSetup() {
   return setupRunner.start(() => load());
+}
+
+async function handleCreateWorkerAccount() {
+  const config = load();
+  const account = config.privacy?.worker_account || 'raylab-worker';
+  setupRunner.logMessage(`Dedicated worker account: creating ${account}...`);
+  try {
+    const result = await createWorkerAccount(account);
+    setupRunner.markWorkerAccountReady(result.message);
+    return result;
+  } catch (err) {
+    setupRunner.logMessage(`Dedicated worker account: failed - ${err.message || String(err)}`, 'stderr');
+    throw err;
+  }
+}
+
+async function handleInstallDocker() {
+  setupRunner.logMessage('Docker runtime: installing Docker...');
+  try {
+    const result = await installDocker((line) => setupRunner.logMessage(line));
+    setupRunner.logMessage(`Docker runtime: ${result.message}`);
+    return result;
+  } catch (err) {
+    setupRunner.logMessage(`Docker runtime: failed - ${err.message || String(err)}`, 'stderr');
+    throw err;
+  }
 }
 
 // ─── Nodes ────────────────────────────────────────────────────────────────────
@@ -250,6 +281,8 @@ function registerHandlers(ipcMain) {
   ipcMain.handle('install_ray',            wrap(handleInstallRay));
   ipcMain.handle('setup_status',           wrap(handleSetupStatus));
   ipcMain.handle('run_setup',              wrap(handleRunSetup));
+  ipcMain.handle('create_worker_account',  wrap(handleCreateWorkerAccount));
+  ipcMain.handle('install_docker',         wrap(handleInstallDocker));
   ipcMain.handle('nodes',                  wrap(handleNodes));
   ipcMain.handle('audit',                  wrap(handleAudit));
   ipcMain.handle('create_submitter',       wrap(handleCreateSubmitter));

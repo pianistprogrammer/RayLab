@@ -101,25 +101,36 @@ function hasWorkerLaunchPermission(account) {
 // ─── Container runtime checks ─────────────────────────────────────────────────
 
 function containerRuntimeStatus(runtime) {
-  const bin = which(runtime);
-  if (!bin) return { ok: false, detail: `${runtime} is not installed or not on PATH` };
+  const name = 'docker';
+  const bin = dockerExecutable();
+  if (!bin) return { ok: false, detail: 'Docker is not installed or not on PATH' };
   try {
     const r = spawnSync(bin, ['--version'], { timeout: 5000, encoding: 'utf8' });
     const detail = (r.stdout || r.stderr || '').trim();
-    return { ok: r.status === 0, detail: detail || `${runtime} found` };
+    return { ok: r.status === 0, detail: detail || `${name} found` };
   } catch (_) {
-    return { ok: false, detail: `${runtime} not available` };
+    return { ok: false, detail: 'Docker is not available' };
   }
+}
+
+function dockerExecutable() {
+  const fromPath = which('docker');
+  if (fromPath) return fromPath;
+  if (process.platform === 'win32') {
+    const fs = require('fs');
+    const candidates = [
+      'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe',
+      'C:\\Program Files\\Docker\\Docker\\resources\\docker.exe',
+    ];
+    return candidates.find((p) => fs.existsSync(p)) || null;
+  }
+  return null;
 }
 
 function gpuRuntimeStatus(runtime) {
   try {
-    let result;
-    if (runtime === 'docker') {
-      result = spawnSync('docker', ['info', '--format', '{{json .Runtimes}}'], { timeout: 8000, encoding: 'utf8' });
-    } else {
-      result = spawnSync(runtime, ['info'], { timeout: 8000, encoding: 'utf8' });
-    }
+    const docker = dockerExecutable() || 'docker';
+    const result = spawnSync(docker, ['info', '--format', '{{json .Runtimes}}'], { timeout: 8000, encoding: 'utf8' });
     const text = ((result.stdout || '') + (result.stderr || '')).toLowerCase();
     if (text.includes('nvidia') || text.includes('gpu')) {
       return { ok: true, detail: 'GPU runtime appears configured' };
@@ -210,19 +221,19 @@ async function diagnostics(config) {
   } else {
     workerStatus = 'fail';
     workerDetail = `Account ${account} does not exist`;
-    workerFix = 'Run Full machine setup to create the dedicated worker account.';
+    workerFix = 'Use Create account to create the dedicated worker account with administrator approval.';
   }
   checks.push({ id: 'worker_account', label: 'Dedicated worker account', status: workerStatus, detail: workerDetail, fix: workerFix });
 
   // 5 — Container runtime
-  const runtime = privacy.container_runtime || 'docker';
+  const runtime = 'docker';
   const containerStatus = containerRuntimeStatus(runtime);
   checks.push({
     id: 'container_runtime',
     label: 'Container runtime',
     status: containerStatus.ok ? 'pass' : 'fail',
     detail: containerStatus.detail,
-    fix: containerStatus.ok ? null : 'Install Docker/Podman and configure it for the dedicated worker account.',
+    fix: containerStatus.ok ? null : 'Use Install Docker to install Docker Desktop, then restart Docker if Windows asks.',
   });
 
   // 6 — GPU container runtime
@@ -263,4 +274,5 @@ module.exports = {
   hasWorkerLaunchPermission,
   containerRuntimeStatus,
   gpuRuntimeStatus,
+  dockerExecutable,
 };

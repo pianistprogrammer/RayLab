@@ -6,9 +6,9 @@ This app is intentionally conservative: it refuses safe-looking shortcuts that w
 
 - Ray 2.52+ installed in RayLab's managed runtime. If Ray is missing, use the app's Diagnostics panel to run the built-in Ray installer.
 - A fixed server-room Coordinator address on a private lab VLAN.
-- No public exposure of Ray ports `6379`, `8265`, `10001`, `8076`, or `8077`.
+- No public exposure of Ray ports `6379`, `8265`, `10001`, `18076`, or `18077`.
 - A dedicated local `raylab-worker` account on every participating machine.
-- Docker or Podman with GPU runtime support.
+- Docker with GPU runtime support.
 - S3-compatible lab object storage for datasets and model weights.
 
 ## Linux Worker Account
@@ -52,7 +52,7 @@ Jobs should read datasets and model weights from the lab object store rather tha
 
 ## Container Runtime
 
-Install Docker/Podman and NVIDIA GPU runtime support. The diagnostics panel checks for the runtime binary and a GPU-capable runtime signal.
+Install Docker and NVIDIA GPU runtime support. The diagnostics panel checks for the Docker binary and a GPU-capable runtime signal.
 
 ## Acceptance Checklist
 

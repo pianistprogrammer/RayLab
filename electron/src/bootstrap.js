@@ -273,6 +273,9 @@ async function _doEnsureRayRuntime(onOutput) {
   if (uv) {
     return _installWithUv(uv, out);
   }
+  if (process.platform === 'win32') {
+    return { succeeded: false, message: 'Bundled uv.exe was not found. Reinstall RayLab, then run setup again.' };
+  }
   return _installWithPip(out);
 }
 

@@ -5,10 +5,13 @@ import {
   CheckCircle2,
   CircleStop,
   Database,
+  Download,
   ExternalLink,
   KeyRound,
   LayoutDashboard,
   ListChecks,
+  Maximize2,
+  Move,
   Play,
   RefreshCw,
   Save,
@@ -23,16 +26,29 @@ import {
   Users,
   X,
   XCircle,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from "react";
 import { api } from "./api";
 import { cacheConfig, useStore } from "./store";
 import type { AppConfig, AppMode, AuditEvent, ClusterState, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NodeInfo, PortConflict, ScheduleWindow, SetupRunStatus, SetupTask, TerminalLogEntry } from "./types";
 
 type View = "home" | "graph" | "submit-job" | "submitters" | "setup" | "settings" | "audit";
 
+const TERMINAL_MIN_HEIGHT = 220;
+const TERMINAL_DEFAULT_HEIGHT = 320;
+const TERMINAL_MAX_HEIGHT = 640;
+
 function cls(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
+}
+
+function clampTerminalHeight(height: number) {
+  const viewportCap = typeof window === "undefined" ? TERMINAL_MAX_HEIGHT : Math.floor(window.innerHeight * 0.68);
+  const max = Math.max(TERMINAL_MIN_HEIGHT, Math.min(TERMINAL_MAX_HEIGHT, viewportCap));
+  return Math.min(max, Math.max(TERMINAL_MIN_HEIGHT, height));
 }
 
 // Spinning loader icon — reuses the existing `spin` keyframe in styles.css
@@ -58,6 +74,7 @@ export function App() {
 
   const [view, setView] = useState<View>("home");
   const [terminalOpen, setTerminalOpen] = useState(false);
+  const [terminalHeight, setTerminalHeight] = useState(TERMINAL_DEFAULT_HEIGHT);
   const [roleSwitchTarget, setRoleSwitchTarget] = useState<AppMode | null>(null);
   const [portConflictPrompt, setPortConflictPrompt] = useState<PortConflict[] | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
@@ -68,6 +85,14 @@ export function App() {
     const timer = window.setInterval(() => void refresh(), 5000);
     return () => window.clearInterval(timer);
   }, [refresh]);
+
+  useEffect(() => {
+    function onResize() {
+      setTerminalHeight((height) => clampTerminalHeight(height));
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     if (config.app_mode !== "coordinator" && (view === "graph" || view === "submit-job" || view === "submitters")) {
@@ -205,7 +230,7 @@ export function App() {
         <SidebarStatus />
       </aside>
 
-      <section className="workspace">
+      <section className={cls("workspace", terminalOpen && "terminal-open")}>
         <header className="topbar">
           <div>
             <p className="eyebrow">{config.app_mode === "coordinator" ? "Coordinator" : "Node"} mode</p>
@@ -220,7 +245,7 @@ export function App() {
               </select>
               {modeSaving && <><Spinner size={14} /><small className="mode-saving">Saving…</small></>}
             </label>
-            <button className="ghost" onClick={() => setTerminalOpen((o) => !o)}><Terminal size={17} />Terminal</button>
+            <button className="ghost" onClick={() => setTerminalOpen((o) => !o)}><Terminal size={17} />{terminalOpen ? "Hide terminal" : "Terminal"}</button>
             <button className="icon-button" title="Refresh" onClick={() => void handleManualRefresh()} disabled={manualRefreshing}>
               {manualRefreshing ? <Spinner /> : <RefreshCw size={18} />}
             </button>
@@ -236,17 +261,19 @@ export function App() {
           </div>
         </header>
 
-        {error && <div className="banner error"><AlertTriangle size={18} />{error}</div>}
-        {notice && <NoticeBanner message={notice} onDone={() => setNotice(null)} />}
+        <div className="workspace-main">
+          {error && <div className="banner error"><AlertTriangle size={18} />{error}</div>}
+          {notice && <NoticeBanner message={notice} onDone={() => setNotice(null)} />}
 
-        {view === "home" && (config.app_mode === "coordinator" ? <CoordinatorHome /> : <NodeHome />)}
-        {view === "graph" && config.app_mode === "coordinator" && <ClusterGraphView />}
-        {view === "submit-job" && config.app_mode === "coordinator" && <SubmitJobView />}
-        {view === "submitters" && config.app_mode === "coordinator" && <SubmittersView />}
-        {view === "setup" && <SetupView />}
-        {view === "settings" && <SettingsView />}
-        {view === "audit" && <AuditView />}
-        {terminalOpen && <TerminalDock close={() => setTerminalOpen(false)} />}
+          {view === "home" && (config.app_mode === "coordinator" ? <CoordinatorHome /> : <NodeHome openTerminal={() => setTerminalOpen(true)} />)}
+          {view === "graph" && config.app_mode === "coordinator" && <ClusterGraphView />}
+          {view === "submit-job" && config.app_mode === "coordinator" && <SubmitJobView />}
+          {view === "submitters" && config.app_mode === "coordinator" && <SubmittersView />}
+          {view === "setup" && <SetupView openTerminal={() => setTerminalOpen(true)} />}
+          {view === "settings" && <SettingsView />}
+          {view === "audit" && <AuditView />}
+        </div>
+        {terminalOpen && <TerminalDock close={() => setTerminalOpen(false)} height={terminalHeight} onHeightChange={setTerminalHeight} />}
         {portConflictPrompt && (
           <PortConflictPrompt
             conflicts={portConflictPrompt}
@@ -530,59 +557,294 @@ function ClusterGraphView() {
 }
 
 function ClusterGraph({ config, nodes }: { config: AppConfig; nodes: NodeInfo[] }) {
-  const width = 900;
-  const height = 380;
-  const cx = width / 2;
-  const coordinatorY = 42;
-  const workerY = 238;
-  const branchY = 178;
-  const workerWidth = 144;
-  const workerGap = 34;
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const dragState = useRef<GraphDragState | null>(null);
+  const [positions, setPositions] = useState<Record<string, GraphPosition>>({});
+  const [viewport, setViewport] = useState<GraphViewport>({ x: 0, y: 0, k: 1 });
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
 
-  const positioned = useMemo(() => nodes.map((node, index) => {
-    const totalWidth = nodes.length * workerWidth + Math.max(0, nodes.length - 1) * workerGap;
-    const startX = cx - totalWidth / 2 + workerWidth / 2;
-    return { node, x: startX + index * (workerWidth + workerGap), y: workerY };
-  }), [nodes, cx]);
-  const branchLeft = positioned[0]?.x ?? cx;
-  const branchRight = positioned[positioned.length - 1]?.x ?? cx;
+  const layoutNodes = useMemo(() => buildGraphNodes(config, nodes), [config, nodes]);
+
+  useEffect(() => {
+    setPositions((current) => {
+      const next = { ...current };
+      const activeIds = new Set(layoutNodes.map((node) => node.id));
+      let changed = false;
+
+      for (const node of layoutNodes) {
+        if (!next[node.id]) {
+          next[node.id] = { x: node.x, y: node.y };
+          changed = true;
+        }
+      }
+      for (const id of Object.keys(next)) {
+        if (!activeIds.has(id)) {
+          delete next[id];
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [layoutNodes]);
+
+  const graphNodes = layoutNodes.map((node) => ({ ...node, ...(positions[node.id] ?? { x: node.x, y: node.y }) }));
+  const coordinator = graphNodes.find((node) => node.kind === "coordinator") ?? graphNodes[0];
+  const workers = graphNodes.filter((node) => node.kind === "worker");
+
+  function zoomAt(point: GraphPosition, factor: number) {
+    setViewport((current) => {
+      const nextScale = clamp(current.k * factor, GRAPH_MIN_ZOOM, GRAPH_MAX_ZOOM);
+      const graphPoint = screenToGraph(point, current);
+      return {
+        k: nextScale,
+        x: point.x - graphPoint.x * nextScale,
+        y: point.y - graphPoint.y * nextScale,
+      };
+    });
+  }
+
+  function resetGraph() {
+    const nextPositions = Object.fromEntries(layoutNodes.map((node) => [node.id, { x: node.x, y: node.y }]));
+    setPositions(nextPositions);
+    setViewport({ x: 0, y: 0, k: 1 });
+  }
+
+  function onWheel(event: ReactWheelEvent<SVGSVGElement>) {
+    event.preventDefault();
+    const svg = svgRef.current;
+    if (!svg) return;
+    zoomAt(svgPoint(svg, event), event.deltaY > 0 ? 0.88 : 1.12);
+  }
+
+  function startPan(event: ReactPointerEvent<SVGRectElement>) {
+    if (event.button !== 0) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+    const point = svgPoint(svg, event);
+    dragState.current = { type: "pan", pointerId: event.pointerId, startX: point.x, startY: point.y, panX: viewport.x, panY: viewport.y };
+    setIsPanning(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function startNodeDrag(event: ReactPointerEvent<SVGGElement>, node: GraphNodeModel) {
+    if (event.button !== 0) return;
+    event.stopPropagation();
+    const svg = svgRef.current;
+    if (!svg) return;
+    const point = screenToGraph(svgPoint(svg, event), viewport);
+    dragState.current = { type: "node", pointerId: event.pointerId, id: node.id, offsetX: point.x - node.x, offsetY: point.y - node.y };
+    setDraggingId(node.id);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function onPointerMove(event: ReactPointerEvent<SVGSVGElement>) {
+    const state = dragState.current;
+    const svg = svgRef.current;
+    if (!state || !svg || state.pointerId !== event.pointerId) return;
+
+    const point = svgPoint(svg, event);
+    if (state.type === "pan") {
+      setViewport((current) => ({ ...current, x: state.panX + point.x - state.startX, y: state.panY + point.y - state.startY }));
+      return;
+    }
+
+    const graphPoint = screenToGraph(point, viewport);
+    setPositions((current) => ({
+      ...current,
+      [state.id]: { x: graphPoint.x - state.offsetX, y: graphPoint.y - state.offsetY },
+    }));
+  }
+
+  function stopDrag(event: ReactPointerEvent<SVGSVGElement>) {
+    const state = dragState.current;
+    if (!state || state.pointerId !== event.pointerId) return;
+    dragState.current = null;
+    setDraggingId(null);
+    setIsPanning(false);
+  }
 
   return (
     <div className="cluster-graph-shell">
-      <svg className="cluster-graph" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Ray cluster node graph">
+      <div className="graph-toolbar" aria-label="Graph controls">
+        <button className="icon-button" title="Zoom in" aria-label="Zoom in" onClick={() => zoomAt(GRAPH_CENTER, 1.18)}><ZoomIn size={17} /></button>
+        <button className="icon-button" title="Zoom out" aria-label="Zoom out" onClick={() => zoomAt(GRAPH_CENTER, 0.84)}><ZoomOut size={17} /></button>
+        <button className="icon-button" title="Reset graph" aria-label="Reset graph" onClick={resetGraph}><Maximize2 size={17} /></button>
+      </div>
+      <svg
+        ref={svgRef}
+        className={cls("cluster-graph", isPanning && "panning")}
+        viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
+        role="img"
+        aria-label="Ray cluster node graph"
+        onWheel={onWheel}
+        onPointerMove={onPointerMove}
+        onPointerUp={stopDrag}
+        onPointerCancel={stopDrag}
+      >
         <defs>
-          <radialGradient id="coordinatorGlow" cx="50%" cy="50%" r="65%">
-            <stop offset="0%" stopColor="#2f9e67" stopOpacity="0.24" />
-            <stop offset="100%" stopColor="#2f9e67" stopOpacity="0" />
+          <radialGradient id="graphCoordinatorFill" cx="38%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="68%" stopColor="#d7f2df" />
+            <stop offset="100%" stopColor="#9fd4b2" />
+          </radialGradient>
+          <radialGradient id="graphWorkerFill" cx="38%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="65%" stopColor="#ddeef4" />
+            <stop offset="100%" stopColor="#9fc4d1" />
+          </radialGradient>
+          <radialGradient id="graphDownFill" cx="38%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#fff7f5" />
+            <stop offset="66%" stopColor="#f2d7d2" />
+            <stop offset="100%" stopColor="#cf9189" />
           </radialGradient>
         </defs>
-        <circle className="coordinator-halo" cx={cx} cy={coordinatorY + 44} r="86" fill="url(#coordinatorGlow)" />
-        {positioned.length > 0 && <path className="graph-link graph-trunk" d={`M ${cx} ${coordinatorY + 88} V ${branchY} H ${branchLeft} H ${branchRight}`} />}
-        {positioned.map(({ node, x, y }) => <path className="graph-link" key={`link-${node.node_id}`} d={`M ${x} ${branchY} V ${y}`} />)}
-        <g className="graph-node coordinator-node" transform={`translate(${cx - 82} ${coordinatorY})`}>
-          <rect width="164" height="88" rx="8" />
-          <text x="82" y="28" textAnchor="middle" className="graph-node-title">Coordinator</text>
-          <text x="82" y="50" textAnchor="middle" className="graph-node-subtitle">{config.coordinator.head_host}:{config.coordinator.ray_port}</text>
-          <text x="82" y="70" textAnchor="middle" className="graph-node-metric">Head node</text>
+        <rect className="graph-hit-zone" width={GRAPH_WIDTH} height={GRAPH_HEIGHT} onPointerDown={startPan} />
+        <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.k})`}>
+          <g className="graph-links">
+            {workers.map((node) => (
+              <line
+                className={cls("graph-link", node.statusClass)}
+                key={`link-${node.id}`}
+                x1={coordinator.x}
+                y1={coordinator.y}
+                x2={node.x}
+                y2={node.y}
+              />
+            ))}
+          </g>
+          <g className="graph-node-layer">
+            {graphNodes.map((node) => (
+              <g
+                className={cls("graph-node", `graph-node-${node.kind}`, node.statusClass, draggingId === node.id && "dragging")}
+                key={node.id}
+                transform={`translate(${node.x} ${node.y})`}
+                onPointerDown={(event) => startNodeDrag(event, node)}
+              >
+                <title>{node.tooltip}</title>
+                <circle className="graph-node-halo" r={node.radius + 11} />
+                <circle className="graph-node-body" r={node.radius} />
+                <circle className="graph-status-dot" cx={node.radius * 0.58} cy={-node.radius * 0.55} r="6" />
+                <text y="-9" textAnchor="middle" className="graph-node-title">{truncateMiddle(node.label, node.kind === "coordinator" ? 20 : 16)}</text>
+                <text y="9" textAnchor="middle" className="graph-node-subtitle">{truncateMiddle(node.detail, 18)}</text>
+                <text y="27" textAnchor="middle" className="graph-node-metric">{node.metric}</text>
+              </g>
+            ))}
+          </g>
         </g>
-        {positioned.map(({ node, x, y }) => <WorkerGraphNode node={node} x={x} y={y} key={node.node_id} />)}
       </svg>
+      <div className="graph-scale"><Move size={14} />{Math.round(viewport.k * 100)}%</div>
       {nodes.length === 0 && <div className="graph-empty">No workers reported yet. Start Ray or wait for nodes to check in.</div>}
     </div>
   );
 }
 
-function WorkerGraphNode({ node, x, y }: { node: NodeInfo; x: number; y: number }) {
-  const status = node.status.toLowerCase();
-  return (
-    <g className={cls("graph-node", "worker-node", status.includes("dead") && "down")} transform={`translate(${x - 72} ${y - 40})`}>
-      <rect width="144" height="80" rx="8" />
-      <circle cx="18" cy="20" r="5" />
-      <text x="72" y="25" textAnchor="middle" className="graph-node-title">{truncateMiddle(node.hostname, 18)}</text>
-      <text x="72" y="47" textAnchor="middle" className="graph-node-subtitle">{node.status}</text>
-      <text x="72" y="66" textAnchor="middle" className="graph-node-metric">{node.cpus_total} CPU / {node.gpus_total} GPU</text>
-    </g>
-  );
+const GRAPH_WIDTH = 980;
+const GRAPH_HEIGHT = 520;
+const GRAPH_CENTER = { x: GRAPH_WIDTH / 2, y: GRAPH_HEIGHT / 2 };
+const GRAPH_MIN_ZOOM = 0.45;
+const GRAPH_MAX_ZOOM = 2.4;
+
+type GraphPosition = { x: number; y: number };
+type GraphViewport = GraphPosition & { k: number };
+type GraphNodeKind = "coordinator" | "worker";
+type GraphStatusClass = "alive" | "warning" | "down";
+type GraphNodeModel = GraphPosition & {
+  id: string;
+  kind: GraphNodeKind;
+  label: string;
+  detail: string;
+  metric: string;
+  tooltip: string;
+  statusClass: GraphStatusClass;
+  radius: number;
+};
+type GraphDragState =
+  | { type: "pan"; pointerId: number; startX: number; startY: number; panX: number; panY: number }
+  | { type: "node"; pointerId: number; id: string; offsetX: number; offsetY: number };
+
+function buildGraphNodes(config: AppConfig, nodes: NodeInfo[]): GraphNodeModel[] {
+  const center = GRAPH_CENTER;
+  const result: GraphNodeModel[] = [{
+    id: "coordinator",
+    kind: "coordinator",
+    label: "Coordinator",
+    detail: `${config.coordinator.head_host}:${config.coordinator.ray_port}`,
+    metric: "Head node",
+    tooltip: `Coordinator\n${config.coordinator.head_host}:${config.coordinator.ray_port}`,
+    statusClass: "alive",
+    radius: 58,
+    x: center.x,
+    y: center.y,
+  }];
+  const seenIds = new Map<string, number>();
+
+  nodes.forEach((node, index) => {
+    const id = uniqueWorkerGraphId(node, seenIds);
+    const ringSize = 8;
+    const ring = Math.floor(index / ringSize);
+    const positionInRing = index % ringSize;
+    const workersInRing = Math.min(ringSize, nodes.length - ring * ringSize);
+    const angle = -Math.PI / 2 + (positionInRing / Math.max(1, workersInRing)) * Math.PI * 2 + ring * 0.34;
+    const radiusX = 230 + ring * 118;
+    const radiusY = 146 + ring * 82;
+    const statusClass = graphStatusClass(node.status);
+    const x = clamp(center.x + Math.cos(angle) * radiusX, 78, GRAPH_WIDTH - 78);
+    const y = clamp(center.y + Math.sin(angle) * radiusY, 76, GRAPH_HEIGHT - 76);
+
+    result.push({
+      id,
+      kind: "worker",
+      label: node.hostname || node.node_id || "Worker",
+      detail: node.status || "unknown",
+      metric: `${node.cpus_total} CPU / ${node.gpus_total} GPU`,
+      tooltip: `${node.hostname || node.node_id}\n${node.status}\n${node.cpus_total} CPU / ${node.gpus_total} GPU / ${node.memory_total_gb.toFixed(1)} GB RAM`,
+      statusClass,
+      radius: 50,
+      x,
+      y,
+    });
+  });
+
+  return result;
+}
+
+function uniqueWorkerGraphId(node: NodeInfo, seenIds: Map<string, number>) {
+  const base = `worker:${node.hostname || node.node_id || "unknown"}`.toLowerCase();
+  const count = seenIds.get(base) ?? 0;
+  seenIds.set(base, count + 1);
+  return count === 0 ? base : `${base}:${count + 1}`;
+}
+
+function graphStatusClass(status: string): GraphStatusClass {
+  const normalized = status.toLowerCase();
+  if (normalized.includes("dead") || normalized.includes("fail") || normalized.includes("lost")) return "down";
+  if (normalized.includes("alive") || normalized.includes("running")) return "alive";
+  return "warning";
+}
+
+function svgPoint(svg: SVGSVGElement, event: { clientX: number; clientY: number }): GraphPosition {
+  const point = svg.createSVGPoint();
+  point.x = event.clientX;
+  point.y = event.clientY;
+  const matrix = svg.getScreenCTM();
+  if (matrix) {
+    const transformed = point.matrixTransform(matrix.inverse());
+    return { x: transformed.x, y: transformed.y };
+  }
+  const rect = svg.getBoundingClientRect();
+  return {
+    x: ((event.clientX - rect.left) / rect.width) * GRAPH_WIDTH,
+    y: ((event.clientY - rect.top) / rect.height) * GRAPH_HEIGHT,
+  };
+}
+
+function screenToGraph(point: GraphPosition, viewport: GraphViewport): GraphPosition {
+  return { x: (point.x - viewport.x) / viewport.k, y: (point.y - viewport.y) / viewport.k };
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
 }
 
 function truncateMiddle(value: string, max: number) {
@@ -709,7 +971,7 @@ function SubmittersView() {
   );
 }
 
-function NodeHome() {
+function NodeHome({ openTerminal }: { openTerminal: () => void }) {
   const config = useStore((s) => s.config);
   const status = useStore((s) => s.status);
   const setConfig = useStore((s) => s.setConfig);
@@ -745,7 +1007,7 @@ function NodeHome() {
 
   return (
     <div className="grid two">
-      <SetupPanel setupRun={setupRun} refresh={refresh} status={status} compact />
+      <SetupPanel setupRun={setupRun} refresh={refresh} status={status} compact openTerminal={openTerminal} />
       <CoordinatorTargetPanel />
       <DiscoveryPanel />
 
@@ -1011,7 +1273,11 @@ function SettingsView() {
           <strong>{draft.privacy.worker_account}</strong>
           <small>Managed by RayLab setup</small>
         </div>
-        <label>Container runtime<select value={draft.privacy.container_runtime} onChange={(e) => updatePrivacy({ container_runtime: e.target.value as "docker" | "podman" })}><option value="docker">Docker</option><option value="podman">Podman</option></select></label>
+        <div className="readonly-field">
+          <span>Container runtime</span>
+          <strong>Docker</strong>
+          <small>Managed by RayLab setup</small>
+        </div>
         <label className="check"><input type="checkbox" checked={draft.privacy.require_runtime_working_dir} onChange={(e) => updatePrivacy({ require_runtime_working_dir: e.target.checked })} />Require runtime working_dir</label>
       </section>
 
@@ -1028,7 +1294,7 @@ function SettingsView() {
   );
 }
 
-function SetupView() {
+function SetupView({ openTerminal }: { openTerminal: () => void }) {
   const setupRun = useStore((s) => s.setupRun);
   const diagnostics = useStore((s) => s.status?.diagnostics ?? []);
   const rayInstall = useStore((s) => s.rayInstall);
@@ -1040,17 +1306,59 @@ function SetupView() {
       <section className="panel wide">
         <div className="panel-title"><ShieldCheck size={19} /><h2>Readiness Checks</h2><button className="ghost" onClick={() => void refresh()}><RefreshCw size={16} />Refresh</button></div>
         <p className="panel-copy">{summary}</p>
-        <DiagnosticsList diagnostics={diagnostics} rayInstall={rayInstall} refresh={refresh} />
+        <DiagnosticsList diagnostics={diagnostics} rayInstall={rayInstall} refresh={refresh} openTerminal={openTerminal} />
       </section>
-      <SetupPanel setupRun={setupRun} refresh={refresh} showTaskList={false} />
+      <SetupPanel setupRun={setupRun} refresh={refresh} showTaskList={false} openTerminal={openTerminal} />
     </div>
   );
 }
 
-function TerminalDock({ close }: { close: () => void }) {
+function TerminalDock({ close, height, onHeightChange }: { close: () => void; height: number; onHeightChange: (height: number) => void }) {
   const logs = useStore((s) => s.terminalLogs);
   const refresh = useStore((s) => s.refresh);
   const outputRef = useRef<HTMLDivElement | null>(null);
+
+  function startResize(event: React.PointerEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const startY = event.clientY;
+    const startHeight = height;
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+
+    function onPointerMove(moveEvent: PointerEvent) {
+      onHeightChange(clampTerminalHeight(startHeight + startY - moveEvent.clientY));
+    }
+
+    function stopResize() {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", stopResize);
+      window.removeEventListener("pointercancel", stopResize);
+    }
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", stopResize);
+    window.addEventListener("pointercancel", stopResize);
+  }
+
+  function resizeWithKeyboard(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      onHeightChange(clampTerminalHeight(height + 24));
+    } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      onHeightChange(clampTerminalHeight(height - 24));
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      onHeightChange(TERMINAL_MIN_HEIGHT);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      onHeightChange(clampTerminalHeight(TERMINAL_MAX_HEIGHT));
+    }
+  }
 
   useEffect(() => {
     const output = outputRef.current;
@@ -1066,18 +1374,19 @@ function TerminalDock({ close }: { close: () => void }) {
   }, [close]);
 
   return (
-    <section className="terminal-dock" role="region" aria-label="Terminal logs">
+    <section className="terminal-dock" style={{ height }} role="region" aria-label="Terminal logs">
+      <div className="terminal-resize-handle" role="separator" aria-orientation="horizontal" aria-label="Resize terminal" tabIndex={0} onKeyDown={resizeWithKeyboard} onPointerDown={startResize} />
       <div className="terminal-dock-title">
         <div><Terminal size={17} /><strong>Terminal</strong><span>Setup and Ray logs</span></div>
         <div className="terminal-dock-actions">
           <button className="ghost" onClick={() => void refresh()}><RefreshCw size={16} />Refresh</button>
-          <button className="ghost close-terminal" title="Close terminal" onClick={close}><X size={17} />Close</button>
+          <button className="ghost close-terminal" title="Hide terminal" onClick={close}><X size={17} />Hide</button>
         </div>
       </div>
       <div className="terminal-output" ref={outputRef}>
         {logs.length === 0 && <div className="terminal-empty">No logs yet.</div>}
-        {logs.map((entry) => (
-          <div className={cls("terminal-line", entry.stream === "stderr" && "error-line")} key={entry.timestamp}>
+        {logs.map((entry, index) => (
+          <div className={cls("terminal-line", entry.stream === "stderr" && "error-line")} key={`${entry.timestamp}-${index}`}>
             <span>{new Date(entry.timestamp).toLocaleTimeString()}</span><code>{entry.message}</code>
           </div>
         ))}
@@ -1124,11 +1433,12 @@ function AuditView() {
   );
 }
 
-function SetupPanel({ setupRun, refresh, status = null, compact = false, showTaskList = true }: { setupRun: SetupRunStatus | null; refresh: () => Promise<void>; status?: ClusterStatus | null; compact?: boolean; showTaskList?: boolean }) {
+function SetupPanel({ setupRun, refresh, status = null, compact = false, showTaskList = true, openTerminal }: { setupRun: SetupRunStatus | null; refresh: () => Promise<void>; status?: ClusterStatus | null; compact?: boolean; showTaskList?: boolean; openTerminal?: () => void }) {
   const [running, setRunning] = useState(false);
 
   async function runSetup() {
     setRunning(true);
+    openTerminal?.();
     try {
       await api.runSetup();
       await refresh();
@@ -1162,17 +1472,76 @@ function SetupPanel({ setupRun, refresh, status = null, compact = false, showTas
       <div className="progress-track"><div className="progress-fill" style={{ width: `${setupRun?.progress ?? 0}%` }} /></div>
       <div className="progress-meta"><span>{setupRun?.progress ?? 0}% complete</span><span>{setupRun?.can_continue ? "Ready to continue" : "Not ready yet"}</span></div>
       {!showTaskList && currentTask && <div className="setup-current"><Spinner size={16} /><span>{currentTask.label}: {currentTask.detail}</span></div>}
-      {showTaskList && visibleTasks.length > 0 && <div className="setup-tasks">{visibleTasks.map((task) => <SetupTaskRow task={task} key={task.id} />)}</div>}
+      {showTaskList && visibleTasks.length > 0 && <div className="setup-tasks">{visibleTasks.map((task) => <SetupTaskRow task={task} refresh={refresh} openTerminal={openTerminal} key={task.id} />)}</div>}
     </section>
   );
 }
 
-function SetupTaskRow({ task }: { task: SetupTask }) {
+function SetupTaskRow({ task, refresh, openTerminal }: { task: SetupTask; refresh: () => Promise<void>; openTerminal?: () => void }) {
   const icon = task.status === "pass" ? <CheckCircle2 size={16} /> : task.status === "fail" ? <XCircle size={16} /> : task.status === "running" ? <Spinner size={16} /> : <AlertTriangle size={16} />;
-  return <div className={cls("setup-task", task.status)}>{icon}<div><strong>{task.label}</strong><span>{task.detail}</span>{task.fix && <small>{task.fix}</small>}</div></div>;
+  return <div className={cls("setup-task", task.status)}>{icon}<div><strong>{task.label}</strong><span>{task.detail}</span>{task.fix && <small>{task.fix}</small>}{task.id === "worker_account" && task.status !== "pass" && <WorkerAccountButton refresh={refresh} />}{task.id === "container" && task.status !== "pass" && <DockerInstallButton refresh={refresh} openTerminal={openTerminal} />}</div></div>;
 }
 
-function DiagnosticsList({ diagnostics, rayInstall, refresh }: { diagnostics: DiagnosticCheck[]; rayInstall: InstallStatus | null; refresh: () => Promise<void> }) {
+function WorkerAccountButton({ refresh }: { refresh: () => Promise<void> }) {
+  const activeAction = useStore((s) => s.activeAction);
+  const setActiveAction = useStore((s) => s.setActiveAction);
+  const setError = useStore((s) => s.setError);
+  const setNotice = useStore((s) => s.setNotice);
+  const busy = activeAction === "worker-account";
+
+  async function createAccount() {
+    setActiveAction("worker-account");
+    setError(null);
+    try {
+      const result = await api.createWorkerAccount();
+      setNotice(result.message);
+      await refresh();
+    } catch (err) {
+      setError(errorMessage(err, "Worker account setup failed"));
+      await refresh();
+    } finally {
+      setActiveAction(null);
+    }
+  }
+
+  return (
+    <button className="ghost inline-fix-button" onClick={() => void createAccount()} disabled={busy}>
+      {busy ? <Spinner size={16} /> : <UserPlus size={16} />}Create account
+    </button>
+  );
+}
+
+function DockerInstallButton({ refresh, openTerminal }: { refresh: () => Promise<void>; openTerminal?: () => void }) {
+  const activeAction = useStore((s) => s.activeAction);
+  const setActiveAction = useStore((s) => s.setActiveAction);
+  const setError = useStore((s) => s.setError);
+  const setNotice = useStore((s) => s.setNotice);
+  const busy = activeAction === "docker-install";
+
+  async function installDocker() {
+    openTerminal?.();
+    setActiveAction("docker-install");
+    setError(null);
+    try {
+      const result = await api.installDocker();
+      setNotice(result.message);
+      await refresh();
+    } catch (err) {
+      setError(errorMessage(err, "Docker installation failed"));
+      await refresh();
+    } finally {
+      setActiveAction(null);
+    }
+  }
+
+  return (
+    <button className="ghost inline-fix-button" onClick={() => void installDocker()} disabled={busy}>
+      {busy ? <Spinner size={16} /> : <Download size={16} />}Install Docker
+    </button>
+  );
+}
+
+function DiagnosticsList({ diagnostics, rayInstall, refresh, openTerminal }: { diagnostics: DiagnosticCheck[]; rayInstall: InstallStatus | null; refresh: () => Promise<void>; openTerminal?: () => void }) {
   const [installing, setInstalling] = useState(false);
 
   async function installRay() {
@@ -1201,6 +1570,8 @@ function DiagnosticsList({ diagnostics, rayInstall, refresh }: { diagnostics: Di
                 {isInstalling ? <Spinner size={16} /> : <Terminal size={16} />}{isInstalling ? "Installing Ray…" : "Install Ray"}
               </button>
             )}
+            {item.id === "worker_account" && item.status !== "pass" && <WorkerAccountButton refresh={refresh} />}
+            {item.id === "container_runtime" && item.status !== "pass" && <DockerInstallButton refresh={refresh} openTerminal={openTerminal} />}
             {item.id === "ray" && rayInstall && rayInstall.message !== "Not started" && <small className="install-log">{rayInstall.message}</small>}
           </div>
         </div>

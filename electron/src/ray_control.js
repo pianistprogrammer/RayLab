@@ -10,7 +10,7 @@ const { appendAudit, makeAuditEvent, load, save } = require('./storage');
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const RAY_PROCESS_NAMES = new Set(['raylet', 'gcs_server', 'plasma_store_server', 'dashboard', 'runtime_env_agent', 'log_monitor']);
-const RAY_PROCESS_MARKERS = ['/raylet', 'gcs_server', 'plasma_store_server', 'dashboard.py', 'runtime_env_agent', 'log_monitor.py', 'monitor.py', 'ray::'];
+const RAY_PROCESS_MARKERS = ['/raylet', '\\raylet', 'raylet.exe', 'gcs_server', 'plasma_store_server', 'dashboard.py', 'dashboard\\agent.py', 'runtime_env_agent', 'runtime_env\\agent', 'log_monitor.py', 'monitor.py', 'ray::'];
 const SENSITIVE_FLAGS = new Set(['--redis-password', '--token']);
 const ANSI_RE = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 
@@ -63,6 +63,14 @@ function _connectHost(host) {
 
 function _psCommandLines() {
   try {
+    if (process.platform === 'win32') {
+      const r = spawnSync('powershell.exe', [
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
+        'Get-CimInstance Win32_Process | ForEach-Object { $_.CommandLine }',
+      ], { timeout: 4000, encoding: 'utf8', windowsHide: true });
+      if (r.status !== 0) return [];
+      return r.stdout.split('\n').map((l) => l.toLowerCase());
+    }
     const r = spawnSync('ps', ['axww', '-o', 'command='], { timeout: 2000, encoding: 'utf8' });
     if (r.status !== 0) return [];
     return r.stdout.split('\n').map((l) => l.toLowerCase());
@@ -85,23 +93,29 @@ function _localRayProcesses() {
 }
 
 function _localRayRunning(config) {
-  return _localRayProcesses().length > 0;
+  if (!config || config.app_mode === 'unconfigured') return false;
+  if (config.app_mode === 'coordinator') return _psHasHead(config);
+  if (config.app_mode === 'node') return _psHasRaylet(config);
+  return false;
 }
 
 function _psHasRaylet(config) {
   const addr = `${config.coordinator.head_host}:${config.coordinator.ray_port}`;
-  return _psCommandLines().some((l) =>
-    l.includes('/site-packages/ray/core/src/ray/raylet/raylet') &&
-    l.includes(`--gcs-address=${addr}`) &&
-    !_isIgnoredLine(l)
-  );
+  return _psCommandLines().some((l) => {
+    if (_isIgnoredLine(l)) return false;
+    const isRaylet = l.includes('/site-packages/ray/core/src/ray/raylet/raylet')
+      || l.includes('\\site-packages\\ray\\core\\src\\ray\\raylet\\raylet.exe')
+      || l.includes('raylet.exe');
+    return isRaylet && l.includes(`--gcs-address=${addr}`);
+  });
 }
 
 function _psHasHead(config) {
   const host = config.coordinator.head_host;
   return _psCommandLines().some((l) => {
     if (_isIgnoredLine(l)) return false;
-    return l.includes('gcs_server') || (l.includes('/raylet') && (l.includes(`--node_ip_address=${host}`) || l.includes(`--node-ip-address=${host}`)));
+    const isRaylet = l.includes('/raylet') || l.includes('\\raylet') || l.includes('raylet.exe');
+    return l.includes('gcs_server') || (isRaylet && (l.includes(`--node_ip_address=${host}`) || l.includes(`--node-ip-address=${host}`)));
   });
 }
 
@@ -181,6 +195,7 @@ async function _killLocalRayProcesses() {
 }
 
 async function _killWorkerRayProcesses(workerAccount) {
+  if (process.platform === 'win32') return _killLocalRayProcesses();
   const patterns = [
     '[r]ay/core/src/ray/raylet/raylet',
     '[r]ay/core/src/ray/gcs/gcs_server',
@@ -232,6 +247,8 @@ async function _portConflicts(config) {
     { host: coord.node_ip_address || coord.head_host, port: coord.ray_port, name: 'Ray head' },
     { host: coord.dashboard_host, port: coord.dashboard_port, name: 'Ray dashboard' },
     { host: coord.node_ip_address || coord.head_host, port: coord.client_port, name: 'Ray client' },
+    { host: coord.node_ip_address || coord.head_host, port: coord.node_manager_port, name: 'Ray node manager' },
+    { host: coord.node_ip_address || coord.head_host, port: coord.object_manager_port, name: 'Ray object manager' },
   ];
   const conflicts = [];
   for (const { host, port, name } of ports) {
@@ -366,50 +383,176 @@ async function _fetchNodes(config) {
     const seen = new Map();
     for (const n of nodes) {
       if (n.is_head_node) continue;
-      const key = n.hostname || n.node_id;
-      const rank = n.state === 'alive' ? 0 : n.state === 'dead' ? 2 : 1;
-      if (!seen.has(key) || rank < seen.get(key).rank) {
-        seen.set(key, {
-          rank,
-          node: {
-            node_id: n.node_id || '',
-            hostname: n.hostname || n.node_id || '',
-            status: n.state || 'unknown',
-            owner: 'unknown',
-            cpus_total: n.resources_total?.CPU || 0,
-            gpus_total: n.resources_total?.GPU || 0,
-            memory_total_gb: parseFloat(((n.resources_total?.memory || 0) / (1024 ** 3)).toFixed(2)),
-            cpu_percent: 0,
-            gpu_percent: 0,
-            ram_percent: 0,
-            last_seen: new Date().toISOString(),
-          },
-        });
-      }
+      const node = _normalizeStateApiNode(n);
+      _rememberBestNode(seen, node, n);
     }
-    return [...seen.values()].sort((a, b) => a.rank - b.rank).map((v) => v.node);
+    return _sortedRememberedNodes(seen);
   } catch (_) {}
 
   // Strategy 2: legacy dashboard API
   try {
     const data = await fetchJson(`${dashUrl}/api/cluster_status`);
     const nodes = (data.data || {}).nodes || data.nodes || [];
-    return nodes.map((n) => ({
-      node_id: n.NodeID || n.node_id || '',
-      hostname: n.NodeName || n.node_name || n.ip || '',
-      status: n.State || n.status || 'unknown',
-      owner: 'unknown',
-      cpus_total: n.Resources?.CPU || n.CPU || 0,
-      gpus_total: n.Resources?.GPU || n.GPU || 0,
-      memory_total_gb: parseFloat((((n.Resources?.memory || n.memory || 0)) / (1024 ** 3)).toFixed(2)),
-      cpu_percent: 0,
-      gpu_percent: 0,
-      ram_percent: 0,
-      last_seen: new Date().toISOString(),
-    }));
+    const seen = new Map();
+    for (const n of nodes) {
+      if (n.is_head_node || n.IsHeadNode) continue;
+      const node = _normalizeLegacyNode(n);
+      _rememberBestNode(seen, node, n);
+    }
+    return _sortedRememberedNodes(seen);
   } catch (_) {}
 
   return [];
+}
+
+function _normalizeStateApiNode(n) {
+  const hostname = _nodeDisplayName(n);
+  return {
+    node_id: n.node_id || n.NodeID || hostname,
+    hostname,
+    status: n.state || n.State || n.status || 'unknown',
+    owner: 'unknown',
+    cpus_total: n.resources_total?.CPU || n.Resources?.CPU || 0,
+    gpus_total: n.resources_total?.GPU || n.Resources?.GPU || 0,
+    memory_total_gb: parseFloat((((n.resources_total?.memory || n.Resources?.memory || 0)) / (1024 ** 3)).toFixed(2)),
+    cpu_percent: 0,
+    gpu_percent: 0,
+    ram_percent: 0,
+    last_seen: new Date().toISOString(),
+  };
+}
+
+function _normalizeLegacyNode(n) {
+  const hostname = _nodeDisplayName(n);
+  return {
+    node_id: n.NodeID || n.node_id || hostname,
+    hostname,
+    status: n.State || n.state || n.status || 'unknown',
+    owner: 'unknown',
+    cpus_total: n.Resources?.CPU || n.resources_total?.CPU || n.CPU || 0,
+    gpus_total: n.Resources?.GPU || n.resources_total?.GPU || n.GPU || 0,
+    memory_total_gb: parseFloat((((n.Resources?.memory || n.resources_total?.memory || n.memory || 0)) / (1024 ** 3)).toFixed(2)),
+    cpu_percent: 0,
+    gpu_percent: 0,
+    ram_percent: 0,
+    last_seen: new Date().toISOString(),
+  };
+}
+
+function _rememberBestNode(seen, node, raw) {
+  const key = _nodeIdentity(raw, node);
+  const rank = _nodeRank(node.status);
+  const existing = seen.get(key);
+  if (!existing || rank < existing.rank || (rank === existing.rank && _nodeFreshness(raw) > existing.freshness)) {
+    seen.set(key, { rank, freshness: _nodeFreshness(raw), node });
+  }
+}
+
+function _sortedRememberedNodes(seen) {
+  return [...seen.values()]
+    .filter((entry) => _isConnectedNodeStatus(entry.node.status))
+    .sort((a, b) => a.rank - b.rank || a.node.hostname.localeCompare(b.node.hostname))
+    .map((v) => v.node);
+}
+
+function _isConnectedNodeStatus(status) {
+  const s = String(status || '').toLowerCase();
+  return s === 'alive' || s === 'running';
+}
+
+function _nodeRank(status) {
+  const s = String(status || '').toLowerCase();
+  if (s === 'alive' || s === 'running') return 0;
+  if (s === 'dead') return 2;
+  return 1;
+}
+
+function _nodeFreshness(n) {
+  const raw = n.last_seen || n.LastSeen || n.update_time_ms || n.UpdateTimeMs || n.start_time_ms || n.StartTimeMs || 0;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function _nodeIdentity(raw, node) {
+  const stable = _firstString(
+    raw.node_ip,
+    raw.node_ip_address,
+    raw.ip,
+    raw.NodeManagerAddress,
+    raw.nodeManagerAddress,
+    raw.node_manager_address,
+    raw.raylet?.nodeManagerAddress,
+    raw.hostname,
+    raw.node_name,
+    raw.nodeName,
+    raw.NodeName,
+    node.hostname,
+  );
+  return `worker:${stable || node.node_id}`.toLowerCase();
+}
+
+function _nodeDisplayName(n) {
+  return _firstString(
+    n.hostname,
+    n.node_name,
+    n.nodeName,
+    n.NodeName,
+    n.node_ip,
+    n.node_ip_address,
+    n.ip,
+    n.NodeManagerAddress,
+    n.nodeManagerAddress,
+    n.node_manager_address,
+    n.node_id,
+    n.NodeID,
+  ) || 'unknown worker';
+}
+
+function _firstString(...values) {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return '';
+}
+
+async function _waitForCoordinatorNodeAlive(config, timeoutMs, stableMs) {
+  const candidates = _localNodeIdentityCandidates(config);
+  const deadline = Date.now() + timeoutMs;
+  let firstSeenAt = null;
+
+  while (Date.now() < deadline) {
+    const nodes = await _fetchNodes(config);
+    const alive = nodes.some((node) => candidates.has(String(node.hostname || '').toLowerCase())
+      || candidates.has(String(node.node_id || '').toLowerCase()));
+
+    if (alive) {
+      if (!firstSeenAt) firstSeenAt = Date.now();
+      if (Date.now() - firstSeenAt >= stableMs) return true;
+    } else {
+      firstSeenAt = null;
+    }
+
+    await sleep(1000);
+  }
+
+  return false;
+}
+
+function _localNodeIdentityCandidates(config) {
+  const values = new Set();
+  const add = (value) => {
+    if (typeof value === 'string' && value.trim()) values.add(value.trim().toLowerCase());
+  };
+
+  add(config.coordinator.node_ip_address);
+  add(os.hostname());
+  for (const entries of Object.values(os.networkInterfaces())) {
+    for (const iface of entries || []) {
+      if (iface.family === 'IPv4' && !iface.internal) add(iface.address);
+    }
+  }
+
+  return values;
 }
 
 // ─── RayController ────────────────────────────────────────────────────────────
@@ -539,6 +682,15 @@ class RayController {
       if (!started) {
         this.state = 'error';
         this.message = 'Ray worker exited before it became visible locally';
+        await appendAudit(makeAuditEvent('cluster_start_failed', this.message));
+        throw new Error(this.message);
+      }
+
+      this._log('Waiting for coordinator heartbeat confirmation...');
+      const confirmed = await _waitForCoordinatorNodeAlive(config, 30000, 18000);
+      if (!confirmed) {
+        this.state = 'error';
+        this.message = 'Ray worker started locally, but the coordinator did not keep it alive. Check inbound worker ports and firewall/network policy.';
         await appendAudit(makeAuditEvent('cluster_start_failed', this.message));
         throw new Error(this.message);
       }
@@ -680,6 +832,8 @@ function _headCommand(config) {
     '--dashboard-host', coord.dashboard_host,
     '--dashboard-port', String(coord.dashboard_port),
     '--ray-client-server-port', String(coord.client_port),
+    '--node-manager-port', String(coord.node_manager_port),
+    '--object-manager-port', String(coord.object_manager_port),
     '--min-worker-port', '20000',
     '--max-worker-port', '29999',
     '--num-cpus', String(Math.floor(caps.cpus)),
@@ -701,6 +855,8 @@ function _nodeCommand(config) {
   return [
     rayCommand(), 'start',
     '--address', `${coord.head_host}:${coord.ray_port}`,
+    '--node-manager-port', String(coord.node_manager_port),
+    '--object-manager-port', String(coord.object_manager_port),
     '--min-worker-port', '20000',
     '--max-worker-port', '29999',
     '--num-cpus', String(Math.floor(caps.cpus)),

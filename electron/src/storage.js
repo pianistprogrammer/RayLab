@@ -29,8 +29,8 @@ const DEFAULT_CONFIG = {
     ray_port: 6379,
     dashboard_port: 8265,
     client_port: 10001,
-    node_manager_port: 8076,
-    object_manager_port: 8077,
+    node_manager_port: 18076,
+    object_manager_port: 18077,
     cluster_token_ref: 'raylab.cluster_token',
     dashboard_token_ref: 'raylab.dashboard_token',
     bind_private_only: true,
@@ -79,10 +79,21 @@ function load(filePath) {
     const raw = fs.readFileSync(p, 'utf8');
     const data = JSON.parse(raw);
     // Deep-merge with defaults so new fields are always present.
-    return deepMerge(JSON.parse(JSON.stringify(DEFAULT_CONFIG)), data);
+    return normalizeConfig(deepMerge(JSON.parse(JSON.stringify(DEFAULT_CONFIG)), data));
   } catch {
     return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   }
+}
+
+function normalizeConfig(config) {
+  const coord = config.coordinator || {};
+
+  // Migrate the previous RayLab defaults. Those ports overlapped with too many
+  // common local development services and were changed before public rollout.
+  if (coord.node_manager_port === 8076) coord.node_manager_port = DEFAULT_CONFIG.coordinator.node_manager_port;
+  if (coord.object_manager_port === 8077) coord.object_manager_port = DEFAULT_CONFIG.coordinator.object_manager_port;
+
+  return config;
 }
 
 function save(config, filePath) {

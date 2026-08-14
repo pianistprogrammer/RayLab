@@ -46,7 +46,7 @@ export interface PrivacyConfig {
   worker_account_required: boolean;
   allow_home_access: boolean;
   require_runtime_working_dir: boolean;
-  container_runtime: "docker" | "podman";
+  container_runtime: "docker";
   require_gpu_container_runtime: boolean;
 }
 

@@ -39,8 +39,11 @@ th { color: #61727a; font-size: 12px; text-transform: uppercase; }
 .dot.error { background: #c44e4e; }
 .dot.starting, .dot.stopping { background: #d69a2d; }
 
-.workspace { padding: 26px; overflow-y: auto; height: 100%; display: flex; flex-direction: column; }
+.workspace { padding: 26px; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); overflow: hidden; }
+.workspace.terminal-open { grid-template-rows: auto minmax(0, 1fr) auto; }
+.workspace-main { min-width: 0; min-height: 0; overflow-y: auto; grid-column: 1; grid-row: 2; padding-right: 2px; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.workspace > .topbar { grid-column: 1 / -1; grid-row: 1; }
 .topbar h1 { margin: 0; font-size: 28px; letter-spacing: 0; }
 .eyebrow { color: #60737c; text-transform: uppercase; font-size: 12px; font-weight: 700; margin: 0 0 5px; }
 .actions { display: flex; gap: 9px; align-items: center; }
@@ -102,6 +105,7 @@ th { color: #61727a; font-size: 12px; text-transform: uppercase; }
 .diag span { color: #526973; font-size: 13px; }
 .diag small { color: #7a8c94; margin-top: 4px; }
 .install-button { margin-top: 9px; min-height: 34px; padding: 7px 10px; }
+.inline-fix-button { margin-top: 9px; min-height: 34px; padding: 7px 10px; width: fit-content; }
 .install-log { color: #1d5f74; }
 .banner { display: flex; align-items: center; gap: 9px; padding: 11px 13px; border-radius: 7px; margin-bottom: 14px; animation: banner-in 0.25s ease forwards; }
 .banner.dismissing { animation: banner-out 0.3s ease forwards; }
@@ -134,22 +138,39 @@ th { color: #61727a; font-size: 12px; text-transform: uppercase; }
 .audit-pagination button { min-height: 32px; padding: 6px 12px; background: #e5edf0; color: #1b3d49; }
 .list-row { border-bottom: 1px solid #e6ecef; padding: 8px 0; }
 .token { white-space: pre-wrap; background: #eef5f7; border-radius: 7px; padding: 10px; color: #1f4c5c; }
-.cluster-graph-shell { position: relative; min-height: 380px; border: 1px solid #dbe5e9; border-radius: 8px; background: #f7fafb; overflow: hidden; }
-.cluster-graph { display: block; width: 100%; min-height: 380px; }
-.graph-link { fill: none; stroke: #8ea5ae; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.graph-trunk { stroke: #6d8791; stroke-width: 2; }
-.coordinator-halo { pointer-events: none; }
-.graph-node rect { fill: #fff; stroke: #c7d6dc; stroke-width: 1.4; filter: drop-shadow(0 1px 2px rgba(20, 40, 48, 0.08)); }
-.graph-node text { dominant-baseline: middle; pointer-events: none; }
-.graph-node-title { fill: #18323d; font-size: 13px; font-weight: 760; }
-.graph-node-subtitle { fill: #526973; font-size: 11px; }
-.graph-node-metric { fill: #1d5f74; font-size: 11px; font-weight: 700; }
-.coordinator-node rect { fill: #eef8f2; stroke: #75b991; }
-.worker-node circle { fill: #2f9e67; }
-.worker-node.down circle { fill: #b84545; }
-.worker-node.down rect { stroke: #e0b2ad; }
-.graph-empty { position: absolute; inset: auto 16px 16px 16px; color: #60737c; font-size: 13px; text-align: center; }
-.terminal-dock { position: fixed; left: 264px; right: 24px; bottom: 24px; z-index: 18; display: flex; flex-direction: column; max-height: min(430px, calc(100vh - 48px)); border: 1px solid #c9d7dd; border-radius: 8px; overflow: hidden; background: #111d24; box-shadow: 0 14px 42px rgba(20, 40, 48, 0.24); }
+.cluster-graph-shell { position: relative; min-height: 520px; border: 1px solid #cddce2; border-radius: 8px; background: #eaf0f2; overflow: hidden; }
+.cluster-graph { display: block; width: 100%; min-height: 520px; touch-action: none; cursor: grab; background: radial-gradient(circle at 48% 44%, rgba(255,255,255,0.7), rgba(233,241,244,0.32) 36%, rgba(213,226,232,0.62) 100%); }
+.cluster-graph.panning { cursor: grabbing; }
+.graph-hit-zone { fill: transparent; }
+.graph-toolbar { position: absolute; z-index: 2; top: 12px; right: 12px; display: flex; gap: 6px; padding: 5px; border: 1px solid rgba(112,135,145,0.34); border-radius: 8px; background: rgba(255,255,255,0.86); box-shadow: 0 4px 14px rgba(25,44,54,0.12); backdrop-filter: blur(6px); }
+.graph-toolbar .icon-button { width: 34px; min-height: 34px; height: 34px; border-radius: 7px; background: #eef4f6; color: #254a58; }
+.graph-scale { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border: 1px solid rgba(112,135,145,0.28); border-radius: 7px; background: rgba(255,255,255,0.78); color: #435963; font-size: 12px; font-weight: 700; }
+.graph-link { stroke: #7895a1; stroke-width: 2.2; stroke-linecap: round; opacity: 0.72; vector-effect: non-scaling-stroke; }
+.graph-link.alive { stroke: #4d9f72; opacity: 0.82; }
+.graph-link.warning { stroke: #c08b36; }
+.graph-link.down { stroke: #b85656; stroke-dasharray: 7 6; }
+.graph-node { cursor: grab; outline: none; }
+.graph-node.dragging { cursor: grabbing; }
+.graph-node text { dominant-baseline: middle; pointer-events: none; letter-spacing: 0; }
+.graph-node-halo { fill: rgba(47,158,103,0.12); opacity: 0; transition: opacity 0.16s ease; }
+.graph-node:hover .graph-node-halo, .graph-node.dragging .graph-node-halo { opacity: 1; }
+.graph-node-body { stroke-width: 2.2; filter: drop-shadow(0 7px 12px rgba(25,44,54,0.17)); }
+.graph-node-coordinator .graph-node-body { fill: url(#graphCoordinatorFill); stroke: #4e9b69; }
+.graph-node-worker .graph-node-body { fill: url(#graphWorkerFill); stroke: #7297a5; }
+.graph-node-worker.down .graph-node-body { fill: url(#graphDownFill); stroke: #bb6b63; }
+.graph-node-worker.warning .graph-node-body { stroke: #be8933; }
+.graph-status-dot { fill: #2f9e67; stroke: #fff; stroke-width: 2; }
+.graph-node.warning .graph-status-dot { fill: #d69a2d; }
+.graph-node.down .graph-status-dot { fill: #b84545; }
+.graph-node-title { fill: #172832; font-size: 12px; font-weight: 800; }
+.graph-node-subtitle { fill: #50636d; font-size: 10.5px; font-weight: 650; }
+.graph-node-metric { fill: #1d5f74; font-size: 10.5px; font-weight: 780; }
+.graph-empty { position: absolute; inset: auto 16px 16px 16px; color: #60737c; font-size: 13px; text-align: center; pointer-events: none; }
+.terminal-dock { grid-column: 1; grid-row: 3; min-width: 0; min-height: 220px; max-height: 68vh; display: flex; flex-direction: column; border: 1px solid #c9d7dd; border-radius: 8px; overflow: hidden; background: #111d24; box-shadow: 0 -1px 2px rgba(20, 40, 48, 0.08); }
+.terminal-resize-handle { height: 8px; flex: 0 0 8px; cursor: row-resize; background: #d5e1e6; border-bottom: 1px solid #c3d3da; position: relative; }
+.terminal-resize-handle::after { content: ""; position: absolute; left: 50%; top: 3px; width: 54px; height: 2px; transform: translateX(-50%); border-radius: 999px; background: #7f98a3; }
+.terminal-resize-handle:hover { background: #c8d8df; }
+.terminal-resize-handle:focus-visible { outline: 2px solid #1d5f74; outline-offset: -2px; }
 .terminal-dock-title { min-height: 42px; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 10px; background: #e6eef2; border-bottom: 1px solid #c9d7dd; color: #18323d; }
 .terminal-dock-title > div { display: flex; align-items: center; gap: 8px; }
 .terminal-dock-title span { color: #60737c; font-size: 12px; }
@@ -217,7 +238,6 @@ th { color: #61727a; font-size: 12px; text-transform: uppercase; }
 @media (max-width: 1100px) {
   body { min-width: 760px; }
   .app-shell { grid-template-columns: 210px 1fr; }
-  .terminal-dock { left: 234px; right: 18px; bottom: 18px; max-height: min(400px, calc(100vh - 36px)); }
   .grid.two, .role-grid, .launch-grid { grid-template-columns: 1fr; }
   .audit-row { grid-template-columns: 1fr; }
 }
