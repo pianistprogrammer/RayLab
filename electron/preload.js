@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const allowed = [
       'open_dashboard', 'backend_status',
       'health', 'get_config', 'save_config',
-      'cluster_status', 'diagnostics', 'hardware', 'terminal_logs',
+      'cluster_status', 'diagnostics', 'run_network_preflight', 'hardware', 'terminal_logs',
       'discovery_coordinators',
       'ray_install_status', 'install_ray',
       'setup_status', 'run_setup', 'create_worker_account', 'install_docker',

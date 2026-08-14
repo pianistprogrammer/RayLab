@@ -1,4 +1,4 @@
-import type { AppConfig, AuditEvent, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NodeInfo, PortConflict, SetupRunStatus, TerminalLogEntry } from "./types";
+import type { AppConfig, AuditEvent, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NetworkPreflightResult, NodeInfo, PortConflict, SetupRunStatus, TerminalLogEntry } from "./types";
 
 export const api = {
   health:               ()           => window.electronAPI.invoke('health') as Promise<{ ok: boolean; version: string; ray_available: boolean; ray_version?: string }>,
@@ -6,6 +6,7 @@ export const api = {
   saveConfig:           (cfg: AppConfig) => window.electronAPI.invoke('save_config', cfg as unknown as Record<string, unknown>) as Promise<AppConfig>,
   status:               ()           => window.electronAPI.invoke('cluster_status') as Promise<ClusterStatus>,
   diagnostics:          ()           => window.electronAPI.invoke('diagnostics') as Promise<DiagnosticCheck[]>,
+  runNetworkPreflight:  ()           => window.electronAPI.invoke('run_network_preflight') as Promise<NetworkPreflightResult>,
   hardware:             ()           => window.electronAPI.invoke('hardware') as Promise<HardwareInfo>,
   terminalLogs:         ()           => window.electronAPI.invoke('terminal_logs') as Promise<TerminalLogEntry[]>,
   discoverCoordinators: ()           => window.electronAPI.invoke('discovery_coordinators') as Promise<DiscoveryCandidate[]>,

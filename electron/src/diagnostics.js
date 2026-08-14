@@ -2,8 +2,10 @@
 
 const net = require('net');
 const dns = require('dns');
+const fs = require('fs');
 const { spawnSync } = require('child_process');
 const { rayVersion, pythonVersion, rayCommand, PINNED_RAY_VERSION, PINNED_PYTHON, resolvedRayExecutable, which } = require('./bootstrap');
+const { preflightPort } = require('./network_preflight');
 
 // ─── Private-host check ───────────────────────────────────────────────────────
 
@@ -34,8 +36,18 @@ function isPortAvailable(host, port) {
     const server = net.createServer();
     server.once('error', () => resolve(false));
     server.once('listening', () => { server.close(); resolve(true); });
-    server.listen(port, host === 'localhost' ? '127.0.0.1' : host);
+    server.listen(port, normalizeBindHost(host));
   });
+}
+
+function normalizeBindHost(host) {
+  if (!host || host === '*' || host === '::') return '0.0.0.0';
+  if (host === 'localhost') return '127.0.0.1';
+  return host;
+}
+
+function coordinatorRayBindHost(coord) {
+  return coord.allow_external_workers ? '0.0.0.0' : '127.0.0.1';
 }
 
 function isPortReachable(host, port, timeoutMs = 1000) {
@@ -116,15 +128,22 @@ function containerRuntimeStatus(runtime) {
 function dockerExecutable() {
   const fromPath = which('docker');
   if (fromPath) return fromPath;
+  const candidates = [];
+  if (process.platform === 'darwin') {
+    candidates.push(
+      '/Applications/Docker.app/Contents/Resources/bin/docker',
+      '/usr/local/bin/docker',
+      '/opt/homebrew/bin/docker',
+      '/usr/bin/docker',
+    );
+  }
   if (process.platform === 'win32') {
-    const fs = require('fs');
-    const candidates = [
+    candidates.push(
       'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe',
       'C:\\Program Files\\Docker\\Docker\\resources\\docker.exe',
-    ];
-    return candidates.find((p) => fs.existsSync(p)) || null;
+    );
   }
-  return null;
+  return candidates.find((p) => fs.existsSync(p)) || null;
 }
 
 function gpuRuntimeStatus(runtime) {
@@ -189,15 +208,23 @@ async function diagnostics(config) {
         : `Cannot reach ${coord.head_host}:${coord.ray_port}`,
       fix: reachable ? null : 'Start the host in External workers mode or save the host machine\'s LAN IP address.',
     });
+    checks.push({
+      id: 'network_preflight',
+      label: 'Bidirectional Ray ports',
+      status: 'warn',
+      detail: `Coordinator must reach this worker on TCP ${coord.node_manager_port}, ${coord.object_manager_port}, and 20000-29999 via preflight ${coord.head_host}:${preflightPort(config)}`,
+      fix: 'Run Network test before joining the cluster. Start Ray will also run this check automatically.',
+    });
   } else {
-    const portFree = await isPortAvailable(coord.head_host, coord.ray_port);
+    const bindHost = coordinatorRayBindHost(coord);
+    const portFree = await isPortAvailable(bindHost, coord.ray_port);
     checks.push({
       id: 'ray_port',
       label: 'Ray head port',
       status: portFree ? 'pass' : 'fail',
       detail: portFree
-        ? `Port ${coord.ray_port} is available on ${coord.head_host}`
-        : `Port ${coord.ray_port} on ${coord.head_host} is already in use`,
+        ? `Local port ${coord.ray_port} is available on ${bindHost}`
+        : `Local port ${coord.ray_port} on ${bindHost} is already in use`,
       fix: portFree ? null : 'Run Full machine setup to automatically select an available Ray head port.',
     });
   }
@@ -268,6 +295,8 @@ module.exports = {
   isPrivateHost,
   isPortAvailable,
   isPortReachable,
+  normalizeBindHost,
+  coordinatorRayBindHost,
   findAvailablePort,
   isCoordinatorReachable,
   hasWorkerAccount,

@@ -4,7 +4,8 @@ const { spawn, spawnSync } = require('child_process');
 const os = require('os');
 const { hasCompatibleRay, ensureRayRuntime, pythonVersion, rayVersion, PINNED_RAY_VERSION, PINNED_PYTHON, findUv, which } = require('./bootstrap');
 const { configDir, save, appendAudit, makeAuditEvent } = require('./storage');
-const { isPrivateHost, isPortAvailable, findAvailablePort, isCoordinatorReachable, hasWorkerAccount, hasWorkerLaunchPermission } = require('./diagnostics');
+const { isPrivateHost, isPortAvailable, findAvailablePort, isCoordinatorReachable, hasWorkerAccount, hasWorkerLaunchPermission, normalizeBindHost, coordinatorRayBindHost } = require('./diagnostics');
+const { preflightPort, runWorkerCallbackPreflight } = require('./network_preflight');
 const { createWorkerAccount } = require('./worker_account');
 const { installDocker } = require('./docker_installer');
 
@@ -153,17 +154,22 @@ class SetupRunner {
           await _ensureWindowsWorkerFirewall(config, (line) => this._log(line));
         }
         const reachable = await isCoordinatorReachable(config);
-        if (reachable) return { status: 'pass', detail: `Coordinator reachable at ${config.coordinator.head_host}:${config.coordinator.ray_port}` };
+        if (reachable) {
+          const preflight = await runWorkerCallbackPreflight(config, (line) => this._log(line.slice(0, 500)));
+          if (preflight.ok) return { status: 'pass', detail: `Coordinator reachable and callback ports passed via ${preflight.endpoint}` };
+          return { status: 'fail', detail: preflight.summary, fix: 'Allow inbound TCP on this worker for 18076, 18077, and 20000-29999, or disable router AP/client isolation.' };
+        }
         return { status: 'warn', detail: 'Coordinator not reachable yet', fix: 'Start the host in External workers mode or save the host machine\'s LAN IP address.' };
       }
       const coord = config.coordinator;
+      const rayBindHost = coordinatorRayBindHost(coord);
       const changes = [];
       const portDefs = [
-        { field: 'ray_port', host: coord.head_host, preferred: 6380 },
-        { field: 'dashboard_port', host: coord.dashboard_host, preferred: 8266 },
-        { field: 'client_port', host: coord.head_host, preferred: 10002 },
-        { field: 'node_manager_port', host: coord.head_host, preferred: 18076 },
-        { field: 'object_manager_port', host: coord.head_host, preferred: 18077 },
+        { field: 'ray_port', host: rayBindHost, preferred: 6380 },
+        { field: 'dashboard_port', host: normalizeBindHost(coord.dashboard_host), preferred: 8266 },
+        { field: 'client_port', host: rayBindHost, preferred: 10002 },
+        { field: 'node_manager_port', host: rayBindHost, preferred: 18076 },
+        { field: 'object_manager_port', host: rayBindHost, preferred: 18077 },
       ];
       for (const def of portDefs) {
         const current = coord[def.field];
@@ -251,9 +257,10 @@ class SetupRunner {
       const t = (id) => this._status.tasks.find((t) => t.id === id);
       const rayOk = t('ray').status === 'pass';
       const networkOk = t('network').status === 'pass';
+      const portsOk = t('ports').status !== 'fail';
       const workerOk = t('worker_account').status === 'pass';
       const coordinatorDevOk = config.app_mode === 'coordinator' && process.platform === 'darwin';
-      const canContinue = rayOk && networkOk && (workerOk || coordinatorDevOk);
+      const canContinue = rayOk && networkOk && portsOk && (workerOk || coordinatorDevOk);
       const blocking = this._status.tasks.filter((t) => t.id !== 'final' && t.status === 'fail');
       if (blocking.length > 0 && !canContinue) {
         this._status.can_continue = false;
@@ -366,6 +373,7 @@ async function _ensureWindowsCoordinatorFirewall(config, onOutput) {
     coord.ray_port,
     coord.dashboard_port,
     coord.client_port,
+    preflightPort(config),
     coord.node_manager_port,
     coord.object_manager_port,
   ].map((port) => Number(port)).filter((port) => Number.isInteger(port) && port > 0);

@@ -35,6 +35,7 @@ export interface CoordinatorConfig {
   client_port: number;
   node_manager_port: number;
   object_manager_port: number;
+  preflight_port: number;
   cluster_token_ref: string;
   dashboard_token_ref: string;
   bind_private_only: boolean;
@@ -92,6 +93,26 @@ export interface DiagnosticCheck {
   status: "pass" | "warn" | "fail";
   detail: string;
   fix?: string;
+}
+
+export interface NetworkPreflightCheck {
+  id: string;
+  label: string;
+  protocol: "tcp";
+  transport?: "h2c" | "tcp";
+  direction: "coordinator_to_worker";
+  port: number;
+  status: "pass" | "warn" | "fail";
+  detail: string;
+  fix?: string | null;
+}
+
+export interface NetworkPreflightResult {
+  ok: boolean;
+  status: "pass" | "warn" | "fail";
+  summary: string;
+  endpoint?: string;
+  checks: NetworkPreflightCheck[];
 }
 
 export interface ClusterStatus {

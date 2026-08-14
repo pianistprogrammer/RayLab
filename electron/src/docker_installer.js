@@ -10,6 +10,8 @@ const { containerRuntimeStatus } = require('./diagnostics');
 const { which } = require('./bootstrap');
 
 const DOCKER_DESKTOP_WIN_URL = 'https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe';
+const DOCKER_DESKTOP_MAC_ARM64_URL = 'https://desktop.docker.com/mac/main/arm64/Docker.dmg';
+const DOCKER_DESKTOP_MAC_AMD64_URL = 'https://desktop.docker.com/mac/main/amd64/Docker.dmg';
 
 async function installDocker(onOutput) {
   const out = (line) => { if (onOutput) onOutput(line); };
@@ -40,11 +42,39 @@ async function _installDockerWindows(out) {
 }
 
 async function _installDockerMac(out) {
+  if (fs.existsSync('/Applications/Docker.app')) {
+    out('Docker Desktop is already installed in /Applications. Start Docker Desktop, then refresh setup.');
+    return _finishInstall(out);
+  }
+
   const brew = which('brew');
-  if (!brew) throw new Error('Homebrew is required for in-app Docker installation on macOS. Install Docker Desktop manually or install Homebrew first.');
-  out('Installing Docker Desktop with Homebrew...');
-  const result = await _runCommand(brew, ['install', '--cask', 'docker'], out, 30 * 60 * 1000);
-  if (!result.success) throw new Error('Homebrew Docker installation failed.');
+  if (brew) {
+    out('Installing Docker Desktop with Homebrew...');
+    const result = await _runCommand(brew, ['install', '--cask', 'docker'], out, 30 * 60 * 1000);
+    if (!result.success) out('Homebrew Docker installation failed; trying Docker Desktop DMG directly...');
+    else return _finishInstall(out);
+  }
+
+  const arch = os.arch() === 'arm64' ? 'arm64' : 'amd64';
+  const url = arch === 'arm64' ? DOCKER_DESKTOP_MAC_ARM64_URL : DOCKER_DESKTOP_MAC_AMD64_URL;
+  const dmgPath = path.join(os.tmpdir(), `RayLab-Docker-Desktop-${arch}.dmg`);
+  const mountPoint = path.join(os.tmpdir(), `RayLab-Docker-Desktop-${Date.now()}`);
+  out(`Downloading Docker Desktop for macOS (${arch})...`);
+  await _download(url, dmgPath, out);
+  fs.mkdirSync(mountPoint, { recursive: true });
+  try {
+    out('Mounting Docker Desktop installer...');
+    const attach = await _runCommand('hdiutil', ['attach', dmgPath, '-mountpoint', mountPoint, '-nobrowse', '-quiet'], out, 10 * 60 * 1000);
+    if (!attach.success) throw new Error('Docker Desktop DMG mount failed.');
+    out('Copying Docker Desktop to /Applications...');
+    const copy = await _runCommand('/bin/cp', ['-R', path.join(mountPoint, 'Docker.app'), '/Applications/'], out, 10 * 60 * 1000);
+    if (!copy.success) throw new Error('Docker Desktop copy failed. Check write permission for /Applications.');
+  } finally {
+    await _runCommand('hdiutil', ['detach', mountPoint, '-quiet'], out, 2 * 60 * 1000);
+    try { fs.rmSync(dmgPath, { force: true }); } catch (_) {}
+    try { fs.rmdirSync(mountPoint); } catch (_) {}
+  }
+  out('Docker Desktop installed. Start Docker Desktop once to finish engine setup.');
   return _finishInstall(out);
 }
 
@@ -65,7 +95,9 @@ async function _finishInstall(out) {
     await appendAudit(makeAuditEvent('docker_install_finished', status.detail, { succeeded: true }));
     return { installed: true, message: status.detail };
   }
-  const message = 'Docker installation finished, but Docker CLI is not available yet. Start Docker Desktop or restart Windows, then refresh setup.';
+  const message = process.platform === 'win32'
+    ? 'Docker installation finished, but Docker CLI is not available yet. Start Docker Desktop or restart Windows, then refresh setup.'
+    : 'Docker installation finished, but Docker CLI is not available yet. Start Docker Desktop once, then refresh setup.';
   out(message);
   await appendAudit(makeAuditEvent('docker_install_finished', message, { succeeded: true, pending_restart: true }));
   return { installed: true, message };

@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const os = require('os');
 const { load, save, appendAudit, makeAuditEvent, getSecret, setSecret, getOrCreateToken } = require('./storage');
 const { ensureRayRuntime, hasCompatibleRay, PINNED_RAY_VERSION, rayVersion, pythonVersion, resolvedRayExecutable } = require('./bootstrap');
 const { RayController } = require('./ray_control');
@@ -11,6 +12,7 @@ const { detectHardware } = require('./hardware');
 const { discoverCoordinators } = require('./discovery');
 const { createWorkerAccount } = require('./worker_account');
 const { installDocker } = require('./docker_installer');
+const { ensureCoordinatorPreflightServer, runWorkerCallbackPreflight } = require('./network_preflight');
 
 // Module-level singletons — shared state across all IPC calls.
 const controller = new RayController();
@@ -67,19 +69,7 @@ async function handleSaveConfig(args) {
     throw new Error('Stop Ray before switching Host/Join mode.');
   }
 
-  // Auto-detect LAN IP for external workers if coordinator is on loopback.
-  if (
-    next.app_mode === 'coordinator' &&
-    next.coordinator.allow_external_workers &&
-    _isLoopbackHost(next.coordinator.head_host)
-  ) {
-    const { detectLanIp } = require('./discovery');
-    const lanIp = detectLanIp();
-    if (lanIp) {
-      next.coordinator.head_host = lanIp;
-      if (!next.coordinator.node_ip_address) next.coordinator.node_ip_address = lanIp;
-    }
-  }
+  _prepareCoordinatorAddressForThisMachine(next, { force: current.app_mode !== 'coordinator' });
 
   await save(next);
   await appendAudit(makeAuditEvent('config_updated', `Configuration saved for ${next.app_mode} mode`));
@@ -95,6 +85,10 @@ async function handleClusterStatus() {
 
 async function handleClusterStart() {
   const config = load();
+  if (_prepareCoordinatorAddressForThisMachine(config, { force: true })) {
+    await save(config);
+    await appendAudit(makeAuditEvent('config_updated', 'Coordinator address refreshed for this machine'));
+  }
   return controller.start(config, { ensureRayRuntime });
 }
 
@@ -131,6 +125,17 @@ function handleTerminalLogs() {
 async function handleDiagnostics() {
   const config = load();
   return diagnostics(config);
+}
+
+async function handleRunNetworkPreflight() {
+  const config = load();
+  if (config.app_mode === 'coordinator') {
+    const result = await ensureCoordinatorPreflightServer(config, (line) => setupRunner.logMessage(line));
+    return { ok: true, status: 'pass', summary: result.message, endpoint: `${config.coordinator.head_host}:${result.port}`, checks: [] };
+  }
+  const result = await runWorkerCallbackPreflight(config, (line) => setupRunner.logMessage(line));
+  if (!result.ok) setupRunner.logMessage(result.summary, 'stderr');
+  return result;
 }
 
 // ─── Hardware ────────────────────────────────────────────────────────────────
@@ -252,6 +257,45 @@ function _isLoopbackHost(host) {
   return !host || host === 'localhost' || host === '127.0.0.1' || host === '::1';
 }
 
+function _prepareCoordinatorAddressForThisMachine(config, { force = false } = {}) {
+  if (config.app_mode !== 'coordinator' || !config.coordinator) return false;
+  const { detectLanIp } = require('./discovery');
+  const coord = config.coordinator;
+  const before = JSON.stringify(coord);
+  const lanIp = detectLanIp();
+  const headIsLocal = _hostBelongsToThisMachine(coord.head_host);
+  const nodeIp = coord.node_ip_address;
+  const nodeIpIsUsable = !nodeIp || _hostBelongsToThisMachine(nodeIp);
+
+  // A machine acting as Host must advertise itself, not the previous host it
+  // may have joined as a worker.
+  if ((force || !headIsLocal) && !headIsLocal) {
+    coord.head_host = coord.allow_external_workers && lanIp ? lanIp : '127.0.0.1';
+  }
+
+  if (coord.allow_external_workers && _isLoopbackHost(coord.head_host) && lanIp) {
+    coord.head_host = lanIp;
+  }
+
+  if (!nodeIpIsUsable) coord.node_ip_address = '';
+  if (coord.allow_external_workers && lanIp && !coord.node_ip_address) {
+    coord.node_ip_address = lanIp;
+  }
+
+  return JSON.stringify(coord) !== before;
+}
+
+function _hostBelongsToThisMachine(host) {
+  const value = String(host || '').trim().toLowerCase();
+  if (_isLoopbackHost(value) || value === '0.0.0.0' || value === '::' || value === '*') return true;
+  for (const entries of Object.values(os.networkInterfaces())) {
+    for (const iface of entries || []) {
+      if (iface.family === 'IPv4' && iface.address === value) return true;
+    }
+  }
+  return false;
+}
+
 // ─── Registration ─────────────────────────────────────────────────────────────
 
 function registerHandlers(ipcMain) {
@@ -275,6 +319,7 @@ function registerHandlers(ipcMain) {
   ipcMain.handle('cluster_panic',          wrap(handleClusterPanic));
   ipcMain.handle('terminal_logs',          wrap(handleTerminalLogs));
   ipcMain.handle('diagnostics',            wrap(handleDiagnostics));
+  ipcMain.handle('run_network_preflight',  wrap(handleRunNetworkPreflight));
   ipcMain.handle('hardware',               wrap(handleHardware));
   ipcMain.handle('discovery_coordinators', wrap(handleDiscoveryCoordinators));
   ipcMain.handle('ray_install_status',     wrap(handleRayInstallStatus));

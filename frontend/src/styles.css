@@ -191,6 +191,8 @@ th { color: #61727a; font-size: 12px; text-transform: uppercase; }
 .setup-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .setup-head strong, .setup-head span { display: block; }
 .setup-head span { color: #5c7079; font-size: 13px; margin-top: 3px; }
+.setup-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.setup-actions .inline-fix-button { margin-top: 0; }
 .progress-track { height: 10px; background: #d6e2e7; border-radius: 999px; overflow: hidden; margin: 13px 0 7px; }
 .progress-fill { height: 100%; background: #2f9e67; transition: width 0.2s ease; }
 .progress-meta { display: flex; justify-content: space-between; color: #526973; font-size: 12px; }

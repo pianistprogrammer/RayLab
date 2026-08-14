@@ -1,11 +1,14 @@
 'use strict';
 
 const { spawn, spawnSync } = require('child_process');
+const fs = require('fs');
 const net = require('net');
 const os = require('os');
+const path = require('path');
 const { rayCommand, subprocessEnv, which } = require('./bootstrap');
 const { diagnostics, isPortReachable } = require('./diagnostics');
-const { appendAudit, makeAuditEvent, load, save } = require('./storage');
+const { ensureCoordinatorPreflightServer, formatPreflightFailure, runWorkerCallbackPreflight } = require('./network_preflight');
+const { appendAudit, makeAuditEvent, load, save, configDir } = require('./storage');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -77,6 +80,32 @@ function _psCommandLines() {
   } catch (_) { return []; }
 }
 
+function _psProcesses() {
+  try {
+    if (process.platform === 'win32') {
+      const script = [
+        '$ErrorActionPreference=\'SilentlyContinue\'',
+        'Get-CimInstance Win32_Process | Select-Object ProcessId,Name,CommandLine | ConvertTo-Json -Compress',
+      ].join('; ');
+      const r = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script], { timeout: 5000, encoding: 'utf8', windowsHide: true });
+      if (r.status !== 0 || !r.stdout.trim()) return [];
+      const parsed = JSON.parse(r.stdout.trim());
+      return (Array.isArray(parsed) ? parsed : [parsed]).map((p) => ({
+        pid: Number(p.ProcessId),
+        name: String(p.Name || ''),
+        command: String(p.CommandLine || p.Name || ''),
+      })).filter((p) => Number.isInteger(p.pid));
+    }
+    const r = spawnSync('ps', ['axww', '-o', 'pid=,command='], { timeout: 3000, encoding: 'utf8' });
+    if (r.status !== 0) return [];
+    return r.stdout.split('\n').map((line) => {
+      const match = line.trim().match(/^(\d+)\s+(.+)$/);
+      if (!match) return null;
+      return { pid: Number.parseInt(match[1], 10), name: '', command: match[2] };
+    }).filter(Boolean);
+  } catch (_) { return []; }
+}
+
 function _isRayLine(line) {
   return RAY_PROCESS_MARKERS.some((m) => line.includes(m.toLowerCase()));
 }
@@ -90,6 +119,13 @@ function _isIgnoredLine(line) {
 function _localRayProcesses() {
   const lines = _psCommandLines();
   return lines.filter((l) => !_isIgnoredLine(l) && _isRayLine(l));
+}
+
+function _localRayProcessInfos() {
+  return _psProcesses().filter((p) => {
+    const line = String(p.command || p.name || '').toLowerCase();
+    return !_isIgnoredLine(line) && _isRayLine(line);
+  });
 }
 
 function _localRayRunning(config) {
@@ -135,6 +171,9 @@ function runRayCommand(cmd, { asWorker = false, workerAccount = 'raylab-worker',
     } else if (process.platform === 'darwin' || process.platform === 'win32') {
       env.RAY_ENABLE_WINDOWS_OR_OSX_CLUSTER = '1';
     }
+    env.GRPC_DNS_RESOLVER = env.GRPC_DNS_RESOLVER || 'native';
+    env.NO_PROXY = _appendNoProxy(env.NO_PROXY, ['127.0.0.1', 'localhost']);
+    env.no_proxy = _appendNoProxy(env.no_proxy, ['127.0.0.1', 'localhost']);
 
     const safe = redactCommand(fullCmd);
     if (onOutput) onOutput(`$ ${safe.join(' ')}`);
@@ -184,13 +223,22 @@ function runRayCommand(cmd, { asWorker = false, workerAccount = 'raylab-worker',
 // ─── Kill helpers ─────────────────────────────────────────────────────────────
 
 async function _killLocalRayProcesses() {
-  const procs = _localRayProcesses();
+  const procs = _localRayProcessInfos();
   if (procs.length === 0) return 0;
-  // We don't have PIDs from ps -o command= output, so run ray stop --force as fallback.
-  // Actual process kill is handled by ray stop; this is an emergency fallback.
   try {
     spawnSync(rayCommand(), ['stop', '--force'], { timeout: 10000, env: subprocessEnv() });
   } catch (_) {}
+  if (process.platform === 'win32') {
+    for (const proc of procs) {
+      if (proc.pid === process.pid) continue;
+      try { spawnSync('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { timeout: 8000, encoding: 'utf8', windowsHide: true }); } catch (_) {}
+    }
+  } else {
+    for (const proc of procs) {
+      if (proc.pid === process.pid) continue;
+      try { process.kill(proc.pid, 'SIGTERM'); } catch (_) {}
+    }
+  }
   return procs.length;
 }
 
@@ -244,18 +292,55 @@ async function _portConflicts(config) {
   if (config.app_mode !== 'coordinator') return [];
   const coord = config.coordinator;
   const ports = [
-    { host: coord.node_ip_address || coord.head_host, port: coord.ray_port, name: 'Ray head' },
-    { host: coord.dashboard_host, port: coord.dashboard_port, name: 'Ray dashboard' },
-    { host: coord.node_ip_address || coord.head_host, port: coord.client_port, name: 'Ray client' },
-    { host: coord.node_ip_address || coord.head_host, port: coord.node_manager_port, name: 'Ray node manager' },
-    { host: coord.node_ip_address || coord.head_host, port: coord.object_manager_port, name: 'Ray object manager' },
+    { host: _localBindHostForRayPort(coord), port: coord.ray_port, name: 'Ray head' },
+    { host: _normalizeBindHost(coord.dashboard_host), port: coord.dashboard_port, name: 'Ray dashboard' },
+    { host: _localBindHostForRayPort(coord), port: coord.client_port, name: 'Ray client' },
+    { host: _localBindHostForRayPort(coord), port: coord.node_manager_port, name: 'Ray node manager' },
+    { host: _localBindHostForRayPort(coord), port: coord.object_manager_port, name: 'Ray object manager' },
   ];
   const conflicts = [];
   for (const { host, port, name } of ports) {
-    const open = await tcpOpen(host, port, 250);
-    if (open) conflicts.push({ name, host: _connectHost(host), port, owners: _portOwners(port) });
+    const owners = _portOwners(port);
+    const available = await _localPortAvailable(host, port);
+    if (!available || owners.length > 0) conflicts.push({ name, host, port, owners });
   }
   return conflicts;
+}
+
+function _normalizeBindHost(host) {
+  if (!host || host === '*' || host === '::') return '0.0.0.0';
+  if (host === 'localhost') return '127.0.0.1';
+  return host;
+}
+
+function _localBindHostForRayPort(coord) {
+  const configured = _normalizeIpLiteral(coord.node_ip_address);
+  if (configured && _isLocalIp(configured)) return configured;
+  return coord.allow_external_workers ? '0.0.0.0' : '127.0.0.1';
+}
+
+function _isLocalIp(ip) {
+  if (!ip) return false;
+  if (ip === '127.0.0.1') return true;
+  for (const entries of Object.values(os.networkInterfaces())) {
+    for (const iface of entries || []) {
+      if (iface.family === 'IPv4' && iface.address === ip) return true;
+    }
+  }
+  return false;
+}
+
+function _localPortAvailable(host, port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once('error', () => resolve(false));
+    server.once('listening', () => { server.close(() => resolve(true)); });
+    try {
+      server.listen({ port, host: _normalizeBindHost(host), exclusive: true });
+    } catch (_) {
+      resolve(false);
+    }
+  });
 }
 
 function _portOwners(port) {
@@ -277,6 +362,8 @@ function _unixPortOwners(port) {
 }
 
 function _windowsPortOwners(port) {
+  const fromPowershell = _windowsPortOwnersFromPowershell(port);
+  if (fromPowershell.length > 0) return fromPowershell;
   try {
     const r = spawnSync('netstat', ['-ano', '-p', 'tcp'], { timeout: 3000, encoding: 'utf8' });
     if (r.status !== 0 || !r.stdout.trim()) return [];
@@ -294,6 +381,28 @@ function _windowsPortOwners(port) {
   } catch (_) { return []; }
 }
 
+function _windowsPortOwnersFromPowershell(port) {
+  try {
+    const script = `
+$ErrorActionPreference='SilentlyContinue'
+$items = foreach ($c in @(Get-NetTCPConnection -State Listen -LocalPort ${Number(port)})) {
+  $ownerPid = [int]$c.OwningProcess
+  $proc = if ($ownerPid -gt 0) { Get-CimInstance Win32_Process -Filter "ProcessId=$ownerPid" } else { $null }
+  $command = if ($proc) { if ($proc.CommandLine) { $proc.CommandLine } else { $proc.Name } } elseif ($ownerPid -eq 4) { 'System' } else { "pid $ownerPid" }
+  [pscustomobject]@{ pid = $ownerPid; command = $command }
+}
+$items | ConvertTo-Json -Compress
+`;
+    const r = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script], { timeout: 5000, encoding: 'utf8', windowsHide: true });
+    if (r.status !== 0 || !r.stdout.trim()) return [];
+    const parsed = JSON.parse(r.stdout.trim());
+    const rows = Array.isArray(parsed) ? parsed : [parsed];
+    const seen = new Set();
+    return rows.map((row) => ({ pid: Number(row.pid), command: String(row.command || `pid ${row.pid}`) }))
+      .filter((row) => Number.isInteger(row.pid) && !seen.has(row.pid) && seen.add(row.pid));
+  } catch (_) { return []; }
+}
+
 async function _killPortConflicts(config, onOutput) {
   let conflicts = await _portConflicts(config);
   if (conflicts.length === 0) return { killed: 0, conflicts: [] };
@@ -302,8 +411,10 @@ async function _killPortConflicts(config, onOutput) {
     .filter((pid) => Number.isInteger(pid) && pid > 0 && pid !== process.pid);
 
   if (pids.length === 0) {
-    if (onOutput) onOutput('No port owner PID reported; trying ray stop --force...');
+    if (onOutput) onOutput('No local port owner PID reported; trying Ray cleanup...');
     try { spawnSync(rayCommand(), ['stop', '--force'], { timeout: 10000, env: subprocessEnv() }); } catch (_) {}
+    const killed = await _killLocalRayProcesses();
+    if (onOutput && killed > 0) onOutput(`Fallback cleanup signalled ${killed} local Ray process(es)`);
     const deadline = Date.now() + 3000;
     while (Date.now() < deadline) {
       conflicts = await _portConflicts(config);
@@ -587,6 +698,14 @@ class RayController {
     const mode = config.app_mode;
     const localRunning = mode !== 'unconfigured' ? _localRayRunning(config) : false;
 
+    if (mode === 'coordinator') {
+      try {
+        await ensureCoordinatorPreflightServer(config, (line) => this._log(line));
+      } catch (err) {
+        this._log(err.message || String(err), 'stderr');
+      }
+    }
+
     if ((this.state === 'stopped' || this.state === 'error') && localRunning) {
       this.state = 'running'; this.message = 'Ray is running';
     } else if (this.state === 'error' && !localRunning) {
@@ -605,6 +724,12 @@ class RayController {
         portCheck.detail = mode === 'coordinator'
           ? `${config.coordinator.head_host}:${config.coordinator.ray_port} is occupied by the running Ray head`
           : `Connected to coordinator at ${config.coordinator.head_host}:${config.coordinator.ray_port}`;
+      }
+      const preflightCheck = checks.find((c) => c.id === 'network_preflight');
+      if (mode === 'node' && preflightCheck) {
+        preflightCheck.status = 'pass';
+        preflightCheck.fix = null;
+        preflightCheck.detail = 'Coordinator heartbeat path is active for this worker';
       }
     }
 
@@ -657,6 +782,20 @@ class RayController {
       if (remaining.length > 0) {
         await _killWorkerRayProcesses(privacy.worker_account);
         await _waitForLocalStop(config, 3000);
+      }
+    }
+
+    if (mode === 'coordinator') {
+      await ensureCoordinatorPreflightServer(config, (line) => this._log(line));
+    }
+
+    if (mode === 'node') {
+      const preflight = await runWorkerCallbackPreflight(config, (line) => this._log(line));
+      if (!preflight.ok) {
+        this.state = 'error';
+        this.message = formatPreflightFailure(preflight);
+        await appendAudit(makeAuditEvent('cluster_start_failed', this.message, { preflight }));
+        throw new Error(this.message);
       }
     }
 
@@ -826,6 +965,7 @@ class RayController {
 function _headCommand(config) {
   const coord = config.coordinator;
   const caps = config.resource_caps;
+  const rayDirs = _ensureRayDataDirs();
   const cmd = [
     rayCommand(), 'start',
     '--port', String(coord.ray_port),
@@ -834,6 +974,8 @@ function _headCommand(config) {
     '--ray-client-server-port', String(coord.client_port),
     '--node-manager-port', String(coord.node_manager_port),
     '--object-manager-port', String(coord.object_manager_port),
+    '--temp-dir', rayDirs.tempDir,
+    '--object-spilling-directory', rayDirs.spillDir,
     '--min-worker-port', '20000',
     '--max-worker-port', '29999',
     '--num-cpus', String(Math.floor(caps.cpus)),
@@ -842,7 +984,10 @@ function _headCommand(config) {
     '--resources', JSON.stringify({ raylab_max_jobs: caps.max_concurrent_jobs }),
   ];
 
-  const nodeIp = coord.node_ip_address || (coord.allow_external_workers ? _detectLanIp() : null);
+  const configuredNodeIp = _normalizeIpLiteral(coord.node_ip_address);
+  const nodeIp = configuredNodeIp && _isLocalIp(configuredNodeIp)
+    ? configuredNodeIp
+    : (coord.allow_external_workers ? _detectLanIp() : null);
   if (nodeIp) cmd.splice(2, 0, '--node-ip-address', nodeIp, '--head');
   else cmd.splice(2, 0, '--head');
 
@@ -852,11 +997,14 @@ function _headCommand(config) {
 function _nodeCommand(config) {
   const coord = config.coordinator;
   const caps = config.resource_caps;
-  return [
+  const rayDirs = _ensureRayDataDirs();
+  const cmd = [
     rayCommand(), 'start',
     '--address', `${coord.head_host}:${coord.ray_port}`,
     '--node-manager-port', String(coord.node_manager_port),
     '--object-manager-port', String(coord.object_manager_port),
+    '--temp-dir', rayDirs.tempDir,
+    '--object-spilling-directory', rayDirs.spillDir,
     '--min-worker-port', '20000',
     '--max-worker-port', '29999',
     '--num-cpus', String(Math.floor(caps.cpus)),
@@ -864,6 +1012,87 @@ function _nodeCommand(config) {
     '--memory', String(Math.floor(caps.memory_gb * 1024 * 1024 * 1024)),
     '--resources', JSON.stringify({ raylab_max_jobs: caps.max_concurrent_jobs }),
   ];
+
+  const nodeIp = _detectNodeIpForHead(coord.head_host) || _detectLanIp();
+  if (nodeIp) cmd.splice(2, 0, '--node-ip-address', nodeIp);
+  return cmd;
+}
+
+function _appendNoProxy(current, hosts) {
+  const parts = String(current || '').split(',').map((p) => p.trim()).filter(Boolean);
+  for (const host of hosts) {
+    if (!parts.some((p) => p.toLowerCase() === host.toLowerCase())) parts.push(host);
+  }
+  return parts.join(',');
+}
+
+function _detectNodeIpForHead(headHost) {
+  const host = _normalizeIpLiteral(headHost);
+  if (!host) return null;
+  const routed = _detectRouteSourceIp(host);
+  if (routed) return routed;
+  const sameSubnet = _detectSameSubnetIp(host);
+  if (sameSubnet) return sameSubnet;
+  return null;
+}
+
+function _detectRouteSourceIp(host) {
+  try {
+    if (process.platform === 'win32') {
+      const ps = `$ErrorActionPreference='SilentlyContinue'; $route = Get-NetRoute -RemoteIPAddress '${_psSingleQuote(host)}' -AddressFamily IPv4 | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1; if ($route) { Get-NetIPAddress -InterfaceIndex $route.InterfaceIndex -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '169.254.*' } | Select-Object -First 1 -ExpandProperty IPAddress }`;
+      const r = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps], { timeout: 4000, encoding: 'utf8', windowsHide: true });
+      return _normalizeIpLiteral((r.stdout || '').trim().split(/\s+/)[0]);
+    }
+    if (process.platform === 'darwin') {
+      const route = spawnSync('/sbin/route', ['-n', 'get', host], { timeout: 3000, encoding: 'utf8' });
+      const iface = (route.stdout || '').match(/interface:\s*(\S+)/)?.[1];
+      if (!iface) return null;
+      const ip = spawnSync('/usr/sbin/ipconfig', ['getifaddr', iface], { timeout: 2000, encoding: 'utf8' });
+      return _normalizeIpLiteral((ip.stdout || '').trim());
+    }
+    const route = spawnSync('ip', ['-4', 'route', 'get', host], { timeout: 3000, encoding: 'utf8' });
+    return _normalizeIpLiteral((route.stdout || '').match(/\bsrc\s+(\d+\.\d+\.\d+\.\d+)/)?.[1]);
+  } catch (_) {
+    return null;
+  }
+}
+
+function _detectSameSubnetIp(host) {
+  const prefix = host.match(/^(\d+\.\d+\.\d+)\./)?.[1];
+  if (!prefix) return null;
+  const ifaces = os.networkInterfaces();
+  for (const entries of Object.values(ifaces)) {
+    for (const iface of entries || []) {
+      if (iface.family === 'IPv4' && !iface.internal && iface.address.startsWith(`${prefix}.`)) return iface.address;
+    }
+  }
+  return null;
+}
+
+function _normalizeIpLiteral(value) {
+  const text = String(value || '').trim();
+  if (!/^\d+\.\d+\.\d+\.\d+$/.test(text)) return null;
+  if (text.startsWith('169.254.')) return null;
+  return text;
+}
+
+function _psSingleQuote(value) {
+  return String(value || '').replace(/'/g, "''");
+}
+
+function _ensureRayDataDirs() {
+  const root = process.platform === 'darwin'
+    ? '/Users/Shared/RayLab/ray'
+    : path.join(configDir(), 'ray');
+  const tempDir = path.join(root, 'tmp');
+  const spillDir = path.join(root, 'spill');
+  for (const dir of [root, tempDir, spillDir]) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      if (process.platform !== 'win32') fs.chmodSync(dir, 0o777);
+    } catch (_) {}
+  }
+  return { tempDir, spillDir };
 }
 
 function _detectLanIp() {

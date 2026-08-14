@@ -188,13 +188,7 @@ export function App() {
       await refresh();
     } catch (err) {
       const message = errorMessage(err, "Ray start failed");
-      if (isPortConflictMessage(message)) {
-        const conflicts = await api.portConflicts().catch(() => [] as PortConflict[]);
-        if (conflicts.length > 0) setPortConflictPrompt(conflicts);
-        else setError(message);
-      } else {
-        setError(message);
-      }
+      setError(isPortConflictMessage(message) ? `${message} RayLab could not clear the occupied port automatically; check the terminal for the owning process and stop it manually if needed.` : message);
     } finally {
       setActiveAction(null);
     }
@@ -1434,6 +1428,7 @@ function AuditView() {
 }
 
 function SetupPanel({ setupRun, refresh, status = null, compact = false, showTaskList = true, openTerminal }: { setupRun: SetupRunStatus | null; refresh: () => Promise<void>; status?: ClusterStatus | null; compact?: boolean; showTaskList?: boolean; openTerminal?: () => void }) {
+  const config = useStore((s) => s.config);
   const [running, setRunning] = useState(false);
 
   async function runSetup() {
@@ -1458,6 +1453,7 @@ function SetupPanel({ setupRun, refresh, status = null, compact = false, showTas
       })
     : tasks;
   const currentTask = tasks.find((task) => task.status === "running") ?? null;
+  const showNetworkTest = config.app_mode === "node";
   return (
     <section className={cls("setup-panel", compact && "compact")}>
       <div className="setup-head">
@@ -1465,9 +1461,12 @@ function SetupPanel({ setupRun, refresh, status = null, compact = false, showTas
           <strong>Machine setup</strong>
           <span>{setupRun?.message ?? "Run setup to prepare this machine for RayLab."}</span>
         </div>
-        <button className="ghost" onClick={() => void runSetup()} disabled={isRunning}>
-          {isRunning ? <Spinner size={16} /> : <Play size={16} />}{isRunning ? "Running…" : "Run setup"}
-        </button>
+        <div className="setup-actions">
+          {showNetworkTest && <NetworkPreflightButton refresh={refresh} openTerminal={openTerminal} />}
+          <button className="ghost" onClick={() => void runSetup()} disabled={isRunning}>
+            {isRunning ? <Spinner size={16} /> : <Play size={16} />}{isRunning ? "Running…" : "Run setup"}
+          </button>
+        </div>
       </div>
       <div className="progress-track"><div className="progress-fill" style={{ width: `${setupRun?.progress ?? 0}%` }} /></div>
       <div className="progress-meta"><span>{setupRun?.progress ?? 0}% complete</span><span>{setupRun?.can_continue ? "Ready to continue" : "Not ready yet"}</span></div>
@@ -1479,7 +1478,7 @@ function SetupPanel({ setupRun, refresh, status = null, compact = false, showTas
 
 function SetupTaskRow({ task, refresh, openTerminal }: { task: SetupTask; refresh: () => Promise<void>; openTerminal?: () => void }) {
   const icon = task.status === "pass" ? <CheckCircle2 size={16} /> : task.status === "fail" ? <XCircle size={16} /> : task.status === "running" ? <Spinner size={16} /> : <AlertTriangle size={16} />;
-  return <div className={cls("setup-task", task.status)}>{icon}<div><strong>{task.label}</strong><span>{task.detail}</span>{task.fix && <small>{task.fix}</small>}{task.id === "worker_account" && task.status !== "pass" && <WorkerAccountButton refresh={refresh} />}{task.id === "container" && task.status !== "pass" && <DockerInstallButton refresh={refresh} openTerminal={openTerminal} />}</div></div>;
+  return <div className={cls("setup-task", task.status)}>{icon}<div><strong>{task.label}</strong><span>{task.detail}</span>{task.fix && <small>{task.fix}</small>}{task.id === "worker_account" && task.status !== "pass" && <WorkerAccountButton refresh={refresh} />}{task.id === "container" && task.status !== "pass" && <DockerInstallButton refresh={refresh} openTerminal={openTerminal} />}{task.id === "ports" && task.status !== "pass" && <NetworkPreflightButton refresh={refresh} openTerminal={openTerminal} />}</div></div>;
 }
 
 function WorkerAccountButton({ refresh }: { refresh: () => Promise<void> }) {
@@ -1541,6 +1540,42 @@ function DockerInstallButton({ refresh, openTerminal }: { refresh: () => Promise
   );
 }
 
+function NetworkPreflightButton({ refresh, openTerminal }: { refresh: () => Promise<void>; openTerminal?: () => void }) {
+  const activeAction = useStore((s) => s.activeAction);
+  const setActiveAction = useStore((s) => s.setActiveAction);
+  const setError = useStore((s) => s.setError);
+  const setNotice = useStore((s) => s.setNotice);
+  const busy = activeAction === "network-preflight";
+
+  async function runNetworkTest() {
+    openTerminal?.();
+    setActiveAction("network-preflight");
+    setError(null);
+    try {
+      const result = await api.runNetworkPreflight();
+      if (result.ok) {
+        setNotice(result.summary);
+      } else {
+        const failed = result.checks.filter((check) => check.status !== "pass");
+        const detail = failed.length > 0 ? ` ${failed.map((check) => `TCP ${check.port}: ${check.detail}`).join(" ")}` : "";
+        setError(`${result.summary}.${detail}`);
+      }
+      await refresh();
+    } catch (err) {
+      setError(errorMessage(err, "Network test failed"));
+      await refresh();
+    } finally {
+      setActiveAction(null);
+    }
+  }
+
+  return (
+    <button className="ghost inline-fix-button" onClick={() => void runNetworkTest()} disabled={busy}>
+      {busy ? <Spinner size={16} /> : <Activity size={16} />}Run network test
+    </button>
+  );
+}
+
 function DiagnosticsList({ diagnostics, rayInstall, refresh, openTerminal }: { diagnostics: DiagnosticCheck[]; rayInstall: InstallStatus | null; refresh: () => Promise<void>; openTerminal?: () => void }) {
   const [installing, setInstalling] = useState(false);
 
@@ -1572,6 +1607,7 @@ function DiagnosticsList({ diagnostics, rayInstall, refresh, openTerminal }: { d
             )}
             {item.id === "worker_account" && item.status !== "pass" && <WorkerAccountButton refresh={refresh} />}
             {item.id === "container_runtime" && item.status !== "pass" && <DockerInstallButton refresh={refresh} openTerminal={openTerminal} />}
+            {item.id === "network_preflight" && <NetworkPreflightButton refresh={refresh} openTerminal={openTerminal} />}
             {item.id === "ray" && rayInstall && rayInstall.message !== "Not started" && <small className="install-log">{rayInstall.message}</small>}
           </div>
         </div>

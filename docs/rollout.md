@@ -6,7 +6,7 @@ This app is intentionally conservative: it refuses safe-looking shortcuts that w
 
 - Ray 2.52+ installed in RayLab's managed runtime. If Ray is missing, use the app's Diagnostics panel to run the built-in Ray installer.
 - A fixed server-room Coordinator address on a private lab VLAN.
-- No public exposure of Ray ports `6379`, `8265`, `10001`, `18076`, or `18077`.
+- No public exposure of RayLab/Ray ports `6379`, `8265`, `10001`, `18075`, `18076`, `18077`, or `20000-29999`.
 - A dedicated local `raylab-worker` account on every participating machine.
 - Docker with GPU runtime support.
 - S3-compatible lab object storage for datasets and model weights.
@@ -45,6 +45,18 @@ Recommended firewall stance:
 - Allow Ray ports only from the lab VLAN.
 - Block inbound Ray ports from campus-wide networks and the internet.
 - Keep dashboard access behind the same VLAN boundary.
+
+RayLab uses a free pre-flight network diagnostic before a worker joins. The worker opens temporary TCP listeners on the Ray callback ports, then asks the coordinator's local preflight endpoint to dial back to the worker. If this fails, RayLab blocks startup before Ray reports a disappearing node.
+
+Port map:
+
+- Worker to coordinator TCP `6379`: Ray GCS/head connection.
+- Worker to coordinator TCP `18075`: RayLab preflight endpoint.
+- Coordinator to worker TCP `18076`: Ray node manager callback.
+- Coordinator to worker TCP `18077`: Ray object manager callback.
+- Coordinator to worker TCP `20000-29999`: Ray worker task ports.
+
+If the preflight fails, check Windows Defender Firewall/ufw, the machine's network profile, and router AP/client isolation. The app does not automate Tailscale or WireGuard because that would add external account and VPN setup requirements.
 
 ## Object Store
 

@@ -31,6 +31,7 @@ const DEFAULT_CONFIG = {
     client_port: 10001,
     node_manager_port: 18076,
     object_manager_port: 18077,
+    preflight_port: 18075,
     cluster_token_ref: 'raylab.cluster_token',
     dashboard_token_ref: 'raylab.dashboard_token',
     bind_private_only: true,
