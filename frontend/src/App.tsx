@@ -27,7 +27,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api";
 import { cacheConfig, useStore } from "./store";
-import type { AppConfig, AppMode, AuditEvent, ClusterState, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NodeInfo, ScheduleWindow, SetupRunStatus, SetupTask, TerminalLogEntry } from "./types";
+import type { AppConfig, AppMode, AuditEvent, ClusterState, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NodeInfo, PortConflict, ScheduleWindow, SetupRunStatus, SetupTask, TerminalLogEntry } from "./types";
 
 type View = "home" | "graph" | "submit-job" | "submitters" | "setup" | "settings" | "audit";
 
@@ -50,6 +50,8 @@ export function App() {
   const notice = useStore((s) => s.notice);
   const setupRun = useStore((s) => s.setupRun);
   const refresh = useStore((s) => s.refresh);
+  const setActiveAction = useStore((s) => s.setActiveAction);
+  const setError = useStore((s) => s.setError);
   const setNotice = useStore((s) => s.setNotice);
   const persistMode = useStore((s) => s.persistMode);
   const runAction = useStore((s) => s.runAction);
@@ -57,6 +59,7 @@ export function App() {
   const [view, setView] = useState<View>("home");
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [roleSwitchTarget, setRoleSwitchTarget] = useState<AppMode | null>(null);
+  const [portConflictPrompt, setPortConflictPrompt] = useState<PortConflict[] | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
   const nodeSetupStarted = useRef(false);
 
@@ -117,6 +120,61 @@ export function App() {
     }
   }
 
+  async function handleStartRay() {
+    setTerminalOpen(true);
+    setPortConflictPrompt(null);
+    setActiveAction("start");
+    setError(null);
+    try {
+      const conflicts = await api.portConflicts();
+      if (conflicts.length > 0) {
+        setPortConflictPrompt(conflicts);
+        return;
+      }
+      await api.start();
+      setNotice("Ray start requested");
+      await refresh();
+    } catch (err) {
+      const message = errorMessage(err, "Ray start failed");
+      if (isPortConflictMessage(message)) {
+        const conflicts = await api.portConflicts().catch(() => [] as PortConflict[]);
+        if (conflicts.length > 0) {
+          setPortConflictPrompt(conflicts);
+        } else {
+          setError(message);
+        }
+      } else {
+        setError(message);
+      }
+    } finally {
+      setActiveAction(null);
+    }
+  }
+
+  async function stopPortConflictsAndStart() {
+    setPortConflictPrompt(null);
+    setTerminalOpen(true);
+    setActiveAction("start");
+    setError(null);
+    try {
+      await api.clearPortConflicts();
+      await api.start();
+      setNotice("Stopped the port conflict and started Ray");
+      await refresh();
+    } catch (err) {
+      const message = errorMessage(err, "Ray start failed");
+      if (isPortConflictMessage(message)) {
+        const conflicts = await api.portConflicts().catch(() => [] as PortConflict[]);
+        if (conflicts.length > 0) setPortConflictPrompt(conflicts);
+        else setError(message);
+      } else {
+        setError(message);
+      }
+    } finally {
+      setActiveAction(null);
+    }
+  }
+
   const isRunning = state === "running";
   const isStarting = state === "starting";
   const isStopping = state === "stopping";
@@ -166,7 +224,7 @@ export function App() {
             <button className="icon-button" title="Refresh" onClick={() => void handleManualRefresh()} disabled={manualRefreshing}>
               {manualRefreshing ? <Spinner /> : <RefreshCw size={18} />}
             </button>
-            <button title={startTitle} onClick={() => { setTerminalOpen(true); void runAction(api.start, "Ray start requested", "start"); }} disabled={startDisabled}>
+            <button title={startTitle} onClick={() => void handleStartRay()} disabled={startDisabled}>
               {activeAction === "start" ? <Spinner /> : <Play size={17} />}Start
             </button>
             <button title={stopTitle} onClick={() => { setTerminalOpen(true); void runAction(api.stop, "Ray stop requested", "stop"); }} disabled={stopDisabled}>
@@ -189,6 +247,13 @@ export function App() {
         {view === "settings" && <SettingsView />}
         {view === "audit" && <AuditView />}
         {terminalOpen && <TerminalDock close={() => setTerminalOpen(false)} />}
+        {portConflictPrompt && (
+          <PortConflictPrompt
+            conflicts={portConflictPrompt}
+            cancel={() => setPortConflictPrompt(null)}
+            stopAndStart={() => void stopPortConflictsAndStart()}
+          />
+        )}
         {roleSwitchTarget && (
           <RoleSwitchPrompt
             currentMode={config.app_mode}
@@ -276,6 +341,40 @@ function RolePicker({ onChoose, busy }: { onChoose: (mode: Exclude<AppMode, "unc
         <small>Default head address: {config.coordinator.head_host}:{config.coordinator.ray_port}</small>
       </section>
     </main>
+  );
+}
+
+function PortConflictPrompt({ conflicts, cancel, stopAndStart }: { conflicts: PortConflict[]; cancel: () => void; stopAndStart: () => void }) {
+  const activeAction = useStore((s) => s.activeAction);
+  const conflictLabel = conflicts.length === 1
+    ? `${conflicts[0].name} port ${conflicts[0].port}`
+    : `${conflicts.length} configured Ray ports`;
+  const prompt = conflicts.length === 1
+    ? `${conflictLabel} is occupied, so Ray cannot host the cluster yet. Do you want to stop the process on that port and start Ray?`
+    : `${conflictLabel} are occupied, so Ray cannot host the cluster yet. Do you want to stop the processes on those ports and start Ray?`;
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="modal-panel port-conflict-modal" role="dialog" aria-modal="true" aria-labelledby="port-conflict-title">
+        <div className="panel-title"><AlertTriangle size={19} /><h2 id="port-conflict-title">Port Already In Use</h2></div>
+        <p>{prompt}</p>
+        <ul className="conflict-list">
+          {conflicts.map((conflict) => (
+            <li key={`${conflict.name}-${conflict.port}`}>
+              <strong>{conflict.name} port {conflict.port}</strong>
+              <span>{conflict.host}</span>
+              <small>{formatPortOwners(conflict.owners)}</small>
+            </li>
+          ))}
+        </ul>
+        <div className="modal-actions">
+          <button className="ghost" onClick={cancel} disabled={activeAction === "start"}>Keep current process</button>
+          <button className="danger" onClick={stopAndStart} disabled={activeAction === "start"}>
+            {activeAction === "start" ? <Spinner /> : <Square size={17} />}Stop and Start Ray
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -1116,6 +1215,19 @@ function NumberField({ label, value, onChange }: { label: React.ReactNode; value
 
 function LabelWithDetected({ label, detected }: { label: string; detected: string }) {
   return <span className="label-with-detected"><span>{label}</span><small>{detected}</small></span>;
+}
+
+function errorMessage(err: unknown, fallback: string) {
+  return err instanceof Error ? err.message : fallback;
+}
+
+function isPortConflictMessage(message: string) {
+  return message.toLowerCase().includes("port conflict");
+}
+
+function formatPortOwners(owners: PortConflict["owners"]) {
+  if (!owners || owners.length === 0) return "Owner process not reported by the OS";
+  return `Owner: ${owners.map((owner) => `${owner.command} (${owner.pid})`).join(", ")}`;
 }
 
 function formatCpuDetected(hardware: HardwareInfo | null) {

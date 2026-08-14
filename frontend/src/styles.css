@@ -110,8 +110,15 @@ th { color: #61727a; font-size: 12px; text-transform: uppercase; }
 .banner.success { background: #dff1e8; color: #1f6846; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(17, 29, 36, 0.36); padding: 24px; }
 .modal-panel { width: min(480px, 100%); background: #fff; border: 1px solid #dbe5e9; border-radius: 8px; padding: 16px; box-shadow: 0 18px 50px rgba(17, 29, 36, 0.22); }
+.modal-panel.port-conflict-modal { width: min(560px, 100%); }
 .modal-panel p { color: #526973; line-height: 1.5; margin: 0 0 16px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.conflict-list { display: grid; gap: 8px; list-style: none; padding: 0; margin: 0 0 16px; }
+.conflict-list li { border: 1px solid #dbe5e9; border-radius: 7px; padding: 10px 11px; background: #f7fafb; min-width: 0; }
+.conflict-list strong, .conflict-list span, .conflict-list small { display: block; overflow-wrap: anywhere; }
+.conflict-list strong { color: #18323d; }
+.conflict-list span { color: #526973; font-size: 13px; margin-top: 2px; }
+.conflict-list small { color: #7a8c94; margin-top: 4px; line-height: 1.35; }
 .role-screen { min-height: 100vh; display: grid; place-items: center; background: #eef2f4; }
 .role-panel { width: min(860px, calc(100vw - 48px)); }
 .role-panel h1 { font-size: 32px; letter-spacing: 0; }

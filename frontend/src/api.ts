@@ -1,4 +1,4 @@
-import type { AppConfig, AuditEvent, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NodeInfo, SetupRunStatus, TerminalLogEntry } from "./types";
+import type { AppConfig, AuditEvent, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NodeInfo, PortConflict, SetupRunStatus, TerminalLogEntry } from "./types";
 
 export const api = {
   health:               ()           => window.electronAPI.invoke('health') as Promise<{ ok: boolean; version: string; ray_available: boolean; ray_version?: string }>,
@@ -14,6 +14,8 @@ export const api = {
   setupStatus:          ()           => window.electronAPI.invoke('setup_status') as Promise<SetupRunStatus>,
   runSetup:             ()           => window.electronAPI.invoke('run_setup') as Promise<SetupRunStatus>,
   start:                ()           => window.electronAPI.invoke('cluster_start') as Promise<ClusterStatus>,
+  portConflicts:        ()           => window.electronAPI.invoke('cluster_port_conflicts') as Promise<PortConflict[]>,
+  clearPortConflicts:   ()           => window.electronAPI.invoke('cluster_clear_port_conflicts') as Promise<{ killed: number; conflicts: PortConflict[] }>,
   stop:                 ()           => window.electronAPI.invoke('cluster_stop') as Promise<ClusterStatus>,
   panic:                ()           => window.electronAPI.invoke('cluster_panic') as Promise<ClusterStatus>,
   nodes:                ()           => window.electronAPI.invoke('nodes') as Promise<NodeInfo[]>,

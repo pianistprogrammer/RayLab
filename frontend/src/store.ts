@@ -81,6 +81,7 @@ interface AppState {
   setConfig: (config: AppConfig) => void;
   setError: (error: string | null) => void;
   setNotice: (notice: string | null) => void;
+  setActiveAction: (activeAction: string | null) => void;
   refresh: () => Promise<void>;
   persistMode: (mode: AppMode) => void;
   saveConfig: (next?: AppConfig, actionKey?: string) => Promise<void>;
@@ -121,6 +122,7 @@ export const useStore = create<AppState>((set, get) => ({
   setConfig: (config) => set({ config }),
   setError: (error) => set({ error }),
   setNotice: (notice) => set({ notice }),
+  setActiveAction: (activeAction) => set({ activeAction }),
 
   refresh: async () => {
     let backendStartupError: string | null = null;

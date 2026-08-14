@@ -14,6 +14,15 @@ const RAY_PROCESS_MARKERS = ['/raylet', 'gcs_server', 'plasma_store_server', 'da
 const SENSITIVE_FLAGS = new Set(['--redis-password', '--token']);
 const ANSI_RE = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 
+class PortConflictError extends Error {
+  constructor(conflicts) {
+    super(`Port conflict: ${conflicts.map((c) => `${c.name} port ${c.port}`).join(', ')} already in use. Stop the conflicting process and try again.`);
+    this.name = 'PortConflictError';
+    this.code = 'PORT_CONFLICT';
+    this.conflicts = conflicts;
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function redactCommand(cmd) {
@@ -41,8 +50,13 @@ function tcpOpen(host, port, timeoutMs = 250) {
     sock.once('connect', () => { sock.destroy(); resolve(true); });
     sock.once('error', () => { sock.destroy(); resolve(false); });
     sock.once('timeout', () => { sock.destroy(); resolve(false); });
-    sock.connect(port, host === 'localhost' ? '127.0.0.1' : host);
+    sock.connect(port, _connectHost(host));
   });
+}
+
+function _connectHost(host) {
+  if (!host || host === 'localhost' || host === '0.0.0.0' || host === '::' || host === '*') return '127.0.0.1';
+  return host;
 }
 
 // ─── Process detection ────────────────────────────────────────────────────────
@@ -206,8 +220,13 @@ async function _waitForLocalStart(config, timeoutMs) {
 // ─── Port check ───────────────────────────────────────────────────────────────
 
 async function _clearOrReportPortConflicts(config) {
-  const mode = config.app_mode;
-  if (mode !== 'coordinator') return;
+  const conflicts = await _portConflicts(config);
+  if (conflicts.length === 0) return;
+  throw new PortConflictError(conflicts);
+}
+
+async function _portConflicts(config) {
+  if (config.app_mode !== 'coordinator') return [];
   const coord = config.coordinator;
   const ports = [
     { host: coord.node_ip_address || coord.head_host, port: coord.ray_port, name: 'Ray head' },
@@ -217,10 +236,110 @@ async function _clearOrReportPortConflicts(config) {
   const conflicts = [];
   for (const { host, port, name } of ports) {
     const open = await tcpOpen(host, port, 250);
-    if (open) conflicts.push(`${name} port ${port}`);
+    if (open) conflicts.push({ name, host: _connectHost(host), port, owners: _portOwners(port) });
   }
-  if (conflicts.length === 0) return;
-  throw new Error(`Port conflict: ${conflicts.join(', ')} already in use. Stop the conflicting process and try again.`);
+  return conflicts;
+}
+
+function _portOwners(port) {
+  if (process.platform === 'win32') return _windowsPortOwners(port);
+  return _unixPortOwners(port);
+}
+
+function _unixPortOwners(port) {
+  try {
+    const r = spawnSync('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN'], { timeout: 3000, encoding: 'utf8' });
+    if (r.status !== 0 || !r.stdout.trim()) return [];
+    return r.stdout.split('\n').slice(1).map((line) => {
+      const parts = line.trim().split(/\s+/);
+      const pid = Number.parseInt(parts[1], 10);
+      if (!Number.isInteger(pid)) return null;
+      return { pid, command: parts[0] || `pid ${pid}` };
+    }).filter(Boolean);
+  } catch (_) { return []; }
+}
+
+function _windowsPortOwners(port) {
+  try {
+    const r = spawnSync('netstat', ['-ano', '-p', 'tcp'], { timeout: 3000, encoding: 'utf8' });
+    if (r.status !== 0 || !r.stdout.trim()) return [];
+    const pids = new Set();
+    for (const raw of r.stdout.split('\n')) {
+      const line = raw.trim();
+      if (!line.toUpperCase().startsWith('TCP')) continue;
+      const parts = line.split(/\s+/);
+      const local = parts[1] || '';
+      const state = (parts[3] || '').toUpperCase();
+      const pid = Number.parseInt(parts[4], 10);
+      if (state === 'LISTENING' && local.endsWith(`:${port}`) && Number.isInteger(pid)) pids.add(pid);
+    }
+    return [...pids].map((pid) => ({ pid, command: `pid ${pid}` }));
+  } catch (_) { return []; }
+}
+
+async function _killPortConflicts(config, onOutput) {
+  let conflicts = await _portConflicts(config);
+  if (conflicts.length === 0) return { killed: 0, conflicts: [] };
+
+  const pids = [...new Set(conflicts.flatMap((c) => c.owners || []).map((o) => o.pid))]
+    .filter((pid) => Number.isInteger(pid) && pid > 0 && pid !== process.pid);
+
+  if (pids.length === 0) {
+    if (onOutput) onOutput('No port owner PID reported; trying ray stop --force...');
+    try { spawnSync(rayCommand(), ['stop', '--force'], { timeout: 10000, env: subprocessEnv() }); } catch (_) {}
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
+      conflicts = await _portConflicts(config);
+      if (conflicts.length === 0) {
+        await appendAudit(makeAuditEvent('port_conflicts_stopped', 'Cleared configured Ray port conflicts with ray stop --force'));
+        return { killed: 0, conflicts: [] };
+      }
+      await sleep(250);
+    }
+    throw new PortConflictError(conflicts);
+  }
+
+  for (const pid of pids) {
+    if (onOutput) onOutput(`Stopping process ${pid} using a configured Ray port...`);
+    try {
+      if (process.platform === 'win32') {
+        spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { timeout: 8000, encoding: 'utf8' });
+      } else {
+        process.kill(pid, 'SIGTERM');
+      }
+    } catch (_) {}
+  }
+
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    conflicts = await _portConflicts(config);
+    if (conflicts.length === 0) {
+      await appendAudit(makeAuditEvent('port_conflicts_stopped', `Stopped ${pids.length} process(es) using configured Ray ports`, { pids }));
+      return { killed: pids.length, conflicts: [] };
+    }
+    await sleep(250);
+  }
+
+  if (process.platform !== 'win32') {
+    const remainingPids = [...new Set(conflicts.flatMap((c) => c.owners || []).map((o) => o.pid))]
+      .filter((pid) => pids.includes(pid));
+    for (const pid of remainingPids) {
+      if (onOutput) onOutput(`Process ${pid} did not exit; forcing it to stop...`);
+      try { process.kill(pid, 'SIGKILL'); } catch (_) {}
+    }
+
+    const forceDeadline = Date.now() + 3000;
+    while (Date.now() < forceDeadline) {
+      conflicts = await _portConflicts(config);
+      if (conflicts.length === 0) {
+        await appendAudit(makeAuditEvent('port_conflicts_stopped', `Force-stopped ${pids.length} process(es) using configured Ray ports`, { pids }));
+        return { killed: pids.length, conflicts: [] };
+      }
+      await sleep(250);
+    }
+  }
+
+  throw new PortConflictError(conflicts);
 }
 
 // ─── Node listing ─────────────────────────────────────────────────────────────
@@ -310,6 +429,15 @@ class RayController {
 
   terminalLogs() {
     return this._logs.slice(-500);
+  }
+
+  async portConflicts(config) {
+    return _portConflicts(config);
+  }
+
+  async clearPortConflicts(config) {
+    const onOutput = (line) => this._log(line, 'stdout');
+    return _killPortConflicts(config, onOutput);
   }
 
   async status(config) {

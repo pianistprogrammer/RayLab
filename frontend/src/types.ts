@@ -103,6 +103,18 @@ export interface ClusterStatus {
   diagnostics: DiagnosticCheck[];
 }
 
+export interface PortConflictOwner {
+  pid: number;
+  command: string;
+}
+
+export interface PortConflict {
+  name: string;
+  host: string;
+  port: number;
+  owners: PortConflictOwner[];
+}
+
 export interface NodeInfo {
   node_id: string;
   hostname: string;

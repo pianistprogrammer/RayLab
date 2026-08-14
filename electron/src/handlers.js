@@ -95,6 +95,16 @@ async function handleClusterStart() {
   return controller.start(config, { ensureRayRuntime });
 }
 
+async function handleClusterPortConflicts() {
+  const config = load();
+  return controller.portConflicts(config);
+}
+
+async function handleClusterClearPortConflicts() {
+  const config = load();
+  return controller.clearPortConflicts(config);
+}
+
 async function handleClusterStop() {
   const config = load();
   return controller.stop(config, { panic: false });
@@ -228,6 +238,8 @@ function registerHandlers(ipcMain) {
   ipcMain.handle('save_config',            wrap(handleSaveConfig));
   ipcMain.handle('cluster_status',         wrap(handleClusterStatus));
   ipcMain.handle('cluster_start',          wrap(handleClusterStart));
+  ipcMain.handle('cluster_port_conflicts', wrap(handleClusterPortConflicts));
+  ipcMain.handle('cluster_clear_port_conflicts', wrap(handleClusterClearPortConflicts));
   ipcMain.handle('cluster_stop',           wrap(handleClusterStop));
   ipcMain.handle('cluster_panic',          wrap(handleClusterPanic));
   ipcMain.handle('terminal_logs',          wrap(handleTerminalLogs));
