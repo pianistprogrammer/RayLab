@@ -170,6 +170,7 @@ function makeRuntimeAccessible() {
       try { fs.chmodSync(bin, 0o755); } catch (_) {}
     }
   }
+  _repairRayNativeExecutables();
 }
 
 function _chmodRecursive(dir) {
@@ -182,12 +183,32 @@ function _chmodRecursive(dir) {
           fs.chmodSync(p, 0o755);
           _chmodRecursive(p);
         } else {
-          fs.chmodSync(p, 0o644);
+          const mode = fs.statSync(p).mode;
+          fs.chmodSync(p, (mode & 0o111) ? 0o755 : 0o644);
         }
       } catch (_) {}
     }
     fs.chmodSync(dir, 0o755);
   } catch (_) {}
+}
+
+function _repairRayNativeExecutables() {
+  const root = path.join(venvDir(), 'lib', 'python3.11', 'site-packages', 'ray', 'core', 'src', 'ray');
+  const names = new Set(['raylet', 'gcs_server', 'plasma_store_server', 'default_worker', 'io_worker']);
+  try {
+    _walk(root, (p) => {
+      if (names.has(path.basename(p))) fs.chmodSync(p, 0o755);
+    });
+  } catch (_) {}
+}
+
+function _walk(dir, visit) {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) _walk(p, visit);
+    else visit(p);
+  }
 }
 
 // ─── Subprocess runner ────────────────────────────────────────────────────────

@@ -192,7 +192,12 @@ function dialHttp2(host, port, timeoutMs = DEFAULT_TIMEOUT_MS) {
 
 async function _runWorkerPortCheck(config, def, endpointPort, onLog) {
   const server = http2.createServer();
-  server.on('session', (session) => { session.on('error', () => {}); });
+  const sessions = new Set();
+  server.on('session', (session) => {
+    sessions.add(session);
+    session.on('close', () => sessions.delete(session));
+    session.on('error', () => {});
+  });
   server.on('stream', (stream, headers) => {
     stream.on('error', () => {});
     if (headers[':path'] !== '/raylab-preflight-grpc') {
@@ -224,7 +229,7 @@ async function _runWorkerPortCheck(config, def, endpointPort, onLog) {
     onLog?.(`Network preflight: ${def.label} failed - ${detail}`);
     return _check(def, 'fail', detail, 'Allow inbound TCP from the coordinator/local subnet or disable AP/client isolation on the router.');
   } finally {
-    await _closeServer(server);
+    await _closeServer(server, sessions);
   }
 }
 
@@ -235,8 +240,12 @@ function _listen(server, port) {
   });
 }
 
-function _closeServer(server) {
+function _closeServer(server, sessions = []) {
   return new Promise((resolve) => {
+    for (const session of sessions) {
+      try { session.close(); } catch (_) {}
+      try { session.destroy(); } catch (_) {}
+    }
     try { server.close(() => resolve()); } catch (_) { resolve(); }
   });
 }

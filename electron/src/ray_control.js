@@ -161,12 +161,14 @@ function runRayCommand(cmd, { asWorker = false, workerAccount = 'raylab-worker',
   return new Promise((resolve) => {
     let fullCmd = [...cmd];
     const env = subprocessEnv();
+    const rayEnv = _rayLocalDataEnv();
+    Object.assign(env, rayEnv);
 
     if (asWorker && process.platform !== 'win32') {
       if (process.platform === 'darwin') {
-        fullCmd = ['sudo', '-n', '-u', workerAccount, '--', 'env', 'RAY_ENABLE_WINDOWS_OR_OSX_CLUSTER=1', ...cmd];
+        fullCmd = ['sudo', '-n', '-u', workerAccount, '--', 'env', ..._envAssignments(rayEnv), 'RAY_ENABLE_WINDOWS_OR_OSX_CLUSTER=1', ...cmd];
       } else {
-        fullCmd = ['sudo', '-n', '-u', workerAccount, '--', ...cmd];
+        fullCmd = ['sudo', '-n', '-u', workerAccount, '--', 'env', ..._envAssignments(rayEnv), ...cmd];
       }
     } else if (process.platform === 'darwin' || process.platform === 'win32') {
       env.RAY_ENABLE_WINDOWS_OR_OSX_CLUSTER = '1';
@@ -218,6 +220,26 @@ function runRayCommand(cmd, { asWorker = false, workerAccount = 'raylab-worker',
       resolve({ success: false, output: err.message, code: 127 });
     });
   });
+}
+
+function _rayLocalDataEnv() {
+  const rayDirs = _ensureRayDataDirs();
+  return {
+    RAY_TMPDIR: rayDirs.envTempBaseDir,
+    RAY_object_spilling_directory: rayDirs.spillDir,
+    TMPDIR: rayDirs.tempDir,
+    TEMP: rayDirs.tempDir,
+    TMP: rayDirs.tempDir,
+    GRPC_DNS_RESOLVER: 'native',
+    NO_PROXY: _appendNoProxy(process.env.NO_PROXY, ['127.0.0.1', 'localhost']),
+    no_proxy: _appendNoProxy(process.env.no_proxy, ['127.0.0.1', 'localhost']),
+  };
+}
+
+function _envAssignments(env) {
+  return Object.entries(env)
+    .filter(([, value]) => value !== undefined && value !== null && String(value) !== '')
+    .map(([key, value]) => `${key}=${value}`);
 }
 
 // ─── Kill helpers ─────────────────────────────────────────────────────────────
@@ -797,6 +819,7 @@ class RayController {
         await appendAudit(makeAuditEvent('cluster_start_failed', this.message, { preflight }));
         throw new Error(this.message);
       }
+      await _waitForWorkerCallbackPortsFree(config, 3000, (line) => this._log(line));
     }
 
     const cmd = mode === 'coordinator' ? _headCommand(config) : _nodeCommand(config);
@@ -1086,13 +1109,36 @@ function _ensureRayDataDirs() {
     : path.join(configDir(), 'ray');
   const tempDir = path.join(root, 'tmp');
   const spillDir = path.join(root, 'spill');
-  for (const dir of [root, tempDir, spillDir]) {
+  const envTempBaseDir = path.join(root, 'tmp-base');
+  for (const dir of [root, tempDir, spillDir, envTempBaseDir]) {
     try {
       fs.mkdirSync(dir, { recursive: true });
       if (process.platform !== 'win32') fs.chmodSync(dir, 0o777);
     } catch (_) {}
   }
-  return { tempDir, spillDir };
+  return { root, tempDir, spillDir, envTempBaseDir };
+}
+
+async function _waitForWorkerCallbackPortsFree(config, timeoutMs, onOutput) {
+  const coord = config.coordinator || {};
+  const ports = [coord.node_manager_port, coord.object_manager_port, 20000]
+    .map((port) => Number(port))
+    .filter((port, index, all) => Number.isInteger(port) && port > 0 && port < 65536 && all.indexOf(port) === index);
+  const deadline = Date.now() + timeoutMs;
+  let lastBusy = [];
+  while (Date.now() < deadline) {
+    lastBusy = [];
+    for (const port of ports) {
+      if (!(await _localPortAvailable('0.0.0.0', port))) lastBusy.push(port);
+    }
+    if (lastBusy.length === 0) return;
+    await sleep(100);
+  }
+  if (lastBusy.length > 0) {
+    const msg = `Ray callback ports still busy after network test: ${lastBusy.join(', ')}`;
+    if (onOutput) onOutput(msg);
+    throw new PortConflictError(lastBusy.map((port) => ({ name: 'Ray callback', host: '0.0.0.0', port, owners: _portOwners(port) })));
+  }
 }
 
 function _detectLanIp() {
