@@ -47,7 +47,7 @@ const DEFAULT_CONFIG = {
     max_cpu_percent_for_idle: 20,
     max_gpu_percent_for_idle: 10,
   },
-  resource_caps: { cpus: 4, gpus: 1, memory_gb: 16, gpu_memory_gb: 12, max_concurrent_jobs: 1 },
+  resource_caps: { cpus: 4, gpus: 0, memory_gb: 16, gpu_memory_gb: 0, max_concurrent_jobs: 1 },
   privacy: {
     worker_account: 'raylab-worker',
     worker_account_required: true,

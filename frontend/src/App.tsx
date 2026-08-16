@@ -32,7 +32,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from "react";
 import { api } from "./api";
-import { cacheConfig, useStore } from "./store";
+import { cacheConfig, constrainConfigToHardware, useStore } from "./store";
 import type { AppConfig, AppMode, AuditEvent, ClusterState, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NodeInfo, PortConflict, ScheduleWindow, SetupRunStatus, SetupTask, TerminalLogEntry } from "./types";
 
 type View = "home" | "graph" | "submit-job" | "submitters" | "setup" | "settings" | "audit";
@@ -444,15 +444,17 @@ function CoordinatorHome() {
   }, [config]);
 
   async function handleSave(next: AppConfig) {
-    savedConfigRef.current = next; // mark as saved before the round-trip
-    await saveConfig(next);
+    const constrained = constrainConfigToHardware(next, hardware);
+    savedConfigRef.current = constrained; // mark as saved before the round-trip
+    setDraft(constrained);
+    await saveConfig(constrained);
   }
 
   function updateCoordinator(patch: Partial<AppConfig["coordinator"]>) {
     setDraft((d) => ({ ...d, coordinator: { ...d.coordinator, ...patch } }));
   }
   function updateCaps(patch: Partial<AppConfig["resource_caps"]>) {
-    setDraft((d) => ({ ...d, resource_caps: { ...d.resource_caps, ...patch } }));
+    setDraft((d) => constrainConfigToHardware({ ...d, resource_caps: { ...d.resource_caps, ...patch } }, hardware));
   }
   function applyLaunchPreset(external: boolean) {
     setDraft((d) => {
@@ -504,10 +506,10 @@ function CoordinatorHome() {
           <NumberField label="Ray head port" value={draft.coordinator.ray_port} onChange={(ray_port) => updateCoordinator({ ray_port })} />
           <NumberField label="Dashboard port" value={draft.coordinator.dashboard_port} onChange={(dashboard_port) => updateCoordinator({ dashboard_port })} />
           <NumberField label="Ray Client port" value={draft.coordinator.client_port} onChange={(client_port) => updateCoordinator({ client_port })} />
-          <NumberField label={<LabelWithDetected label="CPUs offered" detected={formatCpuDetected(hardware)} />} value={draft.resource_caps.cpus} onChange={(cpus) => updateCaps({ cpus })} />
-          <NumberField label={<LabelWithDetected label="GPUs offered" detected={formatGpuDetected(hardware)} />} value={draft.resource_caps.gpus} onChange={(gpus) => updateCaps({ gpus })} />
-          <NumberField label={<LabelWithDetected label="System RAM offered" detected={formatMemoryDetected(hardware)} />} value={draft.resource_caps.memory_gb} onChange={(memory_gb) => updateCaps({ memory_gb })} />
-          <NumberField label="Max concurrent jobs" value={draft.resource_caps.max_concurrent_jobs} onChange={(max_concurrent_jobs) => updateCaps({ max_concurrent_jobs })} />
+          <NumberField label={<LabelWithDetected label="CPUs offered" detected={formatCpuDetected(hardware)} />} value={draft.resource_caps.cpus} min={1} max={hardware?.cpu_logical} onChange={(cpus) => updateCaps({ cpus })} />
+          <NumberField label={<LabelWithDetected label="GPUs offered" detected={formatGpuDetected(hardware)} />} value={draft.resource_caps.gpus} min={0} max={hardware?.gpu_count} onChange={(gpus) => updateCaps({ gpus })} />
+          <NumberField label={<LabelWithDetected label="System RAM offered" detected={formatMemoryDetected(hardware)} />} value={draft.resource_caps.memory_gb} min={1} max={hardware?.memory_total_gb ?? undefined} onChange={(memory_gb) => updateCaps({ memory_gb })} />
+          <NumberField label="Max concurrent jobs" value={draft.resource_caps.max_concurrent_jobs} min={1} onChange={(max_concurrent_jobs) => updateCaps({ max_concurrent_jobs })} />
           <label className="check"><input type="checkbox" checked={draft.coordinator.bind_private_only} onChange={(e) => updateCoordinator({ bind_private_only: e.target.checked })} />Private network only</label>
         </div>
         <pre className="command-preview">{commandPreview}</pre>
@@ -999,6 +1001,10 @@ function NodeHome({ openTerminal }: { openTerminal: () => void }) {
     void saveConfig(next);
   }
 
+  function updateResourceCaps(patch: Partial<AppConfig["resource_caps"]>) {
+    setConfig(constrainConfigToHardware({ ...config, resource_caps: { ...config.resource_caps, ...patch } }, hardware));
+  }
+
   return (
     <div className="grid two">
       <SetupPanel setupRun={setupRun} refresh={refresh} status={status} compact openTerminal={openTerminal} />
@@ -1052,10 +1058,10 @@ function NodeHome({ openTerminal }: { openTerminal: () => void }) {
 
       <section className="panel">
         <div className="panel-title"><SlidersHorizontal size={19} /><h2>Resource Caps</h2></div>
-        <NumberField label={<LabelWithDetected label="CPUs" detected={formatCpuDetected(hardware)} />} value={config.resource_caps.cpus} onChange={(cpus) => setConfig({ ...config, resource_caps: { ...config.resource_caps, cpus } })} />
-        <NumberField label={<LabelWithDetected label="GPUs" detected={formatGpuDetected(hardware)} />} value={config.resource_caps.gpus} onChange={(gpus) => setConfig({ ...config, resource_caps: { ...config.resource_caps, gpus } })} />
-        <NumberField label={<LabelWithDetected label="System RAM cap" detected={formatMemoryDetected(hardware)} />} value={config.resource_caps.memory_gb} onChange={(memory_gb) => setConfig({ ...config, resource_caps: { ...config.resource_caps, memory_gb } })} />
-        <NumberField label={<LabelWithDetected label="GPU memory cap" detected={formatGpuMemoryDetected(hardware)} />} value={config.resource_caps.gpu_memory_gb} onChange={(gpu_memory_gb) => setConfig({ ...config, resource_caps: { ...config.resource_caps, gpu_memory_gb } })} />
+        <NumberField label={<LabelWithDetected label="CPUs" detected={formatCpuDetected(hardware)} />} value={config.resource_caps.cpus} min={1} max={hardware?.cpu_logical} onChange={(cpus) => updateResourceCaps({ cpus })} />
+        <NumberField label={<LabelWithDetected label="GPUs" detected={formatGpuDetected(hardware)} />} value={config.resource_caps.gpus} min={0} max={hardware?.gpu_count} onChange={(gpus) => updateResourceCaps({ gpus })} />
+        <NumberField label={<LabelWithDetected label="System RAM cap" detected={formatMemoryDetected(hardware)} />} value={config.resource_caps.memory_gb} min={1} max={hardware?.memory_total_gb ?? undefined} onChange={(memory_gb) => updateResourceCaps({ memory_gb })} />
+        <NumberField label={<LabelWithDetected label="GPU memory cap" detected={formatGpuMemoryDetected(hardware)} />} value={config.resource_caps.gpu_memory_gb} min={0} max={hardware?.gpu_memory_total_gb ?? undefined} onChange={(gpu_memory_gb) => updateResourceCaps({ gpu_memory_gb })} />
         <button onClick={() => void saveConfig(undefined, "save-caps")} disabled={activeAction === "save-caps"}>{activeAction === "save-caps" ? <Spinner /> : <Save size={17} />}Save caps</button>
       </section>
     </div>
@@ -1616,8 +1622,8 @@ function DiagnosticsList({ diagnostics, rayInstall, refresh, openTerminal }: { d
   );
 }
 
-function NumberField({ label, value, onChange }: { label: React.ReactNode; value: number; onChange: (value: number) => void }) {
-  return <label>{label}<input type="number" value={value} onChange={(e) => onChange(Number(e.target.value))} /></label>;
+function NumberField({ label, value, onChange, min, max, step = 1 }: { label: React.ReactNode; value: number; onChange: (value: number) => void; min?: number; max?: number; step?: number }) {
+  return <label>{label}<input type="number" value={value} min={min} max={max} step={step} onChange={(e) => onChange(Number(e.target.value))} /></label>;
 }
 
 function LabelWithDetected({ label, detected }: { label: string; detected: string }) {

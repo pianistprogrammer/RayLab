@@ -31,7 +31,7 @@ export const fallbackConfig: AppConfig = {
     max_cpu_percent_for_idle: 20,
     max_gpu_percent_for_idle: 10,
   },
-  resource_caps: { cpus: 4, gpus: 1, memory_gb: 16, gpu_memory_gb: 12, max_concurrent_jobs: 1 },
+  resource_caps: { cpus: 4, gpus: 0, memory_gb: 16, gpu_memory_gb: 0, max_concurrent_jobs: 1 },
   privacy: {
     worker_account: "raylab-worker",
     worker_account_required: true,
@@ -61,6 +61,47 @@ export function cacheConfig(config: AppConfig) {
   } catch {
     // The local backend remains the source of truth; this cache only avoids reload flicker.
   }
+}
+
+export function constrainConfigToHardware(config: AppConfig, hardware: HardwareInfo | null): AppConfig {
+  const caps = { ...config.resource_caps };
+  caps.cpus = positiveNumber(caps.cpus, 1);
+  caps.gpus = nonNegativeInteger(caps.gpus);
+  caps.memory_gb = positiveNumber(caps.memory_gb, 1);
+  caps.gpu_memory_gb = nonNegativeNumber(caps.gpu_memory_gb);
+  caps.max_concurrent_jobs = Math.max(1, nonNegativeInteger(caps.max_concurrent_jobs) || 1);
+
+  if (hardware) {
+    if (Number.isFinite(hardware.cpu_logical) && hardware.cpu_logical > 0) {
+      caps.cpus = Math.min(caps.cpus, hardware.cpu_logical);
+    }
+    const memoryTotalGb = hardware.memory_total_gb;
+    if (typeof memoryTotalGb === "number" && Number.isFinite(memoryTotalGb) && memoryTotalGb > 0) {
+      caps.memory_gb = Math.min(caps.memory_gb, memoryTotalGb);
+    }
+    if (Number.isFinite(hardware.gpu_count) && hardware.gpu_count >= 0) {
+      caps.gpus = Math.min(caps.gpus, Math.floor(hardware.gpu_count));
+    }
+    if (caps.gpus === 0) {
+      caps.gpu_memory_gb = 0;
+    } else if (hardware.gpu_memory_total_gb && hardware.gpu_memory_total_gb > 0) {
+      caps.gpu_memory_gb = Math.min(caps.gpu_memory_gb, hardware.gpu_memory_total_gb);
+    }
+  }
+
+  return { ...config, resource_caps: caps };
+}
+
+function positiveNumber(value: number, fallback: number) {
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function nonNegativeNumber(value: number) {
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function nonNegativeInteger(value: number) {
+  return Math.floor(nonNegativeNumber(value));
 }
 
 interface AppState {
@@ -157,15 +198,16 @@ export const useStore = create<AppState>((set, get) => ({
       const effectiveConfig = pendingMode
         ? { ...nextConfig, app_mode: pendingMode }
         : nextConfig;
-      cacheConfig(effectiveConfig);
+      const hardwareConstrainedConfig = constrainConfigToHardware(effectiveConfig, nextHardware);
+      cacheConfig(hardwareConstrainedConfig);
 
       // Only update config if it actually changed — avoids triggering
       // draft resets in editing components when the poll returns identical data.
       const prevConfig = current.config;
-      const configChanged = JSON.stringify(effectiveConfig) !== JSON.stringify(prevConfig);
+      const configChanged = JSON.stringify(hardwareConstrainedConfig) !== JSON.stringify(prevConfig);
 
       set({
-        ...(configChanged ? { config: effectiveConfig } : {}),
+        ...(configChanged ? { config: hardwareConstrainedConfig } : {}),
         status: nextStatus,
         nodes: nextNodes,
         audit: nextAudit,
@@ -214,7 +256,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   saveConfig: async (next, actionKey = "save") => {
-    const config = next ?? get().config;
+    const config = constrainConfigToHardware(next ?? get().config, get().hardware);
     set({ activeAction: actionKey, error: null, config });
     try {
       const saved = await api.saveConfig(config);

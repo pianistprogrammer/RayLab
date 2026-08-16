@@ -1,0 +1,12 @@
+RayLab distributed computing university presentation
+Sources used:
+- Local RayLab UI screenshots captured from the frontend with presentation mock data: presentation/assets/raylab-host-mode.png, raylab-join-mode.png, raylab-cluster-graph.png
+- Local benchmark data: benchmark/reports/monte-carlo-results.json
+- Local benchmark data: benchmark/reports/mnist-cnn-ray-results.json
+- Local MNIST chart data: benchmark/reports/mnist-cnn-ray-results.json
+- User-provided Ray ecosystem image: /Users/I558118/Downloads/ChatGPT Image Aug 16, 2026, 09_31_55 AM.png
+- Ray documentation for tasks, actors, Ray Train, Ray Tune, and Ray Data: https://docs.ray.io/
+- Apache Spark logo and project overview: https://spark.apache.org/
+- Dask logo and documentation: https://docs.dask.org/
+- Kubernetes logo and overview: https://kubernetes.io/docs/concepts/overview/
+- Celery logo and documentation: https://docs.celeryq.dev/

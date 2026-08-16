@@ -1,0 +1,1452 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/utc3gz",
+    "id": "utc3gz",
+    "slide": 5,
+    "layoutId": "9f1deb8f-57b8-4fdb-8289-db7322e90512",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Helvetica Neue"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9f1deb8f-57b8-4fdb-8289-db7322e90512",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/w3ypcf2h",
+      "id": "1",
+      "bbox": [
+        58,
+        34,
+        620,
+        28
+      ],
+      "geometry": "rect",
+      "text": "RAYLAB DISTRIBUTED COMPUTING",
+      "textPreview": "RAYLAB DISTRIBUTED COMPUTING",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RAYLAB DISTRIBUTED COMPUTING"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RAYLAB DISTRIBUTED COMPUTING",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RAYLAB DISTRIBUTED COMPUTING",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/b2pojalc",
+      "id": "2",
+      "bbox": [
+        58,
+        72,
+        1010,
+        106
+      ],
+      "geometry": "rect",
+      "text": "Ray fits the lab better than adjacent tools",
+      "textPreview": "Ray fits the lab better than adjacent tools",
+      "resolvedFontSize": 38,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 38,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Ray fits the lab better than adjacent tools"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Ray fits the lab better than adjacent tools",
+          "resolvedTextStyle": {
+            "fontSize": 38,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Ray fits the lab better than adjacent tools",
+              "fontSize": 38,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a1g7apkr",
+      "id": "3",
+      "bbox": [
+        58,
+        184,
+        1164,
+        1.4
+      ],
+      "geometry": "rect",
+      "fillColor": "#B8C4CA",
+      "lineColor": "#B8C4CA",
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ls76p4je",
+      "id": "4",
+      "bbox": [
+        58,
+        202,
+        1086,
+        58
+      ],
+      "geometry": "rect",
+      "text": "The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime for tasks, actors, training, tuning, data, and serving on machines people already own.",
+      "textPreview": "The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime for tasks, actors, trai...",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 21,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime"
+          },
+          {
+            "index": 2,
+            "text": "for tasks, actors, training, tuning, data, and serving on machines people already own."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime for tasks, actors, training, tuning, data, and serving on machines people already own.",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime for tasks, actors, training, tuning, data, and serving on machines people already own.",
+              "fontSize": 21,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/krypgz2t",
+      "id": "5",
+      "bbox": [
+        58,
+        296,
+        540,
+        150
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#B8C4CA",
+      "lineWidth": 1
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jqponu18",
+      "id": "6",
+      "bbox": [
+        76,
+        316,
+        82,
+        64
+      ],
+      "geometry": "rect",
+      "fillColor": "#F8FAFB",
+      "lineColor": "#D9E3E7",
+      "lineWidth": 1
+    },
+    {
+      "order": 7,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/j2d4ja1w",
+      "id": "7",
+      "bbox": [
+        86,
+        326,
+        62,
+        44
+      ],
+      "geometry": "rect",
+      "alt": "Apache Spark logo",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "7c7bfc4d-85e7-42af-bbed-b4f955a1b795",
+        "contentType": "image/png",
+        "byteLength": 26999
+      }
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/twrqt4ja",
+      "id": "8",
+      "bbox": [
+        176,
+        316,
+        400,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Apache Spark",
+      "textPreview": "Apache Spark",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Helvetica Neue",
+        "color": "#B45309",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Apache Spark"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Apache Spark",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "typeface": "Helvetica Neue",
+            "color": "#B45309",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Apache Spark",
+              "fontSize": 24,
+              "typeface": "Helvetica Neue",
+              "color": "#B45309",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8vipkz2p",
+      "id": "9",
+      "bbox": [
+        176,
+        354,
+        400,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Large-scale SQL, ETL, and data processing.",
+      "textPreview": "Large-scale SQL, ETL, and data processing.",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Large-scale SQL, ETL, and data processing."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Large-scale SQL, ETL, and data processing.",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Large-scale SQL, ETL, and data processing.",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2l4j2p8v",
+      "id": "10",
+      "bbox": [
+        176,
+        400,
+        400,
+        54
+      ],
+      "geometry": "rect",
+      "text": "Less natural for Python-native actors, mixed ML workloads, and interactive desktop-lab contribution.",
+      "textPreview": "Less natural for Python-native actors, mixed ML workloads, and interactive desktop-lab contribution.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Less natural for Python-native actors, mixed ML"
+          },
+          {
+            "index": 2,
+            "text": "workloads, and interactive desktop-lab contribution."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Less natural for Python-native actors, mixed ML workloads, and interactive desktop-lab contribution.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Less natural for Python-native actors, mixed ML workloads, and interactive desktop-lab contribution.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3mxkva9g",
+      "id": "11",
+      "bbox": [
+        642,
+        296,
+        540,
+        150
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#B8C4CA",
+      "lineWidth": 1
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4n6l4fq1",
+      "id": "12",
+      "bbox": [
+        660,
+        316,
+        82,
+        64
+      ],
+      "geometry": "rect",
+      "fillColor": "#F8FAFB",
+      "lineColor": "#D9E3E7",
+      "lineWidth": 1
+    },
+    {
+      "order": 13,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/q1c7al8z",
+      "id": "13",
+      "bbox": [
+        670,
+        326,
+        62,
+        44
+      ],
+      "geometry": "rect",
+      "alt": "Dask logo",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "8850dae2-ef7f-41a2-aa9d-0e0eb3e23932",
+        "contentType": "image/png",
+        "byteLength": 5112
+      }
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qpo36p8r",
+      "id": "14",
+      "bbox": [
+        760,
+        316,
+        400,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Dask",
+      "textPreview": "Dask",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Helvetica Neue",
+        "color": "#2563EB",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Dask"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Dask",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "typeface": "Helvetica Neue",
+            "color": "#2563EB",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Dask",
+              "fontSize": 24,
+              "typeface": "Helvetica Neue",
+              "color": "#2563EB",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bqxkzu9c",
+      "id": "15",
+      "bbox": [
+        760,
+        354,
+        400,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Python-native scaling for arrays, dataframes, and NumPy/Pandas-style workloads.",
+      "textPreview": "Python-native scaling for arrays, dataframes, and NumPy/Pandas-style workloads.",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Python-native scaling for arrays, dataframes, and"
+          },
+          {
+            "index": 2,
+            "text": "NumPy/Pandas-style workloads."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Python-native scaling for arrays, dataframes, and NumPy/Pandas-style workloads.",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Python-native scaling for arrays, dataframes, and NumPy/Pandas-style workloads.",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cb6l8zqx",
+      "id": "16",
+      "bbox": [
+        760,
+        400,
+        400,
+        54
+      ],
+      "geometry": "rect",
+      "text": "Strong for data science parallelism, but not as complete as one runtime for Train, Tune, Serve, and actors.",
+      "textPreview": "Strong for data science parallelism, but not as complete as one runtime for Train, Tune, Serve, and actors.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Strong for data science parallelism, but not as complete"
+          },
+          {
+            "index": 2,
+            "text": "as one runtime for Train, Tune, Serve, and actors."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Strong for data science parallelism, but not as complete as one runtime for Train, Tune, Serve, and actors.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Strong for data science parallelism, but not as complete as one runtime for Train, Tune, Serve, and actors.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/dcf214ri",
+      "id": "17",
+      "bbox": [
+        58,
+        472,
+        540,
+        150
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#B8C4CA",
+      "lineWidth": 1
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6tkju58n",
+      "id": "18",
+      "bbox": [
+        76,
+        492,
+        82,
+        64
+      ],
+      "geometry": "rect",
+      "fillColor": "#F8FAFB",
+      "lineColor": "#D9E3E7",
+      "lineWidth": 1
+    },
+    {
+      "order": 19,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/ovy9kf6x",
+      "id": "19",
+      "bbox": [
+        86,
+        502,
+        62,
+        44
+      ],
+      "geometry": "rect",
+      "alt": "Kubernetes logo",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "6b48285b-cd87-444f-9bb6-54f6c6e8f67f",
+        "contentType": "image/png",
+        "byteLength": 302153
+      }
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vy9gv6p0",
+      "id": "20",
+      "bbox": [
+        176,
+        492,
+        400,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Kubernetes",
+      "textPreview": "Kubernetes",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Helvetica Neue",
+        "color": "#2563EB",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Kubernetes"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Kubernetes",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "typeface": "Helvetica Neue",
+            "color": "#2563EB",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Kubernetes",
+              "fontSize": 24,
+              "typeface": "Helvetica Neue",
+              "color": "#2563EB",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ax0z21of",
+      "id": "21",
+      "bbox": [
+        176,
+        530,
+        400,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Production-grade container orchestration and deployment.",
+      "textPreview": "Production-grade container orchestration and deployment.",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Production-grade container orchestration and"
+          },
+          {
+            "index": 2,
+            "text": "deployment."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Production-grade container orchestration and deployment.",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Production-grade container orchestration and deployment.",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/x0rixw76",
+      "id": "22",
+      "bbox": [
+        176,
+        576,
+        400,
+        54
+      ],
+      "geometry": "rect",
+      "text": "Powerful infrastructure, but operationally heavier and not itself a researcher-friendly compute API.",
+      "textPreview": "Powerful infrastructure, but operationally heavier and not itself a researcher-friendly compute API.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Powerful infrastructure, but operationally heavier and not"
+          },
+          {
+            "index": 2,
+            "text": "itself a researcher-friendly compute API."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Powerful infrastructure, but operationally heavier and not itself a researcher-friendly compute API.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Powerful infrastructure, but operationally heavier and not itself a researcher-friendly compute API.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wzih4r6l",
+      "id": "23",
+      "bbox": [
+        642,
+        472,
+        540,
+        150
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#B8C4CA",
+      "lineWidth": 1
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nupgrmpo",
+      "id": "24",
+      "bbox": [
+        660,
+        492,
+        82,
+        64
+      ],
+      "geometry": "rect",
+      "fillColor": "#F8FAFB",
+      "lineColor": "#D9E3E7",
+      "lineWidth": 1
+    },
+    {
+      "order": 25,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/l8f218ju",
+      "id": "25",
+      "bbox": [
+        670,
+        502,
+        62,
+        44
+      ],
+      "geometry": "rect",
+      "alt": "Celery logo",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "842f1e2a-baeb-4f1f-992e-beee36f30e13",
+        "contentType": "image/png",
+        "byteLength": 5624
+      }
+    },
+    {
+      "order": 26,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9wrytw7u",
+      "id": "26",
+      "bbox": [
+        760,
+        492,
+        400,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Celery",
+      "textPreview": "Celery",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Helvetica Neue",
+        "color": "#2F9E67",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Celery"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Celery",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "typeface": "Helvetica Neue",
+            "color": "#2F9E67",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Celery",
+              "fontSize": 24,
+              "typeface": "Helvetica Neue",
+              "color": "#2F9E67",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 27,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8vyh0r69",
+      "id": "27",
+      "bbox": [
+        760,
+        530,
+        400,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Reliable background jobs and web-task queues.",
+      "textPreview": "Reliable background jobs and web-task queues.",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Reliable background jobs and web-task queues."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Reliable background jobs and web-task queues.",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Reliable background jobs and web-task queues.",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 28,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7qt03qp8",
+      "id": "28",
+      "bbox": [
+        760,
+        576,
+        400,
+        54
+      ],
+      "geometry": "rect",
+      "text": "Great for queues, but not designed as an ML, simulation, and distributed-data runtime.",
+      "textPreview": "Great for queues, but not designed as an ML, simulation, and distributed-data runtime.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Great for queues, but not designed as an ML, simulation,"
+          },
+          {
+            "index": 2,
+            "text": "and distributed-data runtime."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Great for queues, but not designed as an ML, simulation, and distributed-data runtime.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Great for queues, but not designed as an ML, simulation, and distributed-data runtime.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 29,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6pkzalon",
+      "id": "29",
+      "bbox": [
+        58,
+        668,
+        360,
+        24
+      ],
+      "geometry": "rect",
+      "text": "RayLab · university lab cluster",
+      "textPreview": "RayLab · university lab cluster",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RayLab · university lab cluster"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RayLab · university lab cluster",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RayLab · university lab cluster",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 30,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4zu58jit",
+      "id": "30",
+      "bbox": [
+        1162,
+        668,
+        60,
+        24
+      ],
+      "geometry": "rect",
+      "text": "05",
+      "textPreview": "05",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "05"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "05",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "05",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

@@ -1,0 +1,863 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/8p0acj",
+    "id": "8p0acj",
+    "slide": 12,
+    "layoutId": "9f1deb8f-57b8-4fdb-8289-db7322e90512",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Helvetica Neue"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9f1deb8f-57b8-4fdb-8289-db7322e90512",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cvyhgbap",
+      "id": "1",
+      "bbox": [
+        58,
+        34,
+        620,
+        28
+      ],
+      "geometry": "rect",
+      "text": "RAYLAB DISTRIBUTED COMPUTING",
+      "textPreview": "RAYLAB DISTRIBUTED COMPUTING",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RAYLAB DISTRIBUTED COMPUTING"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RAYLAB DISTRIBUTED COMPUTING",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RAYLAB DISTRIBUTED COMPUTING",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bup07694",
+      "id": "2",
+      "bbox": [
+        58,
+        72,
+        1010,
+        106
+      ],
+      "geometry": "rect",
+      "text": "The MNIST CNN benchmark has separately editable charts",
+      "textPreview": "The MNIST CNN benchmark has separately editable charts",
+      "resolvedFontSize": 38,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 38,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The MNIST CNN benchmark has separately editable"
+          },
+          {
+            "index": 2,
+            "text": "charts"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The MNIST CNN benchmark has separately editable charts",
+          "resolvedTextStyle": {
+            "fontSize": 38,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The MNIST CNN benchmark has separately editable charts",
+              "fontSize": 38,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qtgze1sj",
+      "id": "3",
+      "bbox": [
+        58,
+        184,
+        1164,
+        1.4
+      ],
+      "geometry": "rect",
+      "fillColor": "#B8C4CA",
+      "lineColor": "#B8C4CA",
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lkridgr6",
+      "id": "4",
+      "bbox": [
+        58,
+        204,
+        1060,
+        54
+      ],
+      "geometry": "rect",
+      "text": "These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be selected, resized, and edited independently in PowerPoint.",
+      "textPreview": "These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be selected, resized, and edited ...",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 20,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be"
+          },
+          {
+            "index": 2,
+            "text": "selected, resized, and edited independently in PowerPoint."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be selected, resized, and edited independently in PowerPoint.",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be selected, resized, and edited independently in PowerPoint.",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0jyhkval",
+      "id": "5",
+      "bbox": [
+        58,
+        296,
+        350,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Wall time",
+      "textPreview": "Wall time",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Wall time"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Wall time",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Wall time",
+              "fontSize": 22,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zip0bq90",
+      "id": "6",
+      "bbox": [
+        58,
+        326,
+        350,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Lower is better; adding nodes reduced total training time.",
+      "textPreview": "Lower is better; adding nodes reduced total training time.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Lower is better; adding nodes reduced total"
+          },
+          {
+            "index": 2,
+            "text": "training time."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Lower is better; adding nodes reduced total training time.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Lower is better; adding nodes reduced total training time.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/edonu9g3",
+      "id": "7",
+      "bbox": [
+        58,
+        368,
+        350,
+        208
+      ],
+      "chartType": "bar"
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/honi1wr2",
+      "id": "8",
+      "bbox": [
+        468,
+        296,
+        350,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Throughput",
+      "textPreview": "Throughput",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Throughput"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Throughput",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Throughput",
+              "fontSize": 22,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gneh8rah",
+      "id": "9",
+      "bbox": [
+        468,
+        326,
+        350,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Total train images processed per second across synchronized rounds.",
+      "textPreview": "Total train images processed per second across synchronized rounds.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Total train images processed per second across"
+          },
+          {
+            "index": 2,
+            "text": "synchronized rounds."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Total train images processed per second across synchronized rounds.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Total train images processed per second across synchronized rounds.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/6dszmx4n",
+      "id": "10",
+      "bbox": [
+        468,
+        368,
+        350,
+        208
+      ],
+      "chartType": "bar"
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fm1czuto",
+      "id": "11",
+      "bbox": [
+        878,
+        296,
+        350,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Speedup",
+      "textPreview": "Speedup",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Speedup"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Speedup",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Speedup",
+              "fontSize": 22,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gnud8zut",
+      "id": "12",
+      "bbox": [
+        878,
+        326,
+        350,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Measured speedup relative to the one-node baseline.",
+      "textPreview": "Measured speedup relative to the one-node baseline.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Measured speedup relative to the one-node"
+          },
+          {
+            "index": 2,
+            "text": "baseline."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Measured speedup relative to the one-node baseline.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Measured speedup relative to the one-node baseline.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/tg3yhc3e",
+      "id": "13",
+      "bbox": [
+        878,
+        368,
+        350,
+        208
+      ],
+      "chartType": "line"
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2pcva9cz",
+      "id": "14",
+      "bbox": [
+        58,
+        668,
+        360,
+        24
+      ],
+      "geometry": "rect",
+      "text": "RayLab · university lab cluster",
+      "textPreview": "RayLab · university lab cluster",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RayLab · university lab cluster"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RayLab · university lab cluster",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RayLab · university lab cluster",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3qlc3etk",
+      "id": "15",
+      "bbox": [
+        1162,
+        668,
+        60,
+        24
+      ],
+      "geometry": "rect",
+      "text": "12",
+      "textPreview": "12",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "12"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "12",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "12",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

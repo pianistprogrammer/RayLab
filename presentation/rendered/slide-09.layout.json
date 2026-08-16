@@ -1,0 +1,1313 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/m2rq50",
+    "id": "m2rq50",
+    "slide": 9,
+    "layoutId": "9f1deb8f-57b8-4fdb-8289-db7322e90512",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Helvetica Neue",
+      "SFMono-Regular"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9f1deb8f-57b8-4fdb-8289-db7322e90512",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/rutwrm9o",
+      "id": "1",
+      "bbox": [
+        58,
+        34,
+        620,
+        28
+      ],
+      "geometry": "rect",
+      "text": "RAYLAB DISTRIBUTED COMPUTING",
+      "textPreview": "RAYLAB DISTRIBUTED COMPUTING",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RAYLAB DISTRIBUTED COMPUTING"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RAYLAB DISTRIBUTED COMPUTING",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RAYLAB DISTRIBUTED COMPUTING",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/svmx0ra9",
+      "id": "2",
+      "bbox": [
+        58,
+        72,
+        1010,
+        106
+      ],
+      "geometry": "rect",
+      "text": "Ray gives familiar ML frameworks a distributed launch point",
+      "textPreview": "Ray gives familiar ML frameworks a distributed launch point",
+      "resolvedFontSize": 38,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 38,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Ray gives familiar ML frameworks a distributed launch"
+          },
+          {
+            "index": 2,
+            "text": "point"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Ray gives familiar ML frameworks a distributed launch point",
+          "resolvedTextStyle": {
+            "fontSize": 38,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Ray gives familiar ML frameworks a distributed launch point",
+              "fontSize": 38,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/twvetwru",
+      "id": "3",
+      "bbox": [
+        58,
+        184,
+        1164,
+        1.4
+      ],
+      "geometry": "rect",
+      "fillColor": "#B8C4CA",
+      "lineColor": "#B8C4CA",
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ex4f21sf",
+      "id": "4",
+      "bbox": [
+        58,
+        204,
+        1080,
+        54
+      ],
+      "geometry": "rect",
+      "text": "These are intentionally short because the point is not to rewrite every training script. Ray supplies the cluster runtime; the framework keeps the model logic.",
+      "textPreview": "These are intentionally short because the point is not to rewrite every training script. Ray supplies the cluster runtime; the framework ...",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 20,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "These are intentionally short because the point is not to rewrite every training script. Ray supplies the cluster runtime;"
+          },
+          {
+            "index": 2,
+            "text": "the framework keeps the model logic."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "These are intentionally short because the point is not to rewrite every training script. Ray supplies the cluster runtime; the framework keeps the model logic.",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "These are intentionally short because the point is not to rewrite every training script. Ray supplies the cluster runtime; the framework keeps the model logic.",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fydgv690",
+      "id": "5",
+      "bbox": [
+        58,
+        276,
+        558,
+        24
+      ],
+      "geometry": "rect",
+      "text": "PyTorch",
+      "textPreview": "PyTorch",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "PyTorch"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "PyTorch",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "PyTorch",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gzmx4ra5",
+      "id": "6",
+      "bbox": [
+        58,
+        304,
+        558,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#13242A",
+      "lineColor": "#13242A",
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/10vyxwrq",
+      "id": "7",
+      "bbox": [
+        70,
+        315,
+        534,
+        32
+      ],
+      "geometry": "rect",
+      "text": "TorchTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))",
+      "textPreview": "TorchTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "SFMono-Regular",
+        "color": "#DFF5EF",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "TorchTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "TorchTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "SFMono-Regular",
+            "color": "#DFF5EF",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "TorchTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))",
+              "fontSize": 14,
+              "typeface": "SFMono-Regular",
+              "color": "#DFF5EF",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/214f61sb",
+      "id": "8",
+      "bbox": [
+        58,
+        380,
+        558,
+        24
+      ],
+      "geometry": "rect",
+      "text": "TensorFlow / Keras",
+      "textPreview": "TensorFlow / Keras",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "TensorFlow / Keras"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "TensorFlow / Keras",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "TensorFlow / Keras",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/n2xgz69w",
+      "id": "9",
+      "bbox": [
+        58,
+        408,
+        558,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#13242A",
+      "lineColor": "#13242A",
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7idszmto",
+      "id": "10",
+      "bbox": [
+        70,
+        419,
+        534,
+        32
+      ],
+      "geometry": "rect",
+      "text": "TensorflowTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))",
+      "textPreview": "TensorflowTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "SFMono-Regular",
+        "color": "#DFF5EF",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "TensorflowTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "TensorflowTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "SFMono-Regular",
+            "color": "#DFF5EF",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "TensorflowTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))",
+              "fontSize": 14,
+              "typeface": "SFMono-Regular",
+              "color": "#DFF5EF",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6h4bqhc3",
+      "id": "11",
+      "bbox": [
+        58,
+        484,
+        558,
+        24
+      ],
+      "geometry": "rect",
+      "text": "XGBoost",
+      "textPreview": "XGBoost",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "XGBoost"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "XGBoost",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "XGBoost",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tkva1cbu",
+      "id": "12",
+      "bbox": [
+        58,
+        512,
+        558,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#13242A",
+      "lineColor": "#13242A",
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sjmts7u9",
+      "id": "13",
+      "bbox": [
+        70,
+        523,
+        534,
+        32
+      ],
+      "geometry": "rect",
+      "text": "XGBoostTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))",
+      "textPreview": "XGBoostTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "SFMono-Regular",
+        "color": "#DFF5EF",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "XGBoostTrainer(label_column='y',"
+          },
+          {
+            "index": 2,
+            "text": "scaling_config=ScalingConfig(num_workers=N))"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "XGBoostTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "SFMono-Regular",
+            "color": "#DFF5EF",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "XGBoostTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))",
+              "fontSize": 14,
+              "typeface": "SFMono-Regular",
+              "color": "#DFF5EF",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jetsv2ts",
+      "id": "14",
+      "bbox": [
+        664,
+        276,
+        558,
+        24
+      ],
+      "geometry": "rect",
+      "text": "LightGBM",
+      "textPreview": "LightGBM",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "LightGBM"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "LightGBM",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "LightGBM",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/idkrmxc7",
+      "id": "15",
+      "bbox": [
+        664,
+        304,
+        558,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#13242A",
+      "lineColor": "#13242A",
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5gvaxcbi",
+      "id": "16",
+      "bbox": [
+        676,
+        315,
+        534,
+        32
+      ],
+      "geometry": "rect",
+      "text": "LightGBMTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))",
+      "textPreview": "LightGBMTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "SFMono-Regular",
+        "color": "#DFF5EF",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "LightGBMTrainer(label_column='y',"
+          },
+          {
+            "index": 2,
+            "text": "scaling_config=ScalingConfig(num_workers=N))"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "LightGBMTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "SFMono-Regular",
+            "color": "#DFF5EF",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "LightGBMTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))",
+              "fontSize": 14,
+              "typeface": "SFMono-Regular",
+              "color": "#DFF5EF",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kf29o7ux",
+      "id": "17",
+      "bbox": [
+        664,
+        380,
+        558,
+        24
+      ],
+      "geometry": "rect",
+      "text": "scikit-learn tuning",
+      "textPreview": "scikit-learn tuning",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "scikit-learn tuning"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "scikit-learn tuning",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "scikit-learn tuning",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3axs76tw",
+      "id": "18",
+      "bbox": [
+        664,
+        408,
+        558,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#13242A",
+      "lineColor": "#13242A",
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/29oby1cb",
+      "id": "19",
+      "bbox": [
+        676,
+        419,
+        534,
+        32
+      ],
+      "geometry": "rect",
+      "text": "tune.Tuner(trainable, param_space=space).fit()",
+      "textPreview": "tune.Tuner(trainable, param_space=space).fit()",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "SFMono-Regular",
+        "color": "#DFF5EF",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "tune.Tuner(trainable, param_space=space).fit()"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "tune.Tuner(trainable, param_space=space).fit()",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "SFMono-Regular",
+            "color": "#DFF5EF",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "tune.Tuner(trainable, param_space=space).fit()",
+              "fontSize": 14,
+              "typeface": "SFMono-Regular",
+              "color": "#DFF5EF",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/yhsnmp0v",
+      "id": "20",
+      "bbox": [
+        664,
+        484,
+        558,
+        24
+      ],
+      "geometry": "rect",
+      "text": "LLM batch inference",
+      "textPreview": "LLM batch inference",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "LLM batch inference"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "LLM batch inference",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "LLM batch inference",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zi14fuhg",
+      "id": "21",
+      "bbox": [
+        664,
+        512,
+        558,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#13242A",
+      "lineColor": "#13242A",
+      "lineWidth": 0
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kja5ozi1",
+      "id": "22",
+      "bbox": [
+        676,
+        523,
+        534,
+        32
+      ],
+      "geometry": "rect",
+      "text": "ray.data.read_parquet(data).map_batches(predict, concurrency=N)",
+      "textPreview": "ray.data.read_parquet(data).map_batches(predict, concurrency=N)",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "SFMono-Regular",
+        "color": "#DFF5EF",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "ray.data.read_parquet(data).map_batches(predict, concurrency=N)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "ray.data.read_parquet(data).map_batches(predict, concurrency=N)",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "SFMono-Regular",
+            "color": "#DFF5EF",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "ray.data.read_parquet(data).map_batches(predict, concurrency=N)",
+              "fontSize": 14,
+              "typeface": "SFMono-Regular",
+              "color": "#DFF5EF",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lk3mh4z6",
+      "id": "23",
+      "bbox": [
+        58,
+        668,
+        360,
+        24
+      ],
+      "geometry": "rect",
+      "text": "RayLab · university lab cluster",
+      "textPreview": "RayLab · university lab cluster",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RayLab · university lab cluster"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RayLab · university lab cluster",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RayLab · university lab cluster",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mlcnq90r",
+      "id": "24",
+      "bbox": [
+        1162,
+        668,
+        60,
+        24
+      ],
+      "geometry": "rect",
+      "text": "09",
+      "textPreview": "09",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "09"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "09",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "09",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

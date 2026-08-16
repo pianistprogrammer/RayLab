@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RayLab Benchmark Results</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172126;
+      --muted: #5f6d75;
+      --line: #cfd9de;
+      --soft: #eef4f6;
+      --panel: #ffffff;
+      --blue: #2563eb;
+      --teal: #0f9f8e;
+      --green: #1d8f4f;
+      --amber: #c98116;
+      --red: #c24135;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #f7fafb;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 30px 22px 44px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: start;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      font-size: clamp(30px, 4vw, 54px);
+      line-height: 1.02;
+      letter-spacing: 0;
+      max-width: 820px;
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+      max-width: 800px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 7px 11px;
+      border: 1px solid #bad8d3;
+      border-radius: 8px;
+      color: #0d5c54;
+      background: #e8f6f4;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px 16px;
+      min-height: 112px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 9px;
+      font-size: 31px;
+      line-height: 1.05;
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .section-title {
+      margin: 28px 0 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .section-title h2 {
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .section-title p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .chart-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 360px;
+    }
+
+    .chart-panel h3 {
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .chart-panel .note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      margin-top: 5px;
+      min-height: 38px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin-top: 12px;
+      overflow: visible;
+    }
+
+    .axis { stroke: #8ba0aa; stroke-width: 1; }
+    .grid { stroke: #dce5e9; stroke-width: 1; }
+    .label { fill: var(--muted); font-size: 12px; }
+    .value { fill: var(--ink); font-size: 13px; font-weight: 800; }
+    .bar-node-1 { fill: #6b7f89; }
+    .bar-node-2 { fill: var(--teal); }
+    .bar-node-3 { fill: var(--blue); }
+    .speed-line { fill: none; stroke: var(--teal); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .point { fill: #ffffff; stroke: var(--teal); stroke-width: 4; }
+    .target-line { stroke: #9aadb6; stroke-width: 2; stroke-dasharray: 6 6; }
+
+    .nodes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .node-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      min-height: 142px;
+    }
+
+    .node-card h3 {
+      font-size: 16px;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    .node-card p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      margin-top: 6px;
+    }
+
+    .node-stat {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .node-stat strong { color: var(--ink); }
+
+    .takeaways {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .takeaway, .data-table {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .takeaway h2, .data-table h2 { font-size: 20px; }
+    .takeaway ul {
+      margin: 14px 0 0;
+      padding-left: 20px;
+      color: #314047;
+      line-height: 1.55;
+    }
+
+    .takeaway li { margin: 8px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0; }
+
+    footer {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    @media (max-width: 860px) {
+      header, .chart-grid, .nodes, .takeaways { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .badge { justify-self: start; }
+    }
+
+    @media (max-width: 540px) {
+      main { padding: 22px 14px 32px; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .chart-panel { min-height: 0; padding: 13px; }
+      th, td { padding: 9px 5px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>RayLab turns idle lab machines into one shared compute pool.</h1>
+        <p class="subtitle">A cross-platform RayLab cluster ran a Monte Carlo option-pricing simulation across Windows and macOS nodes. The same 480 million simulated paths finished more than twice as fast when a second machine joined the job.</p>
+      </div>
+      <div class="badge">Measured cluster run</div>
+    </header>
+
+    <section class="metric-grid" aria-label="Benchmark highlights">
+      <div class="metric">
+        <span>Measured speedup</span>
+        <strong>2.26x</strong>
+        <small>Two nodes vs. one node on the same Monte Carlo workload.</small>
+      </div>
+      <div class="metric">
+        <span>Best wall time</span>
+        <strong>3.44s</strong>
+        <small>Down from 7.77s with one node.</small>
+      </div>
+      <div class="metric">
+        <span>Workload</span>
+        <strong>480M</strong>
+        <small>Independent simulated market paths per run.</small>
+      </div>
+      <div class="metric">
+        <span>Validation</span>
+        <strong>0.0009</strong>
+        <small>Monte Carlo standard error against Black-Scholes.</small>
+      </div>
+    </section>
+
+    <section class="section-title">
+      <div>
+        <h2>Performance Results</h2>
+        <p>Task: price a European call option with 96 independent Monte Carlo chunks of 5,000,000 paths each.</p>
+      </div>
+    </section>
+
+    <section class="chart-grid" aria-label="Performance charts">
+      <article class="chart-panel">
+        <h3>Wall Time</h3>
+        <p class="note">Lower is better. Adding one worker cut the simulation runtime by more than half.</p>
+        <svg viewBox="0 0 520 260" role="img" aria-label="Wall time chart">
+          <line class="axis" x1="54" y1="218" x2="492" y2="218"></line>
+          <line class="axis" x1="54" y1="24" x2="54" y2="218"></line>
+          <line class="grid" x1="54" y1="170" x2="492" y2="170"></line>
+          <line class="grid" x1="54" y1="121" x2="492" y2="121"></line>
+          <line class="grid" x1="54" y1="73" x2="492" y2="73"></line>
+          <text class="label" x="18" y="222">0s</text>
+          <text class="label" x="12" y="174">2s</text>
+          <text class="label" x="12" y="125">4s</text>
+          <text class="label" x="12" y="77">6s</text>
+          <rect class="bar-node-1" x="142" y="32" width="86" height="186" rx="5"></rect>
+          <rect class="bar-node-2" x="306" y="135" width="86" height="83" rx="5"></rect>
+          <text class="value" x="157" y="24">7.77s</text>
+          <text class="value" x="322" y="129">3.44s</text>
+          <text class="label" x="162" y="242">1 node</text>
+          <text class="label" x="326" y="242">2 nodes</text>
+        </svg>
+      </article>
+
+      <article class="chart-panel">
+        <h3>Speedup vs. One Node</h3>
+        <p class="note">Higher is better. This workload scales cleanly because every simulation chunk is independent.</p>
+        <svg viewBox="0 0 520 260" role="img" aria-label="Speedup line chart">
+          <line class="axis" x1="54" y1="218" x2="492" y2="218"></line>
+          <line class="axis" x1="54" y1="24" x2="54" y2="218"></line>
+          <line class="grid" x1="54" y1="140" x2="492" y2="140"></line>
+          <line class="grid" x1="54" y1="62" x2="492" y2="62"></line>
+          <line class="target-line" x1="54" y1="140" x2="492" y2="140"></line>
+          <text class="label" x="18" y="222">0x</text>
+          <text class="label" x="16" y="144">1x</text>
+          <text class="label" x="16" y="66">2x</text>
+          <polyline class="speed-line" points="170,140 350,43"></polyline>
+          <circle class="point" cx="170" cy="140" r="8"></circle>
+          <circle class="point" cx="350" cy="43" r="8"></circle>
+          <text class="value" x="154" y="126">1.00x</text>
+          <text class="value" x="333" y="29">2.26x</text>
+          <text class="label" x="152" y="242">1 node</text>
+          <text class="label" x="332" y="242">2 nodes</text>
+        </svg>
+      </article>
+
+      <article class="chart-panel">
+        <h3>Throughput</h3>
+        <p class="note">Simulated paths completed per second. RayLab more than doubled useful throughput.</p>
+        <svg viewBox="0 0 520 260" role="img" aria-label="Throughput chart">
+          <line class="axis" x1="54" y1="218" x2="492" y2="218"></line>
+          <line class="axis" x1="54" y1="24" x2="54" y2="218"></line>
+          <line class="grid" x1="54" y1="153" x2="492" y2="153"></line>
+          <line class="grid" x1="54" y1="89" x2="492" y2="89"></line>
+          <line class="grid" x1="54" y1="24" x2="492" y2="24"></line>
+          <text class="label" x="10" y="222">0</text>
+          <text class="label" x="4" y="157">50M</text>
+          <text class="label" x="0" y="93">100M</text>
+          <text class="label" x="0" y="28">150M</text>
+          <rect class="bar-node-1" x="142" y="138" width="86" height="80" rx="5"></rect>
+          <rect class="bar-node-2" x="306" y="37" width="86" height="181" rx="5"></rect>
+          <text class="value" x="139" y="132">61.8M</text>
+          <text class="value" x="303" y="31">139.7M</text>
+          <text class="label" x="162" y="242">1 node</text>
+          <text class="label" x="326" y="242">2 nodes</text>
+        </svg>
+      </article>
+
+      <article class="chart-panel">
+        <h3>2-Node Work Distribution</h3>
+        <p class="note">Each node received 48 chunks. This confirms the simulation used both participating machines.</p>
+        <svg viewBox="0 0 520 260" role="img" aria-label="Work distribution chart">
+          <line class="axis" x1="54" y1="218" x2="492" y2="218"></line>
+          <line class="axis" x1="54" y1="24" x2="54" y2="218"></line>
+          <line class="grid" x1="54" y1="157" x2="492" y2="157"></line>
+          <line class="grid" x1="54" y1="96" x2="492" y2="96"></line>
+          <text class="label" x="10" y="222">0</text>
+          <text class="label" x="4" y="161">16</text>
+          <text class="label" x="4" y="100">32</text>
+          <rect class="bar-node-1" x="142" y="32" width="86" height="186" rx="5"></rect>
+          <rect class="bar-node-2" x="306" y="32" width="86" height="186" rx="5"></rect>
+          <text class="value" x="174" y="24">48</text>
+          <text class="value" x="338" y="24">48</text>
+          <text class="label" x="136" y="242">Abimbolas</text>
+          <text class="label" x="294" y="242">BaddestM4</text>
+        </svg>
+      </article>
+    </section>
+
+    <section class="section-title">
+      <div>
+        <h2>Contributing Nodes</h2>
+        <p>One Windows coordinator and one macOS worker ran the clean demo workload.</p>
+      </div>
+    </section>
+
+    <section class="nodes" aria-label="Cluster nodes">
+      <article class="node-card">
+        <h3>Abimbolas</h3>
+        <p>Windows coordinator at 192.168.33.12</p>
+        <div class="node-stat"><span>Chunks</span><strong>48</strong></div>
+        <div class="node-stat"><span>Paths</span><strong>240M</strong></div>
+      </article>
+      <article class="node-card">
+        <h3>BaddestM4.local</h3>
+        <p>macOS worker at 192.168.33.14</p>
+        <div class="node-stat"><span>Chunks</span><strong>48</strong></div>
+        <div class="node-stat"><span>Paths</span><strong>240M</strong></div>
+      </article>
+    </section>
+
+    <section class="takeaways">
+      <article class="takeaway">
+        <h2>What This Demonstrates</h2>
+        <ul>
+          <li>RayLab can run one Python simulation over a mixed Windows and macOS cluster.</li>
+          <li>The same 480 million paths finished 2.26x faster when RayLab used two nodes instead of one.</li>
+          <li>Monte Carlo is a strong demo workload because every chunk is independent and has tiny result data.</li>
+          <li>The computed option price matched the analytical Black-Scholes price within the measured standard error.</li>
+        </ul>
+      </article>
+      <article class="data-table">
+        <h2>Benchmark Data</h2>
+        <table aria-label="Benchmark table">
+          <thead>
+            <tr><th>Nodes</th><th>Seconds</th><th>Paths/s</th><th>Speedup</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>7.77</td><td>61.8M</td><td>1.00x</td></tr>
+            <tr><td>2</td><td>3.44</td><td>139.7M</td><td>2.26x</td></tr>
+          </tbody>
+        </table>
+        <table aria-label="Correctness table">
+          <thead>
+            <tr><th>Result</th><th>Value</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Black-Scholes price</td><td>11.539831</td></tr>
+            <tr><td>Monte Carlo price</td><td>11.539097</td></tr>
+            <tr><td>Standard error</td><td>0.000945</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+
+    <footer>
+      Measured on RayLab against coordinator 192.168.33.12. Task: European call option pricing using 96 independent Monte Carlo chunks of 5,000,000 simulated paths each. Hardware, network conditions, and workload shape affect scaling; this report is intended as an honest proof that RayLab pooled real cross-platform compute resources.
+    </footer>
+  </main>
+</body>
+</html>

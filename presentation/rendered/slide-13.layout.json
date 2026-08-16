@@ -1,0 +1,1055 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/tu84ti",
+    "id": "tu84ti",
+    "slide": 13,
+    "layoutId": "9f1deb8f-57b8-4fdb-8289-db7322e90512",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Helvetica Neue"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9f1deb8f-57b8-4fdb-8289-db7322e90512",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "d69d0faa-2ea9-43f1-ad75-8c68a3047558",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/q14jexob",
+      "id": "1",
+      "bbox": [
+        58,
+        34,
+        620,
+        28
+      ],
+      "geometry": "rect",
+      "text": "RAYLAB DISTRIBUTED COMPUTING",
+      "textPreview": "RAYLAB DISTRIBUTED COMPUTING",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RAYLAB DISTRIBUTED COMPUTING"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RAYLAB DISTRIBUTED COMPUTING",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RAYLAB DISTRIBUTED COMPUTING",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/dov2pcn2",
+      "id": "2",
+      "bbox": [
+        58,
+        72,
+        1010,
+        106
+      ],
+      "geometry": "rect",
+      "text": "Accuracy stayed strong while all nodes contributed work",
+      "textPreview": "Accuracy stayed strong while all nodes contributed work",
+      "resolvedFontSize": 38,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 38,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Accuracy stayed strong while all nodes contributed"
+          },
+          {
+            "index": 2,
+            "text": "work"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Accuracy stayed strong while all nodes contributed work",
+          "resolvedTextStyle": {
+            "fontSize": 38,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Accuracy stayed strong while all nodes contributed work",
+              "fontSize": 38,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cnmlg76h",
+      "id": "3",
+      "bbox": [
+        58,
+        184,
+        1164,
+        1.4
+      ],
+      "geometry": "rect",
+      "fillColor": "#B8C4CA",
+      "lineColor": "#B8C4CA",
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zqxkr258",
+      "id": "4",
+      "bbox": [
+        58,
+        204,
+        1060,
+        54
+      ],
+      "geometry": "rect",
+      "text": "The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local training time alongside CPU share, which helps explain the different per-host timings.",
+      "textPreview": "The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local training time alongside CPU s...",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 20,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local"
+          },
+          {
+            "index": 2,
+            "text": "training time alongside CPU share, which helps explain the different per-host timings."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local training time alongside CPU share, which helps explain the different per-host timings.",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local training time alongside CPU share, which helps explain the different per-host timings.",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/epo3ih4n",
+      "id": "5",
+      "bbox": [
+        58,
+        300,
+        350,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Test accuracy by round",
+      "textPreview": "Test accuracy by round",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Test accuracy by round"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Test accuracy by round",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Test accuracy by round",
+              "fontSize": 22,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1sf2tcny",
+      "id": "6",
+      "bbox": [
+        58,
+        330,
+        350,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Largest three-node run; values are final evaluation after each synchronization round.",
+      "textPreview": "Largest three-node run; values are final evaluation after each synchronization round.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Largest three-node run; values are final"
+          },
+          {
+            "index": 2,
+            "text": "evaluation after each synchronization round."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Largest three-node run; values are final evaluation after each synchronization round.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Largest three-node run; values are final evaluation after each synchronization round.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/o3alszi9",
+      "id": "7",
+      "bbox": [
+        58,
+        372,
+        350,
+        194
+      ],
+      "chartType": "line"
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vutkfi5o",
+      "id": "8",
+      "bbox": [
+        468,
+        300,
+        350,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Test loss by round",
+      "textPreview": "Test loss by round",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Test loss by round"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Test loss by round",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Test loss by round",
+              "fontSize": 22,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/utkj6do3",
+      "id": "9",
+      "bbox": [
+        468,
+        330,
+        350,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Loss improved across the synchronized rounds in the three-node run.",
+      "textPreview": "Loss improved across the synchronized rounds in the three-node run.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Loss improved across the synchronized rounds"
+          },
+          {
+            "index": 2,
+            "text": "in the three-node run."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Loss improved across the synchronized rounds in the three-node run.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Loss improved across the synchronized rounds in the three-node run.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/k3ih8z2l",
+      "id": "10",
+      "bbox": [
+        468,
+        372,
+        350,
+        194
+      ],
+      "chartType": "line"
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/h4ba1g7i",
+      "id": "11",
+      "bbox": [
+        878,
+        300,
+        350,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Per-host train seconds",
+      "textPreview": "Per-host train seconds",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Helvetica Neue",
+        "color": "#0F1720",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Per-host train seconds"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Per-host train seconds",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Helvetica Neue",
+            "color": "#0F1720",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Per-host train seconds",
+              "fontSize": 22,
+              "typeface": "Helvetica Neue",
+              "color": "#0F1720",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/u1krq187",
+      "id": "12",
+      "bbox": [
+        878,
+        330,
+        350,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Each host trained an equal image share in the largest run.",
+      "textPreview": "Each host trained an equal image share in the largest run.",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Each host trained an equal image share in the"
+          },
+          {
+            "index": 2,
+            "text": "largest run."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Each host trained an equal image share in the largest run.",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Each host trained an equal image share in the largest run.",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "chart",
+      "scope": "slide",
+      "aid": "ch/j29gzu10",
+      "id": "13",
+      "bbox": [
+        878,
+        372,
+        350,
+        194
+      ],
+      "chartType": "bar"
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/47m9wbq9",
+      "id": "14",
+      "bbox": [
+        878,
+        584,
+        330,
+        20
+      ],
+      "geometry": "rect",
+      "text": "Abimbolas: 4 CPUs",
+      "textPreview": "Abimbolas: 4 CPUs",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Abimbolas: 4 CPUs"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Abimbolas: 4 CPUs",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Abimbolas: 4 CPUs",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/58va5g7u",
+      "id": "15",
+      "bbox": [
+        878,
+        606,
+        330,
+        20
+      ],
+      "geometry": "rect",
+      "text": "BaddestM4.local: 10 CPUs",
+      "textPreview": "BaddestM4.local: 10 CPUs",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "BaddestM4.local: 10 CPUs"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "BaddestM4.local: 10 CPUs",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "BaddestM4.local: 10 CPUs",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/i5krul83",
+      "id": "16",
+      "bbox": [
+        878,
+        628,
+        330,
+        20
+      ],
+      "geometry": "rect",
+      "text": "F6TMFW21C3: 12 CPUs",
+      "textPreview": "F6TMFW21C3: 12 CPUs",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "F6TMFW21C3: 12 CPUs"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "F6TMFW21C3: 12 CPUs",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "F6TMFW21C3: 12 CPUs",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/j6ts3qpo",
+      "id": "17",
+      "bbox": [
+        58,
+        668,
+        360,
+        24
+      ],
+      "geometry": "rect",
+      "text": "RayLab · university lab cluster",
+      "textPreview": "RayLab · university lab cluster",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RayLab · university lab cluster"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RayLab · university lab cluster",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RayLab · university lab cluster",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0bi9krqp",
+      "id": "18",
+      "bbox": [
+        1162,
+        668,
+        60,
+        24
+      ],
+      "geometry": "rect",
+      "text": "13",
+      "textPreview": "13",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#52636D",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "13"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "13",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#52636D",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "13",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#52636D",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

@@ -33,7 +33,72 @@ function sanitizeConfig(config) {
   // Always force worker_account to the expected value.
   if (config.privacy) config.privacy.worker_account = 'raylab-worker';
   if (config.privacy) config.privacy.container_runtime = 'docker';
+  _normalizeResourceCaps(config);
   return config;
+}
+
+async function sanitizeConfigForThisMachine(config) {
+  sanitizeConfig(config);
+  const hardware = await _safeDetectHardware();
+  if (hardware) _capResourceCapsToHardware(config, hardware);
+  return config;
+}
+
+async function _safeDetectHardware() {
+  try { return await detectHardware(); } catch (_) { return null; }
+}
+
+function _normalizeResourceCaps(config) {
+  const caps = config.resource_caps || {};
+  caps.cpus = _positiveNumber(caps.cpus, 1);
+  caps.gpus = _nonNegativeInteger(caps.gpus);
+  caps.memory_gb = _positiveNumber(caps.memory_gb, 1);
+  caps.gpu_memory_gb = _nonNegativeNumber(caps.gpu_memory_gb);
+  caps.max_concurrent_jobs = Math.max(1, _nonNegativeInteger(caps.max_concurrent_jobs) || 1);
+  config.resource_caps = caps;
+}
+
+function _capResourceCapsToHardware(config, hardware) {
+  const caps = config.resource_caps;
+  const cpuLimit = _finitePositive(hardware.cpu_logical);
+  if (cpuLimit !== null) caps.cpus = Math.min(caps.cpus, cpuLimit);
+
+  const memoryLimit = _finitePositive(hardware.memory_total_gb);
+  if (memoryLimit !== null) caps.memory_gb = Math.min(caps.memory_gb, memoryLimit);
+
+  const gpuLimit = _finiteNonNegative(hardware.gpu_count);
+  if (gpuLimit !== null) caps.gpus = Math.min(caps.gpus, Math.floor(gpuLimit));
+
+  const gpuMemoryLimit = _finiteNonNegative(hardware.gpu_memory_total_gb);
+  if (caps.gpus === 0) {
+    caps.gpu_memory_gb = 0;
+  } else if (gpuMemoryLimit !== null) {
+    caps.gpu_memory_gb = Math.min(caps.gpu_memory_gb, gpuMemoryLimit);
+  }
+}
+
+function _positiveNumber(value, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function _nonNegativeNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function _nonNegativeInteger(value) {
+  return Math.floor(_nonNegativeNumber(value));
+}
+
+function _finitePositive(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function _finiteNonNegative(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
 // ─── Health ───────────────────────────────────────────────────────────────────
@@ -57,7 +122,7 @@ function handleGetConfig() {
 
 async function handleSaveConfig(args) {
   const current = load();
-  const next = sanitizeConfig({ ...current, ...args });
+  const next = await sanitizeConfigForThisMachine({ ...current, ...args });
 
   // Block mode switch while Ray is running.
   if (
@@ -85,9 +150,14 @@ async function handleClusterStatus() {
 
 async function handleClusterStart() {
   const config = load();
+  const before = JSON.stringify(config.resource_caps || {});
+  await sanitizeConfigForThisMachine(config);
   if (_prepareCoordinatorAddressForThisMachine(config, { force: true })) {
     await save(config);
     await appendAudit(makeAuditEvent('config_updated', 'Coordinator address refreshed for this machine'));
+  } else if (JSON.stringify(config.resource_caps || {}) !== before) {
+    await save(config);
+    await appendAudit(makeAuditEvent('config_updated', 'Resource caps adjusted to detected hardware'));
   }
   return controller.start(config, { ensureRayRuntime });
 }

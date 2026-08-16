@@ -1,0 +1,8 @@
+Summarize the benefit of pooling idle lab computers for AI workloads.
+Write a short explanation of distributed batch inference for a non-technical buyer.
+Extract three risks from running compute jobs across mixed operating systems.
+Draft a two-sentence pitch for RayLab to a university research lab.
+Classify this support ticket as networking, runtime, hardware, or user setup: worker disappears after joining cluster.
+Generate a JSON object with fields product, workload, and outcome for a cluster benchmark.
+Explain why many small LLM requests can be distributed across several machines.
+Create a concise headline for a chart showing faster runtime with multiple nodes.

@@ -1,0 +1,530 @@
+{
+  "benchmark": "mnist_cnn_ray_weight_averaging",
+  "task": "Train a simple CNN on real MNIST using Ray workers and synchronized weight averaging",
+  "workload": {
+    "train_samples": 24000,
+    "test_samples": 5000,
+    "rounds": 5,
+    "local_epochs": 1,
+    "batch_size": 128,
+    "learning_rate": 0.05,
+    "momentum": 0.9
+  },
+  "nodes_selected": [
+    {
+      "node_id": "d3c4595f5d8de60279791226d875ce00cf57432113c2dc9d617610fc",
+      "address": "192.168.33.12",
+      "hostname": "Abimbolas",
+      "cpus": 4
+    },
+    {
+      "node_id": "8830718bdb5d2300730e2dbfae4e042e1620ddf9fd0cb6aa40999b2e",
+      "address": "192.168.33.14",
+      "hostname": "BaddestM4.local",
+      "cpus": 10
+    },
+    {
+      "node_id": "8551bb37cd2993dd42f3997ebde76d05a8048293d4f0da6a0caaf138",
+      "address": "192.168.33.17",
+      "hostname": "F6TMFW21C3",
+      "cpus": 12
+    }
+  ],
+  "runs": [
+    {
+      "nodes": 1,
+      "seconds": 18.55692510001245,
+      "images_per_second": 6466.588583682945,
+      "final_train_loss": 0.04625750059137742,
+      "final_train_accuracy": 0.9857083333333333,
+      "final_test_loss": 0.08869767971038818,
+      "final_test_accuracy": 0.9698,
+      "history": [
+        {
+          "round": 1,
+          "seconds": 2.904549599988968,
+          "train_loss": 0.26495619813601173,
+          "train_accuracy": 0.9215,
+          "test_loss": 0.16725672302246095,
+          "test_accuracy": 0.9432,
+          "test_seconds": 0.23421600001165643,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 24000,
+              "seconds": 2.904549599988968,
+              "train_loss": 0.26495619813601173,
+              "train_accuracy": 0.9215
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "seconds": 2.5661836999934167,
+          "train_loss": 0.10488641945521036,
+          "train_accuracy": 0.9677083333333333,
+          "test_loss": 0.10553172092437745,
+          "test_accuracy": 0.9648,
+          "test_seconds": 0.29769300000043586,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 24000,
+              "seconds": 2.5661836999934167,
+              "train_loss": 0.10488641945521036,
+              "train_accuracy": 0.9677083333333333
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "seconds": 2.51972699999169,
+          "train_loss": 0.07142718597749868,
+          "train_accuracy": 0.978,
+          "test_loss": 0.13014611616134644,
+          "test_accuracy": 0.9596,
+          "test_seconds": 0.25021790000027977,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 24000,
+              "seconds": 2.51972699999169,
+              "train_loss": 0.07142718597749868,
+              "train_accuracy": 0.978
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "seconds": 2.511420500013628,
+          "train_loss": 0.05330948445945978,
+          "train_accuracy": 0.9837916666666666,
+          "test_loss": 0.10214904823303222,
+          "test_accuracy": 0.9676,
+          "test_seconds": 0.2522441000037361,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 24000,
+              "seconds": 2.511420500013628,
+              "train_loss": 0.05330948445945978,
+              "train_accuracy": 0.9837916666666666
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "seconds": 2.5535395000042627,
+          "train_loss": 0.04625750059137742,
+          "train_accuracy": 0.9857083333333333,
+          "test_loss": 0.08869767971038818,
+          "test_accuracy": 0.9698,
+          "test_seconds": 0.23451800001203083,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 24000,
+              "seconds": 2.5535395000042627,
+              "train_loss": 0.04625750059137742,
+              "train_accuracy": 0.9857083333333333
+            }
+          ]
+        }
+      ],
+      "by_host": {
+        "Abimbolas": {
+          "rounds": 5,
+          "samples": 120000,
+          "seconds": 13.055420299991965,
+          "platforms": [
+            "Windows"
+          ]
+        }
+      },
+      "speedup": 1
+    },
+    {
+      "nodes": 2,
+      "seconds": 15.061427099994035,
+      "images_per_second": 7967.37249420724,
+      "final_train_loss": 0.0712965919127067,
+      "final_train_accuracy": 0.978,
+      "final_test_loss": 0.08924664440155029,
+      "final_test_accuracy": 0.9696,
+      "history": [
+        {
+          "round": 1,
+          "seconds": 1.3423980999941705,
+          "train_loss": 0.38032784138123193,
+          "train_accuracy": 0.88275,
+          "test_loss": 0.16968852043151855,
+          "test_accuracy": 0.9482,
+          "test_seconds": 0.23196910000115167,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 12000,
+              "seconds": 1.3423980999941705,
+              "train_loss": 0.38526070582866667,
+              "train_accuracy": 0.8820833333333333
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 12000,
+              "seconds": 0.8154723751358688,
+              "train_loss": 0.3753949769337972,
+              "train_accuracy": 0.8834166666666666
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "seconds": 1.2748791000049096,
+          "train_loss": 0.1420405314962069,
+          "train_accuracy": 0.956125,
+          "test_loss": 0.11459803409576416,
+          "test_accuracy": 0.966,
+          "test_seconds": 0.24541869999666233,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 12000,
+              "seconds": 1.2748791000049096,
+              "train_loss": 0.14702724647521973,
+              "train_accuracy": 0.9538333333333333
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 12000,
+              "seconds": 0.8443753332830966,
+              "train_loss": 0.13705381651719412,
+              "train_accuracy": 0.9584166666666667
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "seconds": 1.2985628999886103,
+          "train_loss": 0.1032584131360054,
+          "train_accuracy": 0.969125,
+          "test_loss": 0.11357898406982422,
+          "test_accuracy": 0.965,
+          "test_seconds": 0.23509919999924023,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 12000,
+              "seconds": 1.2985628999886103,
+              "train_loss": 0.10422585664192835,
+              "train_accuracy": 0.96775
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 12000,
+              "seconds": 0.7800459591671824,
+              "train_loss": 0.10229096963008245,
+              "train_accuracy": 0.9705
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "seconds": 1.2753743000066606,
+          "train_loss": 0.08139675185084343,
+          "train_accuracy": 0.9754583333333333,
+          "test_loss": 0.12026234912872315,
+          "test_accuracy": 0.9596,
+          "test_seconds": 0.24798049998935312,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 12000,
+              "seconds": 1.2753743000066606,
+              "train_loss": 0.0851033990184466,
+              "train_accuracy": 0.9738333333333333
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 12000,
+              "seconds": 0.7780845002271235,
+              "train_loss": 0.07769010468324025,
+              "train_accuracy": 0.9770833333333333
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "seconds": 1.2677975999977207,
+          "train_loss": 0.0712965919127067,
+          "train_accuracy": 0.978,
+          "test_loss": 0.08924664440155029,
+          "test_accuracy": 0.9696,
+          "test_seconds": 0.24385630000324454,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 12000,
+              "seconds": 1.2677975999977207,
+              "train_loss": 0.07150543025135994,
+              "train_accuracy": 0.9776666666666667
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 12000,
+              "seconds": 0.7825362500734627,
+              "train_loss": 0.07108775357405345,
+              "train_accuracy": 0.9783333333333334
+            }
+          ]
+        }
+      ],
+      "by_host": {
+        "Abimbolas": {
+          "rounds": 5,
+          "samples": 60000,
+          "seconds": 6.459011999992072,
+          "platforms": [
+            "Windows"
+          ]
+        },
+        "BaddestM4.local": {
+          "rounds": 5,
+          "samples": 60000,
+          "seconds": 4.000514417886734,
+          "platforms": [
+            "Darwin"
+          ]
+        }
+      },
+      "speedup": 1.2320827884908596
+    },
+    {
+      "nodes": 3,
+      "seconds": 13.828641200001584,
+      "images_per_second": 8677.64216776311,
+      "final_train_loss": 0.08696265940368175,
+      "final_train_accuracy": 0.9741666666666666,
+      "final_test_loss": 0.10275714540481568,
+      "final_test_accuracy": 0.9654,
+      "history": [
+        {
+          "round": 1,
+          "seconds": 0.8753254000039306,
+          "train_loss": 0.4895665009816488,
+          "train_accuracy": 0.8482916666666667,
+          "test_loss": 0.2192081741333008,
+          "test_accuracy": 0.9354,
+          "test_seconds": 0.2444967000046745,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 8000,
+              "seconds": 0.8753254000039306,
+              "train_loss": 0.5091197540760041,
+              "train_accuracy": 0.840875
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.5562642919830978,
+              "train_loss": 0.4990010643005371,
+              "train_accuracy": 0.84775
+            },
+            {
+              "host": "F6TMFW21C3",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.33543112501502037,
+              "train_loss": 0.46057868456840517,
+              "train_accuracy": 0.85625
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "seconds": 0.8504390999878524,
+          "train_loss": 0.1693725639184316,
+          "train_accuracy": 0.9497083333333334,
+          "test_loss": 0.1522359477996826,
+          "test_accuracy": 0.9536,
+          "test_seconds": 0.25007489998824894,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 8000,
+              "seconds": 0.8504390999878524,
+              "train_loss": 0.17561899757385255,
+              "train_accuracy": 0.946875
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.5869054170325398,
+              "train_loss": 0.17725203478336335,
+              "train_accuracy": 0.949
+            },
+            {
+              "host": "F6TMFW21C3",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.3077216670499183,
+              "train_loss": 0.1552466593980789,
+              "train_accuracy": 0.95325
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "seconds": 0.8252918000071077,
+          "train_loss": 0.12697587301333746,
+          "train_accuracy": 0.96175,
+          "test_loss": 0.12905887775421143,
+          "test_accuracy": 0.9588,
+          "test_seconds": 0.24395020000520162,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 8000,
+              "seconds": 0.8252918000071077,
+              "train_loss": 0.12983797430992128,
+              "train_accuracy": 0.9585
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.522904041223228,
+              "train_loss": 0.1377440180182457,
+              "train_accuracy": 0.96
+            },
+            {
+              "host": "F6TMFW21C3",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.29820091696456075,
+              "train_loss": 0.1133456267118454,
+              "train_accuracy": 0.96675
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "seconds": 0.8512725999898976,
+          "train_loss": 0.10515759048859279,
+          "train_accuracy": 0.9689166666666666,
+          "test_loss": 0.10609913930892945,
+          "test_accuracy": 0.9678,
+          "test_seconds": 0.23627029999624938,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 8000,
+              "seconds": 0.8512725999898976,
+              "train_loss": 0.11012642440199852,
+              "train_accuracy": 0.966875
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.5280004162341356,
+              "train_loss": 0.11038547942042351,
+              "train_accuracy": 0.96725
+            },
+            {
+              "host": "F6TMFW21C3",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.2964851249707863,
+              "train_loss": 0.09496086764335632,
+              "train_accuracy": 0.972625
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "seconds": 0.8579831999959424,
+          "train_loss": 0.08696265940368175,
+          "train_accuracy": 0.9741666666666666,
+          "test_loss": 0.10275714540481568,
+          "test_accuracy": 0.9654,
+          "test_seconds": 0.23368859999754932,
+          "workers": [
+            {
+              "host": "Abimbolas",
+              "platform": "Windows",
+              "samples": 8000,
+              "seconds": 0.8579831999959424,
+              "train_loss": 0.08870359843969346,
+              "train_accuracy": 0.972
+            },
+            {
+              "host": "BaddestM4.local",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.5326289581134915,
+              "train_loss": 0.09624374686181546,
+              "train_accuracy": 0.97125
+            },
+            {
+              "host": "F6TMFW21C3",
+              "platform": "Darwin",
+              "samples": 8000,
+              "seconds": 0.30521670798771083,
+              "train_loss": 0.07594063290953636,
+              "train_accuracy": 0.97925
+            }
+          ]
+        }
+      ],
+      "by_host": {
+        "Abimbolas": {
+          "rounds": 5,
+          "samples": 40000,
+          "seconds": 4.260312099984731,
+          "platforms": [
+            "Windows"
+          ]
+        },
+        "BaddestM4.local": {
+          "rounds": 5,
+          "samples": 40000,
+          "seconds": 2.7267031245864928,
+          "platforms": [
+            "Darwin"
+          ]
+        },
+        "F6TMFW21C3": {
+          "rounds": 5,
+          "samples": 40000,
+          "seconds": 1.5430555419879965,
+          "platforms": [
+            "Darwin"
+          ]
+        }
+      },
+      "speedup": 1.3419196312657475
+    }
+  ]
+}
