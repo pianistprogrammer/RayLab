@@ -10,3 +10,26 @@ Sources used:
 - Dask logo and documentation: https://docs.dask.org/
 - Kubernetes logo and overview: https://kubernetes.io/docs/concepts/overview/
 - Celery logo and documentation: https://docs.celeryq.dev/
+Security slides added:
+- Local port defaults and fixed Ray startup flags: electron/src/storage.js, frontend/src/store.ts, electron/src/ray_control.js
+- Firewall scope, preflight checks, worker account setup, and no-public-exposure policy: docs/rollout.md and electron/src/setup_runner.js
+- Ray security guidance: https://docs.ray.io/en/latest/ray-security/index.html
+Security slides added:
+- Local port defaults and fixed Ray startup flags: electron/src/storage.js, frontend/src/store.ts, electron/src/ray_control.js
+- Firewall scope, preflight checks, worker account setup, and no-public-exposure policy: docs/rollout.md and electron/src/setup_runner.js
+- Ray security guidance: https://docs.ray.io/en/latest/ray-security/index.html
+Ray CLI slide added:
+- Normal Ray CLI start/join syntax: https://docs.ray.io/en/latest/cluster/cli.html
+- Fixed-port choices aligned with electron/src/ray_control.js and docs/rollout.md
+Ray CLI slide added:
+- Normal Ray CLI start/join syntax: https://docs.ray.io/en/latest/cluster/cli.html
+- Fixed-port choices aligned with electron/src/ray_control.js and docs/rollout.md
+Ray CLI slide added:
+- Normal Ray CLI start/join syntax: https://docs.ray.io/en/latest/cluster/cli.html
+- Fixed-port choices aligned with electron/src/ray_control.js and docs/rollout.md
+Ray CLI slide added:
+- Normal Ray CLI start/join syntax: https://docs.ray.io/en/latest/cluster/cli.html
+- Fixed-port choices aligned with electron/src/ray_control.js and docs/rollout.md
+Chronology edit:
+- Slides 1-7 revised to present the problem, requirements, tool comparison, Ray choice, and plain Ray CLI before revealing RayLab.
+- Footer labels and slide numbers refreshed to match the user's current slide order.

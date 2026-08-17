@@ -1,286 +1,330 @@
-{"kind":"deck","id":"pr/q9klbc","name":"Deck"}
-{"kind":"layout","layoutId":"d69d0faa-2ea9-43f1-ad75-8c68a3047558","name":"Master","type":"master"}
-{"kind":"layout","layoutId":"9f1deb8f-57b8-4fdb-8289-db7322e90512","name":"Title Slide","type":"title"}
-{"kind":"slide","id":"sl/1gyk60","slide":1,"title":"RAYLAB","textShapes":6}
-{"kind":"textbox","id":"sh/4bmp4b2l","slide":1,"text":"RAYLAB","textPreview":"RAYLAB","textChars":6,"textLines":1,"bbox":[58,48,260,36]}
-{"kind":"textbox","id":"sh/3adov6l0","slide":1,"text":"Turning ordinary lab machines into a distributed compute cluster","textPreview":"Turning ordinary lab machines into a distributed compute cluster","textChars":64,"textLines":1,"bbox":[58,188,910,180]}
-{"kind":"textbox","id":"sh/i947214f","slide":1,"text":"A practical university proof-of-concept using Ray, a desktop app, and real benchmarks across Windows and macOS nodes.","textPreview":"A practical university proof-of-concept using Ray, a desktop app, and real benchmarks across Windows and macOS nodes.","textChars":117,"textLines":1,"bbox":[58,392,790,86]}
-{"kind":"shape","id":"sh/h8v6tw3u","slide":1,"bbox":[58,560,760,1.4]}
-{"kind":"textbox","id":"sh/g7mp0rm9","slide":1,"text":"Presenter: Jeremiah Abimbola","textPreview":"Presenter: Jeremiah Abimbola","textChars":28,"textLines":1,"bbox":[58,586,620,34]}
-{"kind":"textbox","id":"sh/v6tormlo","slide":1,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/u5k7yh4j","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"notes","id":"nt/1gyk60","slide":1,"text":"[Sources]\nLocal project: RayDesktop / RayLab application and benchmark folder.\nRay documentation for distributed compute concepts: https://docs.ray.io/"}
-{"kind":"slide","id":"sl/w35svj","slide":2,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":18}
-{"kind":"textbox","id":"sh/4zilsja5","slide":2,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/jy9kjetk","slide":2,"text":"What we will cover","textPreview":"What we will cover","textChars":18,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/ix03q9sz","slide":2,"bbox":[58,184,1164,1.4]}
-{"kind":"shape","id":"sh/hwr2h4bu","slide":2,"bbox":[58,198,1164,392]}
-{"kind":"shape","id":"sh/wviloza9","slide":2,"bbox":[58,198,1164,50]}
-{"kind":"textbox","id":"sh/vu9kfuto","slide":2,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[68,207,72,38]}
-{"kind":"textbox","id":"sh/ut03m9c3","slide":2,"text":"Why distributed work matters for a university group","textPreview":"Why distributed work matters for a university group","textChars":51,"textLines":1,"bbox":[158,207,1056,38]}
-{"kind":"shape","id":"sh/1svmt8by","slide":2,"bbox":[58,248,1164,50]}
-{"kind":"textbox","id":"sh/gr2l03ad","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[68,257,72,38]}
-{"kind":"textbox","id":"sh/ylk7mxcb","slide":2,"text":"How Ray and RayLab organize machines into one cluster","textPreview":"How Ray and RayLab organize machines into one cluster","textChars":53,"textLines":1,"bbox":[158,257,1056,38]}
-{"kind":"shape","id":"sh/zmt8v2tw","slide":2,"bbox":[58,298,1164,50]}
-{"kind":"textbox","id":"sh/k7m9o7u1","slide":2,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[68,307,72,38]}
-{"kind":"textbox","id":"sh/l8vqhcbm","slide":2,"text":"What host mode and join mode look like in the desktop app","textPreview":"What host mode and join mode look like in the desktop app","textChars":57,"textLines":1,"bbox":[158,307,1056,38]}
-{"kind":"shape","id":"sh/ahk7ixcz","slide":2,"bbox":[58,348,1164,50]}
-{"kind":"textbox","id":"sh/bit8r2tk","slide":2,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[68,357,72,38]}
-{"kind":"textbox","id":"sh/cj2pk7u5","slide":2,"text":"Similar tools, and why we chose Ray for this prototype","textPreview":"Similar tools, and why we chose Ray for this prototype","textChars":54,"textLines":1,"bbox":[158,357,1056,38]}
-{"kind":"shape","id":"sh/xkbqtsbq","slide":2,"bbox":[58,398,1164,50]}
-{"kind":"textbox","id":"sh/ud4ruhcj","slide":2,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[68,407,72,38]}
-{"kind":"textbox","id":"sh/vex8nmto","slide":2,"text":"How common machine-learning frameworks connect to Ray","textPreview":"How common machine-learning frameworks connect to Ray","textChars":53,"textLines":1,"bbox":[158,407,1056,38]}
-{"kind":"shape","id":"sh/ripofe9g","slide":2,"bbox":[58,448,1164,50]}
-{"kind":"textbox","id":"sh/6hgnm9sv","slide":2,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[68,457,72,38]}
-{"kind":"textbox","id":"sh/tk76hor6","slide":2,"text":"The benchmarks we ran and what they proved","textPreview":"The benchmarks we ran and what they proved","textChars":42,"textLines":1,"bbox":[158,457,1056,38]}
-{"kind":"shape","id":"sh/sjy5oja1","slide":2,"bbox":[58,498,1164,50]}
-{"kind":"textbox","id":"sh/fmpojy9c","slide":2,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[68,507,72,38]}
-{"kind":"textbox","id":"sh/elgnqtsr","slide":2,"text":"What we can try next as a lab","textPreview":"What we can try next as a lab","textChars":29,"textLines":1,"bbox":[158,507,1056,38]}
-{"kind":"textbox","id":"sh/1or6l8ri","slide":2,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/0ny5s3ax","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"notes","id":"nt/w35svj","slide":2,"text":"[Sources]\nAgenda derived from the user's requested topics for a university colleague presentation."}
-{"kind":"slide","id":"sl/o55ps3","slide":3,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":11}
-{"kind":"textbox","id":"sh/76x4fits","slide":3,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/876l8nax","slide":3,"text":"The opportunity is already sitting on our desks","textPreview":"The opportunity is already sitting on our desks","textChars":47,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/98fmhsbi","slide":3,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/y1432dsv","slide":3,"text":"Most labs have idle CPU, RAM, and sometimes GPU capacity spread across personal workstations. RayLab shows a path to turn that idle capacity into a shared compute surface without asking everyone to become a cluster administrator.","textPreview":"Most labs have idle CPU, RAM, and sometimes GPU capacity spread across personal workstations. RayLab shows a path to turn that idle capac...","textChars":229,"textLines":1,"bbox":[58,204,1080,94]}
-{"kind":"shape","id":"sh/z2d4bytg","slide":3,"bbox":[58,350,340,188]}
-{"kind":"textbox","id":"sh/k3ml43a1","slide":3,"text":"More useful compute","textPreview":"More useful compute","textChars":19,"textLines":1,"bbox":[78,374,300,38]}
-{"kind":"textbox","id":"sh/l4vmd8bm","slide":3,"text":"Batch simulations, model training, data transforms, and inference jobs can use multiple machines instead of one laptop.","textPreview":"Batch simulations, model training, data transforms, and inference jobs can use multiple machines instead of one laptop.","textChars":119,"textLines":1,"bbox":[78,426,300,88]}
-{"kind":"shape","id":"sh/ix83exsf","slide":3,"bbox":[448,350,340,188]}
-{"kind":"textbox","id":"sh/jyh4n2tk","slide":3,"text":"Lower barrier to entry","textPreview":"Lower barrier to entry","textChars":22,"textLines":1,"bbox":[468,374,300,38]}
-{"kind":"textbox","id":"sh/rihkv6t8","slide":3,"text":"A desktop host/join flow hides the operational details: ports, setup checks, worker accounts, Docker, and logs.","textPreview":"A desktop host/join flow hides the operational details: ports, setup checks, worker accounts, Docker, and logs.","textChars":111,"textLines":1,"bbox":[468,426,300,88]}
-{"kind":"shape","id":"sh/6h8j21cn","slide":3,"bbox":[838,350,340,188]}
-{"kind":"textbox","id":"sh/tkz2xgbe","slide":3,"text":"Better demos and teaching","textPreview":"Better demos and teaching","textChars":25,"textLines":1,"bbox":[858,374,300,38]}
-{"kind":"textbox","id":"sh/sjq14but","slide":3,"text":"Students and colleagues can see distributed systems concepts using machines they recognize.","textPreview":"Students and colleagues can see distributed systems concepts using machines they recognize.","textChars":91,"textLines":1,"bbox":[858,426,300,88]}
-{"kind":"textbox","id":"sh/f61kzqt4","slide":3,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/elsj6lsj","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"notes","id":"nt/o55ps3","slide":3,"text":"[Sources]\nRay documentation describes Ray as a framework for scaling Python and AI workloads across clusters: https://docs.ray.io/\nBenefits framed from local RayLab prototype behavior and benchmark results in benchmark/."}
-{"kind":"slide","id":"sl/apfqqt","slide":4,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":11}
-{"kind":"textbox","id":"sh/dgjilczy","slide":4,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/qt8zah0n","slide":4,"text":"RayLab separates orchestration from contribution","textPreview":"RayLab separates orchestration from contribution","textChars":48,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/reh0jmh8","slide":4,"bbox":[58,184,1164,1.4]}
-{"kind":"shape","id":"sh/4rqh87ih","slide":4,"bbox":[58,230,290,180]}
-{"kind":"textbox","id":"sh/pszyhcz2","slide":4,"text":"Host","textPreview":"Host","textChars":4,"textLines":1,"bbox":[82,254,210,38]}
-{"kind":"textbox","id":"sh/2p8z6x0b","slide":4,"text":"Runs the Ray head node, dashboard, job submission endpoint, and live cluster graph.","textPreview":"Runs the Ray head node, dashboard, job submission endpoint, and live cluster graph.","textChars":83,"textLines":1,"bbox":[82,306,230,76]}
-{"kind":"shape","id":"sh/3qhgf2hw","slide":4,"bbox":[492,274,280,90]}
-{"kind":"textbox","id":"sh/8nuhkri1","slide":4,"text":"Ray","textPreview":"Ray","textChars":3,"textLines":1,"bbox":[522,289,220,34]}
-{"kind":"textbox","id":"sh/9o3itwz6","slide":4,"text":"schedules tasks and actors","textPreview":"schedules tasks and actors","textChars":26,"textLines":1,"bbox":[522,328,220,28]}
-{"kind":"shape","id":"sh/143qlsz6","slide":4,"bbox":[890,230,290,180]}
-{"kind":"textbox","id":"sh/03u9cnil","slide":4,"text":"Join","textPreview":"Join","textChars":4,"textLines":1,"bbox":[914,254,210,38]}
-{"kind":"textbox","id":"sh/z2l8jih0","slide":4,"text":"Offers local CPU, RAM, and GPU capacity under machine setup, schedule, and privacy controls.","textPreview":"Offers local CPU, RAM, and GPU capacity under machine setup, schedule, and privacy controls.","textChars":92,"textLines":1,"bbox":[914,306,230,78]}
-{"kind":"textbox","id":"sh/ehcrad0v","slide":4,"text":"The key design idea: each machine remains locally controlled, while Ray gives the group a shared programming model for distributed jobs.","textPreview":"The key design idea: each machine remains locally controlled, while Ray gives the group a shared programming model for distributed jobs.","textChars":136,"textLines":1,"bbox":[58,486,980,72]}
-{"kind":"textbox","id":"sh/dg3qh8za","slide":4,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/cfa983ip","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"notes","id":"nt/apfqqt","slide":4,"text":"[Sources]\nRay Core tasks and actors are the scheduling primitives described in Ray documentation: https://docs.ray.io/en/latest/ray-core/walkthrough.html\nRayLab host/join responsibilities are based on the local app UI and configuration flow."}
-{"kind":"slide","id":"sl/utc3gz","slide":5,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":17}
-{"kind":"textbox","id":"sh/w3ypcf2h","slide":5,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/b2pojalc","slide":5,"text":"Ray fits the lab better than adjacent tools","textPreview":"Ray fits the lab better than adjacent tools","textChars":43,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/a1g7apkr","slide":5,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/ls76p4je","slide":5,"text":"The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime for tasks, actors, training, tuning, data, and serving on machines people already own.","textPreview":"The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime for tasks, actors, trai...","textChars":200,"textLines":1,"bbox":[58,202,1086,58]}
-{"kind":"shape","id":"sh/krypgz2t","slide":5,"bbox":[58,296,540,150]}
-{"kind":"shape","id":"sh/jqponu18","slide":5,"bbox":[76,316,82,64]}
-{"kind":"textbox","id":"sh/twrqt4ja","slide":5,"text":"Apache Spark","textPreview":"Apache Spark","textChars":12,"textLines":1,"bbox":[176,316,400,28]}
-{"kind":"textbox","id":"sh/8vipkz2p","slide":5,"text":"Large-scale SQL, ETL, and data processing.","textPreview":"Large-scale SQL, ETL, and data processing.","textChars":42,"textLines":1,"bbox":[176,354,400,42]}
-{"kind":"textbox","id":"sh/2l4j2p8v","slide":5,"text":"Less natural for Python-native actors, mixed ML workloads, and interactive desktop-lab contribution.","textPreview":"Less natural for Python-native actors, mixed ML workloads, and interactive desktop-lab contribution.","textChars":100,"textLines":1,"bbox":[176,400,400,54]}
-{"kind":"shape","id":"sh/3mxkva9g","slide":5,"bbox":[642,296,540,150]}
-{"kind":"shape","id":"sh/4n6l4fq1","slide":5,"bbox":[660,316,82,64]}
-{"kind":"textbox","id":"sh/qpo36p8r","slide":5,"text":"Dask","textPreview":"Dask","textChars":4,"textLines":1,"bbox":[760,316,400,28]}
-{"kind":"textbox","id":"sh/bqxkzu9c","slide":5,"text":"Python-native scaling for arrays, dataframes, and NumPy/Pandas-style workloads.","textPreview":"Python-native scaling for arrays, dataframes, and NumPy/Pandas-style workloads.","textChars":79,"textLines":1,"bbox":[760,354,400,42]}
-{"kind":"textbox","id":"sh/cb6l8zqx","slide":5,"text":"Strong for data science parallelism, but not as complete as one runtime for Train, Tune, Serve, and actors.","textPreview":"Strong for data science parallelism, but not as complete as one runtime for Train, Tune, Serve, and actors.","textChars":107,"textLines":1,"bbox":[760,400,400,54]}
-{"kind":"shape","id":"sh/dcf214ri","slide":5,"bbox":[58,472,540,150]}
-{"kind":"shape","id":"sh/6tkju58n","slide":5,"bbox":[76,492,82,64]}
-{"kind":"textbox","id":"sh/vy9gv6p0","slide":5,"text":"Kubernetes","textPreview":"Kubernetes","textChars":10,"textLines":1,"bbox":[176,492,400,28]}
-{"kind":"textbox","id":"sh/ax0z21of","slide":5,"text":"Production-grade container orchestration and deployment.","textPreview":"Production-grade container orchestration and deployment.","textChars":56,"textLines":1,"bbox":[176,530,400,42]}
-{"kind":"textbox","id":"sh/x0rixw76","slide":5,"text":"Powerful infrastructure, but operationally heavier and not itself a researcher-friendly compute API.","textPreview":"Powerful infrastructure, but operationally heavier and not itself a researcher-friendly compute API.","textChars":100,"textLines":1,"bbox":[176,576,400,54]}
-{"kind":"shape","id":"sh/wzih4r6l","slide":5,"bbox":[642,472,540,150]}
-{"kind":"shape","id":"sh/nupgrmpo","slide":5,"bbox":[660,492,82,64]}
-{"kind":"textbox","id":"sh/9wrytw7u","slide":5,"text":"Celery","textPreview":"Celery","textChars":6,"textLines":1,"bbox":[760,492,400,28]}
-{"kind":"textbox","id":"sh/8vyh0r69","slide":5,"text":"Reliable background jobs and web-task queues.","textPreview":"Reliable background jobs and web-task queues.","textChars":45,"textLines":1,"bbox":[760,530,400,42]}
-{"kind":"textbox","id":"sh/7qt03qp8","slide":5,"text":"Great for queues, but not designed as an ML, simulation, and distributed-data runtime.","textPreview":"Great for queues, but not designed as an ML, simulation, and distributed-data runtime.","textChars":86,"textLines":1,"bbox":[760,576,400,54]}
-{"kind":"textbox","id":"sh/6pkzalon","slide":5,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/4zu58jit","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"image","id":"im/j2d4ja1w","slide":5,"name":"","geometry":"rect","alt":"Apache Spark logo","bbox":[86,326,62,44]}
-{"kind":"image","id":"im/q1c7al8z","slide":5,"name":"","geometry":"rect","alt":"Dask logo","bbox":[670,326,62,44]}
-{"kind":"image","id":"im/ovy9kf6x","slide":5,"name":"","geometry":"rect","alt":"Kubernetes logo","bbox":[86,502,62,44]}
-{"kind":"image","id":"im/l8f218ju","slide":5,"name":"","geometry":"rect","alt":"Celery logo","bbox":[670,502,62,44]}
-{"kind":"notes","id":"nt/utc3gz","slide":5,"text":"[Sources]\nRay documentation describes Ray Core tasks/actors and Ray libraries for Train, Tune, Data, and Serve: https://docs.ray.io/\nApache Spark project documentation describes Spark as a unified engine for large-scale data analytics: https://spark.apache.org/\nDask documentation describes Dask as parallel computing in Python that scales arrays, dataframes, and custom workloads: https://docs.dask.org/\nKubernetes documentation describes Kubernetes as a system for automating deployment, scaling, and management of containerized applications: https://kubernetes.io/docs/concepts/overview/\nCelery documentation describes Celery as a distributed task queue: https://docs.celeryq.dev/\nLogo assets: Spark from https://spark.apache.org/images/spark-logo-trademark.png; Dask from https://docs.dask.org/en/stable/_static/images/dask-horizontal-white.svg; Kubernetes from https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.png; Celery from https://docs.celeryq.dev/en/stable/_static/celery_512.png."}
-{"kind":"slide","id":"sl/6k6k7z","slide":6,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":11}
-{"kind":"textbox","id":"sh/done9ojy","slide":6,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/qlcvy907","slide":6,"text":"Host mode turns one machine into the cluster coordinator","textPreview":"Host mode turns one machine into the cluster coordinator","textChars":56,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/bmlw7e1s","slide":6,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/ojudwji1","slide":6,"text":"The host chooses network exposure, ports, resource caps, and can see active nodes. In practice, this becomes the control room for the lab cluster.","textPreview":"The host chooses network exposure, ports, resource caps, and can see active nodes. In practice, this becomes the control room for the lab...","textChars":146,"textLines":1,"bbox":[58,190,470,110]}
-{"kind":"textbox","id":"sh/pk3e54jm","slide":6,"text":"COORDINATOR","textPreview":"COORDINATOR","textChars":11,"textLines":1,"bbox":[58,346,230,28]}
-{"kind":"textbox","id":"sh/2xcvu90b","slide":6,"text":"3 nodes","textPreview":"3 nodes","textChars":7,"textLines":1,"bbox":[58,380,230,62]}
-{"kind":"textbox","id":"sh/3ylw3e1w","slide":6,"text":"Windows head plus two macOS contributors","textPreview":"Windows head plus two macOS contributors","textChars":40,"textLines":1,"bbox":[58,446,250,60]}
-{"kind":"textbox","id":"sh/8fyx83il","slide":6,"text":"JOB SLOTS","textPreview":"JOB SLOTS","textChars":9,"textLines":1,"bbox":[338,346,230,28]}
-{"kind":"textbox","id":"sh/9g7eh8z6","slide":6,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[338,380,230,62]}
-{"kind":"textbox","id":"sh/lszah4jq","slide":6,"text":"Configured as RayLab max concurrent jobs","textPreview":"Configured as RayLab max concurrent jobs","textChars":40,"textLines":1,"bbox":[338,446,250,60]}
-{"kind":"textbox","id":"sh/zqh8fu10","slide":6,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/yp8rmp0f","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"image","id":"im/vm9on2t8","slide":6,"name":"","geometry":"roundRect","alt":"RayLab host mode screenshot","bbox":[560,188,640,404]}
-{"kind":"notes","id":"nt/6k6k7z","slide":6,"text":"[Sources]\nScreenshot captured from the local RayLab React frontend with a mocked Electron bridge for presentation data: presentation/assets/raylab-host-mode.png\nCluster node data mirrors benchmark/reports/mnist-cnn-ray-results.json."}
-{"kind":"slide","id":"sl/g18x20","slide":7,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":11}
-{"kind":"textbox","id":"sh/szy98ryd","slide":7,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/ryp8fmhs","slide":7,"text":"Join mode lets a colleague contribute safely","textPreview":"Join mode lets a colleague contribute safely","textChars":44,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/6xgr6hgn","slide":7,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/gni9cryp","slide":7,"text":"A worker machine can join the coordinator, run setup, verify networking, and cap its contribution. The user remains in control of when and how much local compute is shared.","textPreview":"A worker machine can join the coordinator, run setup, verify networking, and cap its contribution. The user remains in control of when an...","textChars":172,"textLines":1,"bbox":[810,206,340,154]}
-{"kind":"textbox","id":"sh/f298jmh4","slide":7,"text":"CPU offered","textPreview":"CPU offered","textChars":11,"textLines":1,"bbox":[810,420,175,24]}
-{"kind":"shape","id":"sh/e1grahgj","slide":7,"bbox":[998,423,230,18]}
-{"kind":"shape","id":"sh/hsnq9szq","slide":7,"bbox":[998,423,191.67,18]}
-{"kind":"textbox","id":"sh/wrep07y5","slide":7,"text":"10.00x","textPreview":"10.00x","textChars":6,"textLines":1,"bbox":[1238,420,70,24]}
-{"kind":"textbox","id":"sh/udwvelc7","slide":7,"text":"RAM cap","textPreview":"RAM cap","textChars":7,"textLines":1,"bbox":[810,470,175,24]}
-{"kind":"shape","id":"sh/vepc76ds","slide":7,"bbox":[998,473,230,18]}
-{"kind":"shape","id":"sh/wfydgbud","slide":7,"bbox":[998,473,230,18]}
-{"kind":"textbox","id":"sh/hg7u9gvy","slide":7,"text":"32.00x","textPreview":"32.00x","textChars":6,"textLines":1,"bbox":[1238,470,70,24]}
-{"kind":"textbox","id":"sh/ihgvilcj","slide":7,"text":"Setup","textPreview":"Setup","textChars":5,"textLines":1,"bbox":[810,520,175,24]}
-{"kind":"shape","id":"sh/j2pcbqt4","slide":7,"bbox":[998,523,230,18]}
-{"kind":"shape","id":"sh/43ydkvup","slide":7,"bbox":[998,523,230,18]}
-{"kind":"textbox","id":"sh/547ud0bu","slide":7,"text":"1.00x","textPreview":"1.00x","textChars":5,"textLines":1,"bbox":[1238,520,70,24]}
-{"kind":"textbox","id":"sh/650vm5cf","slide":7,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/r69cfqt0","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"image","id":"im/wz6d0zep","slide":7,"name":"","geometry":"roundRect","alt":"RayLab join mode screenshot","bbox":[58,188,690,430]}
-{"kind":"notes","id":"nt/g18x20","slide":7,"text":"[Sources]\nScreenshot captured from the local RayLab React frontend with a mocked Electron bridge for presentation data: presentation/assets/raylab-join-mode.png\nResource cap behavior is implemented in frontend/src/store.ts and frontend/src/App.tsx."}
-{"kind":"slide","id":"sl/yxxelr","slide":8,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":7}
-{"kind":"textbox","id":"sh/qdgj6pc7","slide":8,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/dg7i1kvi","slide":8,"text":"The cluster graph makes distributed work visible","textPreview":"The cluster graph makes distributed work visible","textChars":48,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/cfy18fux","slide":8,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/yhgjapc3","slide":8,"text":"This matters for teaching and debugging: colleagues can see which machines are alive, what each contributes, and whether the coordinator sees the same reality as the workers.","textPreview":"This matters for teaching and debugging: colleagues can see which machines are alive, what each contributes, and whether the coordinator ...","textChars":174,"textLines":1,"bbox":[900,202,300,156]}
-{"kind":"textbox","id":"sh/lk7i54vu","slide":8,"text":"Live nodes only","textPreview":"Live nodes only","textChars":15,"textLines":1,"bbox":[900,414,260,36]}
-{"kind":"textbox","id":"sh/0jy1wzu9","slide":8,"text":"The graph intentionally shows current connected devices rather than remembered historical machines.","textPreview":"The graph intentionally shows current connected devices rather than remembered historical machines.","textChars":99,"textLines":1,"bbox":[900,460,300,74]}
-{"kind":"textbox","id":"sh/n6907edk","slide":8,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/m50jy9cf","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"image","id":"im/ytwnaxon","slide":8,"name":"","geometry":"roundRect","alt":"RayLab cluster graph screenshot","bbox":[58,188,780,430]}
-{"kind":"notes","id":"nt/yxxelr","slide":8,"text":"[Sources]\nScreenshot captured from the local RayLab React frontend with mocked live cluster data: presentation/assets/raylab-cluster-graph.png\nCurrent graph behavior is implemented in frontend/src/App.tsx ClusterGraph."}
-{"kind":"slide","id":"sl/m2rq50","slide":9,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":17}
-{"kind":"textbox","id":"sh/rutwrm9o","slide":9,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/svmx0ra9","slide":9,"text":"Ray gives familiar ML frameworks a distributed launch point","textPreview":"Ray gives familiar ML frameworks a distributed launch point","textChars":59,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/twvetwru","slide":9,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/ex4f21sf","slide":9,"text":"These are intentionally short because the point is not to rewrite every training script. Ray supplies the cluster runtime; the framework keeps the model logic.","textPreview":"These are intentionally short because the point is not to rewrite every training script. Ray supplies the cluster runtime; the framework ...","textChars":159,"textLines":1,"bbox":[58,204,1080,54]}
-{"kind":"textbox","id":"sh/fydgv690","slide":9,"text":"PyTorch","textPreview":"PyTorch","textChars":7,"textLines":1,"bbox":[58,276,558,24]}
-{"kind":"shape","id":"sh/gzmx4ra5","slide":9,"bbox":[58,304,558,50]}
-{"kind":"textbox","id":"sh/10vyxwrq","slide":9,"text":"TorchTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))","textPreview":"TorchTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))","textChars":69,"textLines":1,"bbox":[70,315,534,32]}
-{"kind":"textbox","id":"sh/214f61sb","slide":9,"text":"TensorFlow / Keras","textPreview":"TensorFlow / Keras","textChars":18,"textLines":1,"bbox":[58,380,558,24]}
-{"kind":"shape","id":"sh/n2xgz69w","slide":9,"bbox":[58,408,558,50]}
-{"kind":"textbox","id":"sh/7idszmto","slide":9,"text":"TensorflowTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))","textPreview":"TensorflowTrainer(train_loop, scaling_config=ScalingConfig(num_workers=N))","textChars":74,"textLines":1,"bbox":[70,419,534,32]}
-{"kind":"textbox","id":"sh/6h4bqhc3","slide":9,"text":"XGBoost","textPreview":"XGBoost","textChars":7,"textLines":1,"bbox":[58,484,558,24]}
-{"kind":"shape","id":"sh/tkva1cbu","slide":9,"bbox":[58,512,558,50]}
-{"kind":"textbox","id":"sh/sjmts7u9","slide":9,"text":"XGBoostTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))","textPreview":"XGBoostTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))","textChars":77,"textLines":1,"bbox":[70,523,534,32]}
-{"kind":"textbox","id":"sh/jetsv2ts","slide":9,"text":"LightGBM","textPreview":"LightGBM","textChars":8,"textLines":1,"bbox":[664,276,558,24]}
-{"kind":"shape","id":"sh/idkrmxc7","slide":9,"bbox":[664,304,558,50]}
-{"kind":"textbox","id":"sh/5gvaxcbi","slide":9,"text":"LightGBMTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))","textPreview":"LightGBMTrainer(label_column='y', scaling_config=ScalingConfig(num_workers=N))","textChars":78,"textLines":1,"bbox":[676,315,534,32]}
-{"kind":"textbox","id":"sh/kf29o7ux","slide":9,"text":"scikit-learn tuning","textPreview":"scikit-learn tuning","textChars":19,"textLines":1,"bbox":[664,380,558,24]}
-{"kind":"shape","id":"sh/3axs76tw","slide":9,"bbox":[664,408,558,50]}
-{"kind":"textbox","id":"sh/29oby1cb","slide":9,"text":"tune.Tuner(trainable, param_space=space).fit()","textPreview":"tune.Tuner(trainable, param_space=space).fit()","textChars":46,"textLines":1,"bbox":[676,419,534,32]}
-{"kind":"textbox","id":"sh/yhsnmp0v","slide":9,"text":"LLM batch inference","textPreview":"LLM batch inference","textChars":19,"textLines":1,"bbox":[664,484,558,24]}
-{"kind":"shape","id":"sh/zi14fuhg","slide":9,"bbox":[664,512,558,50]}
-{"kind":"textbox","id":"sh/kja5ozi1","slide":9,"text":"ray.data.read_parquet(data).map_batches(predict, concurrency=N)","textPreview":"ray.data.read_parquet(data).map_batches(predict, concurrency=N)","textChars":63,"textLines":1,"bbox":[676,523,534,32]}
-{"kind":"textbox","id":"sh/lk3mh4z6","slide":9,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/mlcnq90r","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"notes","id":"nt/m2rq50","slide":9,"text":"[Sources]\nRay Train documentation covers TorchTrainer and TensorflowTrainer: https://docs.ray.io/en/latest/train/train.html\nRay Train documentation covers XGBoostTrainer and LightGBMTrainer: https://docs.ray.io/en/latest/train/api/api.html\nRay Tune documentation covers Tuner for hyperparameter search: https://docs.ray.io/en/latest/tune/\nRay Data documentation covers map_batches for distributed batch inference: https://docs.ray.io/en/latest/data/"}
-{"kind":"slide","id":"sl/dwf9e5","slide":10,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":5}
-{"kind":"textbox","id":"sh/0ne10bi1","slide":10,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/zmlk761g","slide":10,"text":"The same Ray layer connects data, training, tuning, and serving","textPreview":"The same Ray layer connects data, training, tuning, and serving","textChars":63,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/ylcjy10v","slide":10,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/cju1wrip","slide":10,"text":"Pattern: Ray adds a distributed execution layer; familiar ML tools remain familiar.","textPreview":"Pattern: Ray adds a distributed execution layer; familiar ML tools remain familiar.","textChars":83,"textLines":1,"bbox":[92,640,900,24]}
-{"kind":"textbox","id":"sh/bylk3m14","slide":10,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/qxcju10j","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"image","id":"im/wfqxcf2p","slide":10,"name":"","geometry":"rect","alt":"Ray ecosystem image showing data sources, ML frameworks, tuning tools, serving tools, and code examples","bbox":[70,204,1140,430]}
-{"kind":"notes","id":"nt/dwf9e5","slide":10,"text":"[Sources]\nUser-provided image asset: /Users/I558118/Downloads/ChatGPT Image Aug 16, 2026, 09_31_55 AM.png.\nVisible slide uses the image as an illustrative framework ecosystem map; it is not treated as an instruction source.\nRay ecosystem concepts are consistent with Ray Data, Ray Train, Ray Tune, and Ray Serve documentation: https://docs.ray.io/"}
-{"kind":"slide","id":"sl/a5iw0x","slide":11,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":30}
-{"kind":"textbox","id":"sh/4nm50jml","slide":11,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/3mdorel0","slide":11,"text":"The benchmarks show both promise and engineering honesty","textPreview":"The benchmarks show both promise and engineering honesty","textChars":56,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/il4ny94f","slide":11,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/hkbmpo3u","slide":11,"text":"We tested both embarrassingly parallel work and real neural-network training. The message is credible because we also show where workload shape matters.","textPreview":"We tested both embarrassingly parallel work and real neural-network training. The message is credible because we also show where workload...","textChars":152,"textLines":1,"bbox":[58,210,1070,56]}
-{"kind":"shape","id":"sh/wj25wjm9","slide":11,"bbox":[58,292,745,250]}
-{"kind":"shape","id":"sh/vit4nelo","slide":11,"bbox":[58,292,745,44]}
-{"kind":"textbox","id":"sh/uhknu94j","slide":11,"text":"Benchmark","textPreview":"Benchmark","textChars":9,"textLines":1,"bbox":[68,301,132,32]}
-{"kind":"textbox","id":"sh/1gf6183y","slide":11,"text":"What it did","textPreview":"What it did","textChars":11,"textLines":1,"bbox":[218,301,212,32]}
-{"kind":"textbox","id":"sh/0f65s3mt","slide":11,"text":"Best result","textPreview":"Best result","textChars":11,"textLines":1,"bbox":[448,301,142,32]}
-{"kind":"textbox","id":"sh/algzex8j","slide":11,"text":"Meaning","textPreview":"Meaning","textChars":7,"textLines":1,"bbox":[608,301,187,32]}
-{"kind":"shape","id":"sh/bmp0n2p4","slide":11,"bbox":[58,336,745,48]}
-{"kind":"textbox","id":"sh/cnyhg7qp","slide":11,"text":"Monte Carlo","textPreview":"Monte Carlo","textChars":11,"textLines":1,"bbox":[68,345,132,36]}
-{"kind":"textbox","id":"sh/xo7ipc7a","slide":11,"text":"480M option-pricing paths","textPreview":"480M option-pricing paths","textChars":25,"textLines":1,"bbox":[218,345,212,36]}
-{"kind":"textbox","id":"sh/2xwzax8n","slide":11,"text":"2.26x speedup","textPreview":"2.26x speedup","textChars":13,"textLines":1,"bbox":[448,345,142,36]}
-{"kind":"textbox","id":"sh/nip0j2p8","slide":11,"text":"Clean scaling story for independent tasks","textPreview":"Clean scaling story for independent tasks","textChars":41,"textLines":1,"bbox":[608,345,187,36]}
-{"kind":"shape","id":"sh/ojyhc7qt","slide":11,"bbox":[58,384,745,48]}
-{"kind":"textbox","id":"sh/pk7ils7e","slide":11,"text":"MNIST CNN","textPreview":"MNIST CNN","textChars":9,"textLines":1,"bbox":[68,393,132,36]}
-{"kind":"textbox","id":"sh/md0jmh8r","slide":11,"text":"Real simple CNN on MNIST","textPreview":"Real simple CNN on MNIST","textChars":24,"textLines":1,"bbox":[218,393,212,36]}
-{"kind":"textbox","id":"sh/7e90vmpc","slide":11,"text":"1.34x, 96.54%","textPreview":"1.34x, 96.54%","textChars":13,"textLines":1,"bbox":[448,393,142,36]}
-{"kind":"textbox","id":"sh/jy1wne5o","slide":11,"text":"Real training across all nodes","textPreview":"Real training across all nodes","textChars":30,"textLines":1,"bbox":[608,393,187,36]}
-{"kind":"shape","id":"sh/ixsfe9oj","slide":11,"bbox":[58,432,745,48]}
-{"kind":"textbox","id":"sh/503eponu","slide":11,"text":"Prime count","textPreview":"Prime count","textChars":11,"textLines":1,"bbox":[68,441,132,36]}
-{"kind":"textbox","id":"sh/4zuxgj69","slide":11,"text":"Count primes below a limit","textPreview":"Count primes below a limit","textChars":26,"textLines":1,"bbox":[218,441,212,36]}
-{"kind":"textbox","id":"sh/r2lgry50","slide":11,"text":"CPU distribution","textPreview":"CPU distribution","textChars":16,"textLines":1,"bbox":[448,441,142,36]}
-{"kind":"textbox","id":"sh/61cfitof","slide":11,"text":"Deterministic compute smoke test","textPreview":"Deterministic compute smoke test","textChars":32,"textLines":1,"bbox":[608,441,187,36]}
-{"kind":"shape","id":"sh/do3yt8n6","slide":11,"bbox":[58,480,745,48]}
-{"kind":"textbox","id":"sh/s3uxk36l","slide":11,"text":"NumPy/SciPy","textPreview":"NumPy/SciPy","textChars":11,"textLines":1,"bbox":[68,489,132,36]}
-{"kind":"textbox","id":"sh/fq5gvy5w","slide":11,"text":"Dense math + solve","textPreview":"Dense math + solve","textChars":18,"textLines":1,"bbox":[218,489,212,36]}
-{"kind":"textbox","id":"sh/epcfmtob","slide":11,"text":"Limited scaling","textPreview":"Limited scaling","textChars":15,"textLines":1,"bbox":[448,489,142,36]}
-{"kind":"textbox","id":"sh/cvexc32p","slide":11,"text":"Small shared libraries can bottleneck","textPreview":"Small shared libraries can bottleneck","textChars":37,"textLines":1,"bbox":[608,489,187,36]}
-{"kind":"shape","id":"sh/xwne583a","slide":11,"bbox":[855,306,330,210]}
-{"kind":"textbox","id":"sh/atwvad4j","slide":11,"text":"Monte Carlo","textPreview":"Monte Carlo","textChars":11,"textLines":1,"bbox":[890,352,175,24]}
-{"kind":"shape","id":"sh/bu5w3yl4","slide":11,"bbox":[1078,355,190,18]}
-{"kind":"shape","id":"sh/ored83md","slide":11,"bbox":[1078,355,178.92,18]}
-{"kind":"textbox","id":"sh/psne183y","slide":11,"text":"2.26x","textPreview":"2.26x","textChars":5,"textLines":1,"bbox":[1278,352,70,24]}
-{"kind":"textbox","id":"sh/2pcv6t4n","slide":11,"text":"MNIST CNN","textPreview":"MNIST CNN","textChars":9,"textLines":1,"bbox":[890,412,175,24]}
-{"kind":"shape","id":"sh/nq5wzyl8","slide":11,"bbox":[1078,415,190,18]}
-{"kind":"shape","id":"sh/03ud4jmh","slide":11,"bbox":[1078,415,106.24,18]}
-{"kind":"textbox","id":"sh/143exo32","slide":11,"text":"1.34x","textPreview":"1.34x","textChars":5,"textLines":1,"bbox":[1278,412,70,24]}
-{"kind":"textbox","id":"sh/5wz2p0fi","slide":11,"text":"Speedup over one node","textPreview":"Speedup over one node","textChars":21,"textLines":1,"bbox":[890,484,230,30]}
-{"kind":"textbox","id":"sh/kvqlgvyx","slide":11,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/juhknqxc","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"notes","id":"nt/a5iw0x","slide":11,"text":"[Sources]\nMonte Carlo results source: benchmark/reports/monte-carlo-results.json and benchmark/README.md.\nMNIST CNN results source: benchmark/reports/mnist-cnn-ray-results.json and benchmark/reports/raylab-mnist-cnn-report.html.\nPrime and NumPy/SciPy benchmark scripts are in benchmark/ray_compute_test.py and benchmark/numpy_scipy_benchmark.py."}
-{"kind":"slide","id":"sl/8p0acj","slide":12,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":11}
-{"kind":"textbox","id":"sh/cvyhgbap","slide":12,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/bup07694","slide":12,"text":"The MNIST CNN benchmark has separately editable charts","textPreview":"The MNIST CNN benchmark has separately editable charts","textChars":54,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/qtgze1sj","slide":12,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/lkridgr6","slide":12,"text":"These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be selected, resized, and edited independently in PowerPoint.","textPreview":"These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be selected, resized, and edited ...","textChars":165,"textLines":1,"bbox":[58,204,1060,54]}
-{"kind":"textbox","id":"sh/0jyhkval","slide":12,"text":"Wall time","textPreview":"Wall time","textChars":9,"textLines":1,"bbox":[58,296,350,28]}
-{"kind":"textbox","id":"sh/zip0bq90","slide":12,"text":"Lower is better; adding nodes reduced total training time.","textPreview":"Lower is better; adding nodes reduced total training time.","textChars":58,"textLines":1,"bbox":[58,326,350,42]}
-{"kind":"textbox","id":"sh/honi1wr2","slide":12,"text":"Throughput","textPreview":"Throughput","textChars":10,"textLines":1,"bbox":[468,296,350,28]}
-{"kind":"textbox","id":"sh/gneh8rah","slide":12,"text":"Total train images processed per second across synchronized rounds.","textPreview":"Total train images processed per second across synchronized rounds.","textChars":67,"textLines":1,"bbox":[468,326,350,42]}
-{"kind":"textbox","id":"sh/fm1czuto","slide":12,"text":"Speedup","textPreview":"Speedup","textChars":7,"textLines":1,"bbox":[878,296,350,28]}
-{"kind":"textbox","id":"sh/gnud8zut","slide":12,"text":"Measured speedup relative to the one-node baseline.","textPreview":"Measured speedup relative to the one-node baseline.","textChars":51,"textLines":1,"bbox":[878,326,350,42]}
-{"kind":"textbox","id":"sh/2pcva9cz","slide":12,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/3qlc3etk","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"chart","id":"ch/edonu9g3","slide":12,"name":"","chartType":"bar","bbox":[58,368,350,208]}
-{"kind":"chart","id":"ch/6dszmx4n","slide":12,"name":"","chartType":"bar","bbox":[468,368,350,208]}
-{"kind":"chart","id":"ch/tg3yhc3e","slide":12,"name":"","chartType":"line","bbox":[878,368,350,208]}
-{"kind":"notes","id":"nt/8p0acj","slide":12,"text":"[Sources]\nMNIST benchmark source data: benchmark/reports/mnist-cnn-ray-results.json.\nCharts are native PowerPoint chart objects generated from the JSON results rather than a single flattened screenshot."}
-{"kind":"slide","id":"sl/tu84ti","slide":13,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":14}
-{"kind":"textbox","id":"sh/q14jexob","slide":13,"text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
-{"kind":"textbox","id":"sh/dov2pcn2","slide":13,"text":"Accuracy stayed strong while all nodes contributed work","textPreview":"Accuracy stayed strong while all nodes contributed work","textChars":55,"textLines":1,"bbox":[58,72,1010,106]}
-{"kind":"shape","id":"sh/cnmlg76h","slide":13,"bbox":[58,184,1164,1.4]}
-{"kind":"textbox","id":"sh/zqxkr258","slide":13,"text":"The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local training time alongside CPU share, which helps explain the different per-host timings.","textPreview":"The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local training time alongside CPU s...","textChars":194,"textLines":1,"bbox":[58,204,1060,54]}
-{"kind":"textbox","id":"sh/epo3ih4n","slide":13,"text":"Test accuracy by round","textPreview":"Test accuracy by round","textChars":22,"textLines":1,"bbox":[58,300,350,28]}
-{"kind":"textbox","id":"sh/1sf2tcny","slide":13,"text":"Largest three-node run; values are final evaluation after each synchronization round.","textPreview":"Largest three-node run; values are final evaluation after each synchronization round.","textChars":85,"textLines":1,"bbox":[58,330,350,42]}
-{"kind":"textbox","id":"sh/vutkfi5o","slide":13,"text":"Test loss by round","textPreview":"Test loss by round","textChars":18,"textLines":1,"bbox":[468,300,350,28]}
-{"kind":"textbox","id":"sh/utkj6do3","slide":13,"text":"Loss improved across the synchronized rounds in the three-node run.","textPreview":"Loss improved across the synchronized rounds in the three-node run.","textChars":67,"textLines":1,"bbox":[468,330,350,42]}
-{"kind":"textbox","id":"sh/h4ba1g7i","slide":13,"text":"Per-host train seconds","textPreview":"Per-host train seconds","textChars":22,"textLines":1,"bbox":[878,300,350,28]}
-{"kind":"textbox","id":"sh/u1krq187","slide":13,"text":"Each host trained an equal image share in the largest run.","textPreview":"Each host trained an equal image share in the largest run.","textChars":58,"textLines":1,"bbox":[878,330,350,42]}
-{"kind":"textbox","id":"sh/47m9wbq9","slide":13,"text":"Abimbolas: 4 CPUs","textPreview":"Abimbolas: 4 CPUs","textChars":17,"textLines":1,"bbox":[878,584,330,20]}
-{"kind":"textbox","id":"sh/58va5g7u","slide":13,"text":"BaddestM4.local: 10 CPUs","textPreview":"BaddestM4.local: 10 CPUs","textChars":24,"textLines":1,"bbox":[878,606,330,20]}
-{"kind":"textbox","id":"sh/i5krul83","slide":13,"text":"F6TMFW21C3: 12 CPUs","textPreview":"F6TMFW21C3: 12 CPUs","textChars":19,"textLines":1,"bbox":[878,628,330,20]}
-{"kind":"textbox","id":"sh/j6ts3qpo","slide":13,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/0bi9krqp","slide":13,"text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"chart","id":"ch/o3alszi9","slide":13,"name":"","chartType":"line","bbox":[58,372,350,194]}
-{"kind":"chart","id":"ch/k3ih8z2l","slide":13,"name":"","chartType":"line","bbox":[468,372,350,194]}
-{"kind":"chart","id":"ch/j29gzu10","slide":13,"name":"","chartType":"bar","bbox":[878,372,350,194]}
-{"kind":"notes","id":"nt/tu84ti","slide":13,"text":"[Sources]\nMNIST benchmark source data: benchmark/reports/mnist-cnn-ray-results.json.\nNode CPU counts and per-host contribution are from nodes_selected and the largest run's by_host/history fields."}
-{"kind":"slide","id":"sl/0r8bx9","slide":14,"title":"What we can do next","textShapes":14}
-{"kind":"textbox","id":"sh/by9srulg","slide":14,"text":"What we can do next","textPreview":"What we can do next","textChars":19,"textLines":1,"bbox":[58,70,760,76]}
-{"kind":"textbox","id":"sh/czi9kz21","slide":14,"text":"The prototype is far enough to demonstrate value. The next step is to pick two or three real lab workloads and make RayLab the easiest way to run them together.","textPreview":"The prototype is far enough to demonstrate value. The next step is to pick two or three real lab workloads and make RayLab the easiest wa...","textChars":160,"textLines":1,"bbox":[58,176,880,80]}
-{"kind":"textbox","id":"sh/d0rat436","slide":14,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[58,326,44,44]}
-{"kind":"textbox","id":"sh/290re54j","slide":14,"text":"Package a reproducible demo","textPreview":"Package a reproducible demo","textChars":27,"textLines":1,"bbox":[130,324,430,30]}
-{"kind":"textbox","id":"sh/3a9snal4","slide":14,"text":"Keep Monte Carlo and MNIST as the baseline demos for new machines.","textPreview":"Keep Monte Carlo and MNIST as the baseline demos for new machines.","textChars":66,"textLines":1,"bbox":[130,360,660,44]}
-{"kind":"textbox","id":"sh/ovi9gfmp","slide":14,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[58,418,44,44]}
-{"kind":"textbox","id":"sh/pwrapk3a","slide":14,"text":"Invite a small pilot group","textPreview":"Invite a small pilot group","textChars":26,"textLines":1,"bbox":[130,416,430,30]}
-{"kind":"textbox","id":"sh/m5kbq9k3","slide":14,"text":"Test with colleagues who already run Python, ML, or simulation jobs.","textPreview":"Test with colleagues who already run Python, ML, or simulation jobs.","textChars":68,"textLines":1,"bbox":[130,452,660,44]}
-{"kind":"textbox","id":"sh/n6tsjelo","slide":14,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[58,510,44,44]}
-{"kind":"textbox","id":"sh/nml8jylw","slide":14,"text":"Add workload templates","textPreview":"Add workload templates","textChars":22,"textLines":1,"bbox":[130,508,430,30]}
-{"kind":"textbox","id":"sh/2lcrat4b","slide":14,"text":"Make common jobs one-click: batch inference, Ray Tune sweeps, and data transforms.","textPreview":"Make common jobs one-click: batch inference, Ray Tune sweeps, and data transforms.","textChars":82,"textLines":1,"bbox":[130,544,660,44]}
-{"kind":"textbox","id":"sh/ponqlo3m","slide":14,"text":"Distributed computing becomes useful when it feels ordinary enough to try.","textPreview":"Distributed computing becomes useful when it feels ordinary enough to try.","textChars":74,"textLines":1,"bbox":[820,432,310,120]}
-{"kind":"textbox","id":"sh/one9cjm1","slide":14,"text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
-{"kind":"textbox","id":"sh/bq58nyls","slide":14,"text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
-{"kind":"notes","id":"nt/0r8bx9","slide":14,"text":"[Sources]\nNext steps synthesized from local RayLab prototype state and benchmark outcomes.\nRay documentation for Ray Tune, Ray Train, and Ray Data: https://docs.ray.io/"}
+{"kind":"slide","id":"sl/y90nupkv","slide":1,"title":"DISTRIBUTED COMPUTE","textShapes":6}
+{"kind":"textbox","id":"sh/fu94fe98","slide":1,"name":"Rectangle 7","text":"DISTRIBUTED COMPUTE","textPreview":"DISTRIBUTED COMPUTE","textChars":19,"textLines":1,"bbox":[58,48,260,36]}
+{"kind":"textbox","id":"sh/547294r6","slide":1,"name":"Rectangle 1","text":"Turning ordinary lab machines into a distributed compute cluster","textPreview":"Turning ordinary lab machines into a distributed compute cluster","textChars":64,"textLines":1,"bbox":[58,188,910,180]}
+{"kind":"textbox","id":"sh/k3yl0zql","slide":1,"name":"Rectangle 2","text":"A practical university question: can ordinary Windows and macOS machines work together as one shared compute surface?","textPreview":"A practical university question: can ordinary Windows and macOS machines work together as one shared compute surface?","textChars":117,"textLines":1,"bbox":[58,392,790,86]}
+{"kind":"shape","id":"sh/7qp4be9c","slide":1,"name":"Rectangle 3","bbox":[58,560,760,1.4]}
+{"kind":"textbox","id":"sh/65g3298r","slide":1,"name":"Rectangle 4","text":"Jeremiah Abimbola","textPreview":"Jeremiah Abimbola","textChars":17,"textLines":1,"bbox":[58,586,620,34]}
+{"kind":"textbox","id":"sh/ts7md4r2","slide":1,"name":"Rectangle 5","text":"Distributed compute study","textPreview":"Distributed compute study","textChars":25,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/sryl4zqx","slide":1,"name":"Rectangle 6","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"notes","id":"nt/y90nupkv","slide":1,"text":"[Sources]\nOpening framing based on the local benchmark and presentation materials.\nRay documentation for distributed compute concepts: https://docs.ray.io/"}
+{"kind":"slide","id":"sl/hwbqtkby","slide":2,"title":"DISTRIBUTED COMPUTING","textShapes":18}
+{"kind":"textbox","id":"sh/p0vy54na","slide":2,"name":"Rectangle 27","text":"DISTRIBUTED COMPUTING","textPreview":"DISTRIBUTED COMPUTING","textChars":21,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/9072xkry","slide":2,"name":"Rectangle 1","text":"What we will cover","textPreview":"What we will cover","textChars":18,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/ozy1ofad","slide":2,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"shape","id":"sh/b29kza94","slide":2,"name":"Rectangle 3","bbox":[58,198,1164,392]}
+{"kind":"shape","id":"sh/a10jqpsj","slide":2,"name":"Rectangle 4","bbox":[58,198,1164,50]}
+{"kind":"textbox","id":"sh/x4r21kru","slide":2,"name":"Rectangle 5","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[68,207,72,38]}
+{"kind":"textbox","id":"sh/w3i1sfa9","slide":2,"name":"Rectangle 6","text":"Why distributed work matters for a university group","textPreview":"Why distributed work matters for a university group","textChars":51,"textLines":1,"bbox":[158,207,1056,38]}
+{"kind":"shape","id":"sh/r65knqtk","slide":2,"name":"Rectangle 7","bbox":[58,248,1164,50]}
+{"kind":"textbox","id":"sh/q5wjelsz","slide":2,"name":"Rectangle 8","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[68,257,72,38]}
+{"kind":"textbox","id":"sh/ove9o7yd","slide":2,"name":"Rectangle 9","text":"What a useful shared cluster would need to do","textPreview":"What a useful shared cluster would need to do","textChars":45,"textLines":1,"bbox":[158,257,1056,38]}
+{"kind":"shape","id":"sh/9wnqhczy","slide":2,"name":"Rectangle 10","bbox":[58,298,1164,50]}
+{"kind":"textbox","id":"sh/mtwrmxg7","slide":2,"name":"Rectangle 11","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[68,307,72,38]}
+{"kind":"textbox","id":"sh/nu58f2hs","slide":2,"name":"Rectangle 12","text":"The tools we considered before choosing a runtime","textPreview":"The tools we considered before choosing a runtime","textChars":49,"textLines":1,"bbox":[158,307,1056,38]}
+{"kind":"shape","id":"sh/wjy9sry9","slide":2,"name":"Rectangle 13","bbox":[58,348,1164,50]}
+{"kind":"textbox","id":"sh/xk7qlczu","slide":2,"name":"Rectangle 14","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[68,357,72,38]}
+{"kind":"textbox","id":"sh/ahwrqhgj","slide":2,"name":"Rectangle 15","text":"Why Ray became the runtime choice","textPreview":"Why Ray became the runtime choice","textChars":33,"textLines":1,"bbox":[158,357,1056,38]}
+{"kind":"shape","id":"sh/bip8jmho","slide":2,"name":"Rectangle 16","bbox":[58,398,1164,50]}
+{"kind":"textbox","id":"sh/cnupgny5","slide":2,"name":"Rectangle 17","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[68,407,72,38]}
+{"kind":"textbox","id":"sh/do3q9szq","slide":2,"name":"Rectangle 18","text":"How Ray connects common machine-learning frameworks","textPreview":"How Ray connects common machine-learning frameworks","textChars":51,"textLines":1,"bbox":[158,407,1056,38]}
+{"kind":"shape","id":"sh/t8byxkn2","slide":2,"name":"Rectangle 19","bbox":[58,448,1164,50]}
+{"kind":"textbox","id":"sh/s72xofmh","slide":2,"name":"Rectangle 20","text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[68,457,72,38]}
+{"kind":"textbox","id":"sh/76twva5c","slide":2,"name":"Rectangle 21","text":"What we built on top of Ray and how it behaves","textPreview":"What we built on top of Ray and how it behaves","textChars":46,"textLines":1,"bbox":[158,457,1056,38]}
+{"kind":"shape","id":"sh/65kfmpor","slide":2,"name":"Rectangle 22","bbox":[58,498,1164,50]}
+{"kind":"textbox","id":"sh/hcvy14ne","slide":2,"name":"Rectangle 23","text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[68,507,72,38]}
+{"kind":"textbox","id":"sh/gbmxszmt","slide":2,"name":"Rectangle 24","text":"Benchmarks, security, and next steps","textPreview":"Benchmarks, security, and next steps","textChars":36,"textLines":1,"bbox":[158,507,1056,38]}
+{"kind":"textbox","id":"sh/fadgzu58","slide":2,"name":"Rectangle 25","text":"Distributed compute study","textPreview":"Distributed compute study","textChars":25,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/u94fqp4n","slide":2,"name":"Rectangle 26","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"notes","id":"nt/hwbqtkby","slide":2,"text":"[Sources]\nAgenda derived from the user's requested topics for a university colleague presentation."}
+{"kind":"slide","id":"sl/ofy9wn61","slide":3,"title":"DISTRIBUTED COMPUTING","textShapes":11}
+{"kind":"textbox","id":"sh/x8nml0ra","slide":3,"name":"Rectangle 15","text":"DISTRIBUTED COMPUTING","textPreview":"DISTRIBUTED COMPUTING","textChars":21,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/cza94vmx","slide":3,"name":"Rectangle 1","text":"The opportunity is already sitting on our desks","textPreview":"The opportunity is already sitting on our desks","textChars":47,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/d0jax03i","slide":3,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/298ryl4v","slide":3,"name":"Rectangle 3","text":"Most labs have idle CPU, RAM, and sometimes GPU capacity spread across personal workstations. The practical question is whether that idle capacity can become a shared compute surface without asking everyone to become a cluster administrator.","textPreview":"Most labs have idle CPU, RAM, and sometimes GPU capacity spread across personal workstations. The practical question is whether that idle...","textChars":241,"textLines":1,"bbox":[58,204,1080,94]}
+{"kind":"shape","id":"sh/3ah8rqlg","slide":3,"name":"Rectangle 4","bbox":[58,350,340,188]}
+{"kind":"textbox","id":"sh/obq90bml","slide":3,"name":"Rectangle 5","text":"More useful compute","textPreview":"More useful compute","textChars":19,"textLines":1,"bbox":[78,374,300,38]}
+{"kind":"textbox","id":"sh/pcjqtg36","slide":3,"name":"Rectangle 6","text":"Batch simulations, model training, data transforms, and inference jobs can use multiple machines instead of one laptop.","textPreview":"Batch simulations, model training, data transforms, and inference jobs can use multiple machines instead of one laptop.","textChars":119,"textLines":1,"bbox":[78,426,300,88]}
+{"kind":"shape","id":"sh/m5cra54z","slide":3,"name":"Rectangle 7","bbox":[448,350,340,188]}
+{"kind":"textbox","id":"sh/n6ls3alk","slide":3,"name":"Rectangle 8","text":"Lower barrier to entry","textPreview":"Lower barrier to entry","textChars":22,"textLines":1,"bbox":[468,374,300,38]}
+{"kind":"textbox","id":"sh/n2l4fq98","slide":3,"name":"Rectangle 9","text":"Any usable answer has to hide operational details: ports, setup checks, worker accounts, containers, and logs.","textPreview":"Any usable answer has to hide operational details: ports, setup checks, worker accounts, containers, and logs.","textChars":110,"textLines":1,"bbox":[468,426,300,88]}
+{"kind":"shape","id":"sh/m1c3mlsn","slide":3,"name":"Rectangle 10","bbox":[838,350,340,188]}
+{"kind":"textbox","id":"sh/943mhgre","slide":3,"name":"Rectangle 11","text":"Better demos and teaching","textPreview":"Better demos and teaching","textChars":25,"textLines":1,"bbox":[858,374,300,38]}
+{"kind":"textbox","id":"sh/83ulovat","slide":3,"name":"Rectangle 12","text":"Students and colleagues can see distributed systems concepts using machines they recognize.","textPreview":"Students and colleagues can see distributed systems concepts using machines they recognize.","textChars":91,"textLines":1,"bbox":[858,440.05,300,88]}
+{"kind":"textbox","id":"sh/v6l4jq94","slide":3,"name":"Rectangle 13","text":"Distributed compute study","textPreview":"Distributed compute study","textChars":25,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/a5c3ql8z","slide":3,"name":"Rectangle 14","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"notes","id":"nt/ofy9wn61","slide":3,"text":"[Sources]\nBenefits framed from local benchmark goals and university-lab compute sharing needs.\nRay documentation describes scaling Python and AI workloads across clusters: https://docs.ray.io/"}
+{"kind":"slide","id":"sl/jyx0ra1s","slide":4,"title":"DISTRIBUTED COMPUTING","textShapes":11}
+{"kind":"textbox","id":"sh/a5kr2xg3","slide":4,"name":"Rectangle 15","text":"DISTRIBUTED COMPUTING","textPreview":"DISTRIBUTED COMPUTING","textChars":21,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/1cj2d8b6","slide":4,"name":"Rectangle 1","text":"A useful answer has to satisfy three constraints","textPreview":"A useful answer has to satisfy three constraints","textChars":48,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/0ba143al","slide":4,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"shape","id":"sh/rm1k7yt4","slide":4,"name":"Rectangle 3","bbox":[58,230,290,180]}
+{"kind":"textbox","id":"sh/ql8jytsj","slide":4,"name":"Rectangle 4","text":"Coordination","textPreview":"Coordination","textChars":12,"textLines":1,"bbox":[82,254,210,38]}
+{"kind":"textbox","id":"sh/doj29oba","slide":4,"name":"Rectangle 5","text":"One machine organizes jobs, logs, resources, and live state for the group.","textPreview":"One machine organizes jobs, logs, resources, and live state for the group.","textChars":74,"textLines":1,"bbox":[82,306,230,76]}
+{"kind":"shape","id":"sh/sna103ap","slide":4,"name":"Rectangle 6","bbox":[474,263.8,290,129]}
+{"kind":"textbox","id":"sh/3ihk3et8","slide":4,"name":"Rectangle 7","text":"Runtime","textPreview":"Runtime","textChars":7,"textLines":1,"bbox":[504,278.8,220,34]}
+{"kind":"textbox","id":"sh/ih8ju9sn","slide":4,"name":"Rectangle 8","text":"schedules work across machines","textPreview":"schedules work across machines","textChars":30,"textLines":1,"bbox":[504,317.8,220,28]}
+{"kind":"shape","id":"sh/kbm987y5","slide":4,"name":"Rectangle 9","bbox":[890,230,290,180]}
+{"kind":"textbox","id":"sh/5cva1cfq","slide":4,"name":"Rectangle 10","text":"Contribution","textPreview":"Contribution","textChars":12,"textLines":1,"bbox":[914,254,210,38]}
+{"kind":"textbox","id":"sh/i94r6xgz","slide":4,"name":"Rectangle 11","text":"Each participant must control when and how much local CPU, RAM, or GPU capacity is shared.","textPreview":"Each participant must control when and how much local CPU, RAM, or GPU capacity is shared.","textChars":90,"textLines":1,"bbox":[914,306,230,78]}
+{"kind":"textbox","id":"sh/jadsz2xk","slide":4,"name":"Rectangle 12","text":"Before choosing a tool, the requirement was simple: pool idle compute while keeping machines understandable and locally controlled.","textPreview":"Before choosing a tool, the requirement was simple: pool idle compute while keeping machines understandable and locally controlled.","textChars":131,"textLines":1,"bbox":[58,486,980,72]}
+{"kind":"textbox","id":"sh/w72947yt","slide":4,"name":"Rectangle 13","text":"Distributed compute study","textPreview":"Distributed compute study","textChars":25,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/x8vaxsfe","slide":4,"name":"Rectangle 14","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"notes","id":"nt/jyx0ra1s","slide":4,"text":"[Sources]\nRequirements synthesized from the local prototype goals: coordination, runtime abstraction, and controlled contribution.\nRay Core tasks and actors are the scheduling primitives described in Ray documentation: https://docs.ray.io/en/latest/ray-core/walkthrough.html"}
+{"kind":"slide","id":"sl/i107q5of","slide":5,"title":"WHY RAY","textShapes":17}
+{"kind":"textbox","id":"sh/vu5kbihc","slide":5,"name":"Rectangle 30","text":"WHY RAY","textPreview":"WHY RAY","textChars":7,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/dgbulwnm","slide":5,"name":"Rectangle 1","text":"Ray fits the lab better than adjacent tools","textPreview":"Ray fits the lab better than adjacent tools","textChars":43,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/cf2tcr61","slide":5,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/z2tcnm5s","slide":5,"name":"Rectangle 3","text":"The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime for tasks, actors, training, tuning, data, and serving on machines people already own.","textPreview":"The alternatives are excellent, but they each optimize for a narrower layer. Ray gave us one Python-first runtime for tasks, actors, trai...","textChars":200,"textLines":1,"bbox":[58,202,1086,58]}
+{"kind":"shape","id":"sh/yhkbe1o7","slide":5,"name":"Rectangle 4","bbox":[58,296,540,150]}
+{"kind":"shape","id":"sh/l4bupwny","slide":5,"name":"Rectangle 5","bbox":[76,316,82,64]}
+{"kind":"textbox","id":"sh/n6dcr65o","slide":5,"name":"Rectangle 7","text":"Apache Spark","textPreview":"Apache Spark","textChars":12,"textLines":1,"bbox":[176,316,400,28]}
+{"kind":"textbox","id":"sh/m5kbi1oj","slide":5,"name":"Rectangle 8","text":"Large-scale SQL, ETL, and data processing.","textPreview":"Large-scale SQL, ETL, and data processing.","textChars":42,"textLines":1,"bbox":[176,354,400,42]}
+{"kind":"textbox","id":"sh/w32dkbuh","slide":5,"name":"Rectangle 9","text":"Less natural for Python-native actors, mixed ML workloads, and interactive desktop-lab contribution.","textPreview":"Less natural for Python-native actors, mixed ML workloads, and interactive desktop-lab contribution.","textChars":100,"textLines":1,"bbox":[176,400,400,54]}
+{"kind":"shape","id":"sh/x4vedgvm","slide":5,"name":"Rectangle 10","bbox":[642,296,540,150]}
+{"kind":"shape","id":"sh/ahkvi1cb","slide":5,"name":"Rectangle 11","bbox":[660,316,82,64]}
+{"kind":"textbox","id":"sh/k7mxovud","slide":5,"name":"Rectangle 13","text":"Dask","textPreview":"Dask","textChars":4,"textLines":1,"bbox":[760,316,400,28]}
+{"kind":"textbox","id":"sh/58vehgvy","slide":5,"name":"Rectangle 14","text":"Python-native scaling for arrays, dataframes, and NumPy/Pandas-style workloads.","textPreview":"Python-native scaling for arrays, dataframes, and NumPy/Pandas-style workloads.","textChars":79,"textLines":1,"bbox":[760,354,400,42]}
+{"kind":"textbox","id":"sh/i54fmlc7","slide":5,"name":"Rectangle 15","text":"Strong for data science parallelism, but not as complete as one runtime for Train, Tune, Serve, and actors.","textPreview":"Strong for data science parallelism, but not as complete as one runtime for Train, Tune, Serve, and actors.","textChars":107,"textLines":1,"bbox":[760,400,400,54]}
+{"kind":"shape","id":"sh/j6dwfqds","slide":5,"name":"Rectangle 16","bbox":[58,472,540,150]}
+{"kind":"shape","id":"sh/sb6xsvu9","slide":5,"name":"Rectangle 17","bbox":[76,492,82,64]}
+{"kind":"textbox","id":"sh/hgrmpwj2","slide":5,"name":"Rectangle 19","text":"Kubernetes","textPreview":"Kubernetes","textChars":10,"textLines":1,"bbox":[176,492,400,28]}
+{"kind":"textbox","id":"sh/gfi5grih","slide":5,"name":"Rectangle 20","text":"Production-grade container orchestration and deployment.","textPreview":"Production-grade container orchestration and deployment.","textChars":56,"textLines":1,"bbox":[176,530,400,42]}
+{"kind":"textbox","id":"sh/fe94nm1w","slide":5,"name":"Rectangle 21","text":"Powerful infrastructure, but operationally heavier and not itself a researcher-friendly compute API.","textPreview":"Powerful infrastructure, but operationally heavier and not itself a researcher-friendly compute API.","textChars":100,"textLines":1,"bbox":[176,576,400,54]}
+{"kind":"shape","id":"sh/ud0ne10b","slide":5,"name":"Rectangle 22","bbox":[642,472,540,150]}
+{"kind":"shape","id":"sh/pkr6tgjy","slide":5,"name":"Rectangle 23","bbox":[660,492,82,64]}
+{"kind":"textbox","id":"sh/3i94r61s","slide":5,"name":"Rectangle 25","text":"Celery","textPreview":"Celery","textChars":6,"textLines":1,"bbox":[760,492,400,28]}
+{"kind":"textbox","id":"sh/2h0ni107","slide":5,"name":"Rectangle 26","text":"Reliable background jobs and web-task queues.","textPreview":"Reliable background jobs and web-task queues.","textChars":45,"textLines":1,"bbox":[760,530,400,42]}
+{"kind":"textbox","id":"sh/5o7mhcju","slide":5,"name":"Rectangle 27","text":"Great for queues, but not designed as an ML, simulation, and distributed-data runtime.","textPreview":"Great for queues, but not designed as an ML, simulation, and distributed-data runtime.","textChars":86,"textLines":1,"bbox":[760,576,400,54]}
+{"kind":"textbox","id":"sh/kny587i9","slide":5,"name":"Rectangle 28","text":"Distributed compute study","textPreview":"Distributed compute study","textChars":25,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/atcjidg7","slide":5,"name":"Rectangle 29","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"image","id":"im/jex07a9g","slide":5,"name":"Picture 36","bbox":[86,331.51,62,32.98]}
+{"kind":"image","id":"im/id4ze58b","slide":5,"name":"Picture 42","bbox":[670,335.6,62,24.8]}
+{"kind":"image","id":"im/t4fid4ry","slide":5,"name":"Picture 48","bbox":[94.33,502,45.35,44]}
+{"kind":"image","id":"im/sj61kzqd","slide":5,"name":"Picture 54","bbox":[679,502,44,44]}
+{"kind":"notes","id":"nt/i107q5of","slide":5,"text":"[Sources]\nRay documentation describes Ray Core tasks/actors and Ray libraries for Train, Tune, Data, and Serve: https://docs.ray.io/\nApache Spark project documentation describes Spark as a unified engine for large-scale data analytics: https://spark.apache.org/\nDask documentation describes Dask as parallel computing in Python that scales arrays, dataframes, and custom workloads: https://docs.dask.org/\nKubernetes documentation describes Kubernetes as a system for automating deployment, scaling, and management of containerized applications: https://kubernetes.io/docs/concepts/overview/\nCelery documentation describes Celery as a distributed task queue: https://docs.celeryq.dev/\nLogo assets: Spark from https://spark.apache.org/images/spark-logo-trademark.png; Dask from https://docs.dask.org/en/stable/_static/images/dask-horizontal-white.svg; Kubernetes from https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.png; Celery from https://docs.celeryq.dev/en/stable/_static/celery_512.png."}
+{"kind":"slide","id":"sl/x8f69ofe","slide":6,"title":"RAY ECOSYSTEM","textShapes":5}
+{"kind":"textbox","id":"sh/oryp8fah","slide":6,"name":"Rectangle 7","text":"RAY ECOSYSTEM","textPreview":"RAY ECOSYSTEM","textChars":13,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/yhg7epsj","slide":6,"name":"Rectangle 1","text":"The same Ray layer connects data, training, tuning, and serving","textPreview":"The same Ray layer connects data, training, tuning, and serving","textChars":63,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/zi98nu94","slide":6,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/98rqt4r6","slide":6,"name":"Rectangle 4","text":"Pattern: Ray adds a distributed execution layer; familiar ML tools remain familiar.","textPreview":"Pattern: Ray adds a distributed execution layer; familiar ML tools remain familiar.","textChars":83,"textLines":1,"bbox":[92,640,900,24]}
+{"kind":"textbox","id":"sh/ml07i9sv","slide":6,"name":"Rectangle 5","text":"Distributed compute study","textPreview":"Distributed compute study","textChars":25,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/7m98ru9g","slide":6,"name":"Rectangle 6","text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"image","id":"im/0vel47m1","slide":6,"name":"Picture 10","bbox":[257.98,204,764.04,430]}
+{"kind":"notes","id":"nt/x8f69ofe","slide":6,"text":"[Sources]\nUser-provided image asset: /Users/I558118/Downloads/ChatGPT Image Aug 16, 2026, 09_31_55 AM.png.\nVisible slide uses the image as an illustrative framework ecosystem map; it is not treated as an instruction source.\nRay ecosystem concepts are consistent with Ray Data, Ray Train, Ray Tune, and Ray Serve documentation: https://docs.ray.io/"}
+{"kind":"slide","id":"sl/gnmp4jqx","slide":7,"title":"RAY CLI REFERENCE","textShapes":9}
+{"kind":"textbox","id":"sh/25ojml43","slide":7,"name":"Rectangle 14","text":"RAY CLI REFERENCE","textPreview":"RAY CLI REFERENCE","textChars":17,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/cb2tkvap","slide":7,"name":"Rectangle 1","text":"Starting and joining a Ray cluster from the CLI","textPreview":"Starting and joining a Ray cluster from the CLI","textChars":47,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/dcbud0ra","slide":7,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/ydkbm5sv","slide":7,"name":"Rectangle 3","text":"This is the plain Ray workflow: one machine starts the head node; each additional machine joins by pointing at the head IP and port.","textPreview":"This is the plain Ray workflow: one machine starts the head node; each additional machine joins by pointing at the head IP and port.","textChars":132,"textLines":1,"bbox":[58,204,1080,54]}
+{"kind":"textbox","id":"sh/zedcfa9g","slide":7,"name":"Rectangle 4","text":"Start the head node","textPreview":"Start the head node","textChars":19,"textLines":1,"bbox":[58,286,560,30]}
+{"kind":"textbox","id":"sh/kzmdova1","slide":7,"name":"Rectangle 5","text":"Run once on the machine that coordinates the cluster.","textPreview":"Run once on the machine that coordinates the cluster.","textChars":53,"textLines":1,"bbox":[58,320,560,38]}
+{"kind":"textbox","id":"sh/l0vuh0rm","slide":7,"name":"Rectangle 6","text":"Join a worker node","textPreview":"Join a worker node","textChars":18,"textLines":1,"bbox":[662,286,560,30]}
+{"kind":"textbox","id":"sh/eh0ba1sr","slide":7,"name":"Rectangle 7","text":"Run on each machine that contributes CPU/GPU resources.","textPreview":"Run on each machine that contributes CPU/GPU resources.","textChars":55,"textLines":1,"bbox":[662,320,560,38]}
+{"kind":"textbox","id":"sh/cbq1sv25","slide":7,"name":"Rectangle 12","text":"Distributed compute study","textPreview":"Distributed compute study","textChars":25,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/n6x0fqlo","slide":7,"name":"Rectangle 13","text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"image","id":"im/y1ofmd0z","slide":7,"name":"Picture 22","bbox":[58,370,560,256]}
+{"kind":"image","id":"im/j2xwvyhk","slide":7,"name":"Picture 23","bbox":[662,370,560,256]}
+{"kind":"notes","id":"nt/gnmp4jqx","slide":7,"text":"[Sources]\nRay CLI command structure source: Ray documentation for ray start and cluster startup: https://docs.ray.io/en/latest/cluster/cli.html\nPort choices mirror the local RayLab fixed-port configuration in electron/src/ray_control.js and docs/rollout.md.\nThe slide intentionally shows normal Ray CLI usage without RayLab-specific commands."}
+{"kind":"slide","id":"sl/fu1gfa1s","slide":8,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":11}
+{"kind":"textbox","id":"sh/0jydkreh","slide":8,"name":"Rectangle 13","text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/18byd4zy","slide":8,"name":"Rectangle 1","text":"Then we built RayLab: host mode coordinates the cluster","textPreview":"Then we built RayLab: host mode coordinates the cluster","textChars":55,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/g72x4zyd","slide":8,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/ri9g7uhw","slide":8,"name":"Rectangle 3","text":"The host chooses network exposure, ports, resource caps, and can see active nodes. In practice, this becomes the control room for the lab cluster.","textPreview":"The host chooses network exposure, ports, resource caps, and can see active nodes. In practice, this becomes the control room for the lab...","textChars":146,"textLines":1,"bbox":[58,190,470,110]}
+{"kind":"textbox","id":"sh/6h0fypgb","slide":8,"name":"Rectangle 4","text":"COORDINATOR","textPreview":"COORDINATOR","textChars":11,"textLines":1,"bbox":[58,346,230,28]}
+{"kind":"textbox","id":"sh/tkby9kzm","slide":8,"name":"Rectangle 5","text":"3 nodes","textPreview":"3 nodes","textChars":7,"textLines":1,"bbox":[58,380,230,62]}
+{"kind":"textbox","id":"sh/sjix0zy1","slide":8,"name":"Rectangle 6","text":"Windows head plus two macOS contributors","textPreview":"Windows head plus two macOS contributors","textChars":40,"textLines":1,"bbox":[58,446,250,60]}
+{"kind":"textbox","id":"sh/je9g3ahk","slide":8,"name":"Rectangle 7","text":"JOB SLOTS","textPreview":"JOB SLOTS","textChars":9,"textLines":1,"bbox":[338,346,230,28]}
+{"kind":"textbox","id":"sh/id0fu50z","slide":8,"name":"Rectangle 8","text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[338,380,230,62]}
+{"kind":"textbox","id":"sh/o7ydoret","slide":8,"name":"Rectangle 9","text":"Configured as RayLab max concurrent jobs","textPreview":"Configured as RayLab max concurrent jobs","textChars":40,"textLines":1,"bbox":[338,446,250,60]}
+{"kind":"textbox","id":"sh/m5gvmhwn","slide":8,"name":"Rectangle 11","text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/n6pwfmd8","slide":8,"name":"Rectangle 12","text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"image","id":"im/ep47m9kn","slide":8,"name":"Picture 23","geometry":"roundRect","bbox":[560,188,640,404]}
+{"kind":"notes","id":"nt/fu1gfa1s","slide":8,"text":"[Sources]\nScreenshot captured from the local RayLab React frontend with a mocked Electron bridge for presentation data: presentation/assets/raylab-host-mode.png\nCluster node data mirrors benchmark/reports/mnist-cnn-ray-results.json."}
+{"kind":"slide","id":"sl/udsvah03","slide":9,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":11}
+{"kind":"textbox","id":"sh/98ji147e","slide":9,"name":"Rectangle 19","text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/1cfmhgne","slide":9,"name":"Rectangle 1","text":"Join mode lets a colleague contribute safely","textPreview":"Join mode lets a colleague contribute safely","textChars":44,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/0b65obm9","slide":9,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/mdonql4z","slide":9,"name":"Rectangle 4","text":"A worker machine can join the coordinator, run setup, verify networking, and cap its contribution. The user remains in control of when and how much local compute is shared.","textPreview":"A worker machine can join the coordinator, run setup, verify networking, and cap its contribution. The user remains in control of when an...","textChars":172,"textLines":1,"bbox":[773,207.84,489.51,180]}
+{"kind":"textbox","id":"sh/9gzml0nq","slide":9,"name":"Rectangle 5","text":"CPU offered","textPreview":"CPU offered","textChars":11,"textLines":1,"bbox":[773,446.16,175,24]}
+{"kind":"shape","id":"sh/ofq5svm5","slide":9,"name":"Rectangle 6","bbox":[961,449.16,230,18]}
+{"kind":"shape","id":"sh/bih4na5w","slide":9,"name":"Rectangle 7","bbox":[961,449.16,191.67,18]}
+{"kind":"textbox","id":"sh/ah8nu54b","slide":9,"name":"Rectangle 8","text":"10.00x","textPreview":"10.00x","textChars":6,"textLines":1,"bbox":[1201,446.16,70,24]}
+{"kind":"textbox","id":"sh/oza1gfyh","slide":9,"name":"Rectangle 9","text":"RAM cap","textPreview":"RAM cap","textChars":7,"textLines":1,"bbox":[773,496.16,175,24]}
+{"kind":"shape","id":"sh/p0ji9kf2","slide":9,"name":"Rectangle 10","bbox":[961,499.16,230,18]}
+{"kind":"shape","id":"sh/2xsjepgb","slide":9,"name":"Rectangle 11","bbox":[961,499.16,230,18]}
+{"kind":"textbox","id":"sh/3y107axw","slide":9,"name":"Rectangle 12","text":"32.00x","textPreview":"32.00x","textChars":6,"textLines":1,"bbox":[1201,496.16,70,24]}
+{"kind":"textbox","id":"sh/cnu1kzyd","slide":9,"name":"Rectangle 13","text":"Setup","textPreview":"Setup","textChars":5,"textLines":1,"bbox":[773,546.16,175,24]}
+{"kind":"shape","id":"sh/do3id4fy","slide":9,"name":"Rectangle 14","bbox":[961,549.16,230,18]}
+{"kind":"shape","id":"sh/qlcjipgn","slide":9,"name":"Rectangle 15","bbox":[961,549.16,230,18]}
+{"kind":"textbox","id":"sh/bml0buxs","slide":9,"name":"Rectangle 16","text":"1.00x","textPreview":"1.00x","textChars":5,"textLines":1,"bbox":[1201,546.16,70,24]}
+{"kind":"textbox","id":"sh/0ru1ozyp","slide":9,"name":"Rectangle 17","text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/lsn2h4fa","slide":9,"name":"Rectangle 18","text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"image","id":"im/ned87qxk","slide":9,"name":"Picture 22","geometry":"roundRect","bbox":[58,188,690,430]}
+{"kind":"notes","id":"nt/udsvah03","slide":9,"text":"[Sources]\nScreenshot captured from the local RayLab React frontend with a mocked Electron bridge for presentation data: presentation/assets/raylab-join-mode.png\nResource cap behavior is implemented in frontend/src/store.ts and frontend/src/App.tsx."}
+{"kind":"slide","id":"sl/m90b6t0r","slide":10,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":7}
+{"kind":"textbox","id":"sh/s7yt4b21","slide":10,"name":"Rectangle 9","text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/xc3mho32","slide":10,"name":"Rectangle 1","text":"The cluster graph makes distributed work visible","textPreview":"The cluster graph makes distributed work visible","textChars":48,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/cbu58j2h","slide":10,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/ydcnatkn","slide":10,"name":"Rectangle 4","text":"This matters for teaching and debugging: colleagues can see which machines are alive, what each contributes, and whether the coordinator sees the same reality as the workers.","textPreview":"This matters for teaching and debugging: colleagues can see which machines are alive, what each contributes, and whether the coordinator ...","textChars":174,"textLines":1,"bbox":[900,202,322,156]}
+{"kind":"textbox","id":"sh/l036l83y","slide":10,"name":"Rectangle 5","text":"Live nodes only","textPreview":"Live nodes only","textChars":15,"textLines":1,"bbox":[900,452.73,260,36]}
+{"kind":"textbox","id":"sh/kzu5c32t","slide":10,"name":"Rectangle 6","text":"The graph intentionally shows current connected devices rather than remembered historical machines.","textPreview":"The graph intentionally shows current connected devices rather than remembered historical machines.","textChars":99,"textLines":1,"bbox":[900.14,498.33,335.72,124.08]}
+{"kind":"textbox","id":"sh/725onyl4","slide":10,"name":"Rectangle 7","text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/m1cnetkj","slide":10,"name":"Rectangle 8","text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"image","id":"im/uhgz6tkr","slide":10,"name":"Picture 12","geometry":"roundRect","bbox":[58,188,780,430]}
+{"kind":"notes","id":"nt/m90b6t0r","slide":10,"text":"[Sources]\nScreenshot captured from the local RayLab React frontend with mocked live cluster data: presentation/assets/raylab-cluster-graph.png\nCurrent graph behavior is implemented in frontend/src/App.tsx ClusterGraph."}
+{"kind":"slide","id":"sl/jetc3ut0","slide":11,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":30}
+{"kind":"textbox","id":"sh/4rato36h","slide":11,"name":"Rectangle 42","text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/xcryxg7y","slide":11,"name":"Rectangle 1","text":"The benchmarks show both promise and engineering honesty","textPreview":"The benchmarks show both promise and engineering honesty","textChars":56,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/wbih4b6d","slide":11,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/n69grmpw","slide":11,"name":"Rectangle 3","text":"We tested both embarrassingly parallel work and real neural-network training. The message is credible because we also show where workload shape matters.","textPreview":"We tested both embarrassingly parallel work and real neural-network training. The message is credible because we also show where workload...","textChars":152,"textLines":1,"bbox":[58,210,1070,56]}
+{"kind":"shape","id":"sh/250zy18b","slide":11,"name":"Rectangle 4","bbox":[58,292,755.77,270.6]}
+{"kind":"shape","id":"sh/98rytw72","slide":11,"name":"Rectangle 5","bbox":[58,292,745,44]}
+{"kind":"textbox","id":"sh/o7ih0r6h","slide":11,"name":"Rectangle 6","text":"Benchmark","textPreview":"Benchmark","textChars":9,"textLines":1,"bbox":[68,301,132,32]}
+{"kind":"textbox","id":"sh/72t03qp0","slide":11,"name":"Rectangle 7","text":"What it did","textPreview":"What it did","textChars":11,"textLines":1,"bbox":[218,301,212,32]}
+{"kind":"textbox","id":"sh/61kzalof","slide":11,"name":"Rectangle 8","text":"Best result","textPreview":"Best result","textChars":11,"textLines":1,"bbox":[448,301,142,32]}
+{"kind":"textbox","id":"sh/ofqtgnyt","slide":11,"name":"Rectangle 9","text":"Meaning","textPreview":"Meaning","textChars":7,"textLines":1,"bbox":[608,301,187,32]}
+{"kind":"shape","id":"sh/9gza9sze","slide":11,"name":"Rectangle 10","bbox":[58,336,745,48]}
+{"kind":"textbox","id":"sh/mdobedg3","slide":11,"name":"Rectangle 11","text":"Monte Carlo","textPreview":"Monte Carlo","textChars":11,"textLines":1,"bbox":[68,345,132,36]}
+{"kind":"textbox","id":"sh/nehs7iho","slide":11,"name":"Rectangle 12","text":"480M option-pricing paths","textPreview":"480M option-pricing paths","textChars":25,"textLines":1,"bbox":[218,345,212,36]}
+{"kind":"textbox","id":"sh/0b6tc3yx","slide":11,"name":"Rectangle 13","text":"2.26x speedup","textPreview":"2.26x speedup","textChars":13,"textLines":1,"bbox":[448,345,142,36]}
+{"kind":"textbox","id":"sh/1cfa58zi","slide":11,"name":"Rectangle 14","text":"Clean scaling story for independent tasks","textPreview":"Clean scaling story for independent tasks","textChars":41,"textLines":1,"bbox":[608,345,187,36]}
+{"kind":"shape","id":"sh/epobatgr","slide":11,"name":"Rectangle 15","bbox":[58,384,745,57]}
+{"kind":"textbox","id":"sh/zaxs3yhc","slide":11,"name":"Rectangle 16","text":"MNIST CNN","textPreview":"MNIST CNN","textChars":9,"textLines":1,"bbox":[68,393,132,36]}
+{"kind":"textbox","id":"sh/cn6t83y1","slide":11,"name":"Rectangle 17","text":"Real simple CNN on MNIST","textPreview":"Real simple CNN on MNIST","textChars":24,"textLines":1,"bbox":[218,393,212,36]}
+{"kind":"textbox","id":"sh/dofa18z6","slide":11,"name":"Rectangle 18","text":"1.34x, 96.54%","textPreview":"1.34x, 96.54%","textChars":13,"textLines":1,"bbox":[448,393,142,36]}
+{"kind":"textbox","id":"sh/tsnip0ny","slide":11,"name":"Rectangle 19","text":"Real training across all nodes","textPreview":"Real training across all nodes","textChars":30,"textLines":1,"bbox":[608,393,195,43]}
+{"kind":"shape","id":"sh/87ehgv6d","slide":11,"name":"Rectangle 20","bbox":[58,432,745,48]}
+{"kind":"textbox","id":"sh/7650nq5s","slide":11,"name":"Rectangle 21","text":"Prime count","textPreview":"Prime count","textChars":11,"textLines":1,"bbox":[68,441,132,36]}
+{"kind":"textbox","id":"sh/65wzelo7","slide":11,"name":"Rectangle 22","text":"Count primes below a limit","textPreview":"Count primes below a limit","textChars":26,"textLines":1,"bbox":[218,441,212,36]}
+{"kind":"textbox","id":"sh/l43ilgn2","slide":11,"name":"Rectangle 23","text":"CPU distribution","textPreview":"CPU distribution","textChars":16,"textLines":1,"bbox":[448,441,142,36]}
+{"kind":"textbox","id":"sh/k3uhcb6h","slide":11,"name":"Rectangle 24","text":"Deterministic compute smoke test","textPreview":"Deterministic compute smoke test","textChars":32,"textLines":1,"bbox":[608,441,187,36]}
+{"kind":"shape","id":"sh/j2lgjq5w","slide":11,"name":"Rectangle 25","bbox":[58,480,745,57.4]}
+{"kind":"textbox","id":"sh/y1czalob","slide":11,"name":"Rectangle 26","text":"NumPy/SciPy","textPreview":"NumPy/SciPy","textChars":11,"textLines":1,"bbox":[68,489,132,36]}
+{"kind":"textbox","id":"sh/p07ixkn6","slide":11,"name":"Rectangle 27","text":"Dense math + solve","textPreview":"Dense math + solve","textChars":18,"textLines":1,"bbox":[218,489,212,36]}
+{"kind":"textbox","id":"sh/4zyhofml","slide":11,"name":"Rectangle 28","text":"Limited scaling","textPreview":"Limited scaling","textChars":15,"textLines":1,"bbox":[448,489,142,36]}
+{"kind":"textbox","id":"sh/m58fih43","slide":11,"name":"Rectangle 29","text":"Small shared libraries can bottleneck","textPreview":"Small shared libraries can bottleneck","textChars":37,"textLines":1,"bbox":[608,489,187,36]}
+{"kind":"shape","id":"sh/n61wbmlo","slide":11,"name":"Rectangle 30","bbox":[838,306,424.51,210]}
+{"kind":"textbox","id":"sh/o7axk7m9","slide":11,"name":"Rectangle 31","text":"Monte Carlo","textPreview":"Monte Carlo","textChars":11,"textLines":1,"bbox":[854.28,352.28,175,24]}
+{"kind":"shape","id":"sh/98jedc3u","slide":11,"name":"Rectangle 32","bbox":[990,358.49,190,18]}
+{"kind":"shape","id":"sh/eh8fex47","slide":11,"name":"Rectangle 33","bbox":[990,358.49,178.92,18]}
+{"kind":"textbox","id":"sh/z2hw72lc","slide":11,"name":"Rectangle 34","text":"2.26x","textPreview":"2.26x","textChars":5,"textLines":1,"bbox":[1174.28,354,70,24]}
+{"kind":"textbox","id":"sh/03qxg7mx","slide":11,"name":"Rectangle 35","text":"MNIST CNN","textPreview":"MNIST CNN","textChars":9,"textLines":1,"bbox":[854.28,412.28,175,24]}
+{"kind":"shape","id":"sh/14ze9c3i","slide":11,"name":"Rectangle 36","bbox":[990,418.49,190,18]}
+{"kind":"shape","id":"sh/ydcfq1kb","slide":11,"name":"Rectangle 37","bbox":[990,418.49,106.24,18]}
+{"kind":"textbox","id":"sh/jylwj6lw","slide":11,"name":"Rectangle 38","text":"1.34x","textPreview":"1.34x","textChars":5,"textLines":1,"bbox":[1174.28,413.72,70,24]}
+{"kind":"textbox","id":"sh/3qhsfypc","slide":11,"name":"Rectangle 39","text":"Speedup over one node","textPreview":"Speedup over one node","textChars":21,"textLines":1,"bbox":[890,484,230,30]}
+{"kind":"textbox","id":"sh/ip8bmtor","slide":11,"name":"Rectangle 40","text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/5sjah872","slide":11,"name":"Rectangle 41","text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"notes","id":"nt/jetc3ut0","slide":11,"text":"[Sources]\nMonte Carlo results source: benchmark/reports/monte-carlo-results.json and benchmark/README.md.\nMNIST CNN results source: benchmark/reports/mnist-cnn-ray-results.json and benchmark/reports/raylab-mnist-cnn-report.html.\nPrime and NumPy/SciPy benchmark scripts are in benchmark/ray_compute_test.py and benchmark/numpy_scipy_benchmark.py."}
+{"kind":"slide","id":"sl/8f2psfyx","slide":12,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":11}
+{"kind":"textbox","id":"sh/mps7a5or","slide":12,"name":"Rectangle 15","text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/1gbm9s3a","slide":12,"name":"Rectangle 1","text":"The MNIST CNN benchmark has separately editable charts","textPreview":"The MNIST CNN benchmark has separately editable charts","textChars":54,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/0f2lgnmp","slide":12,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/ra943il8","slide":12,"name":"Rectangle 3","text":"These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be selected, resized, and edited independently in PowerPoint.","textPreview":"These charts are rebuilt from the benchmark JSON instead of pasted as one screenshot, so each graph can be selected, resized, and edited ...","textChars":165,"textLines":1,"bbox":[58,204,1060,54]}
+{"kind":"textbox","id":"sh/q903ad4n","slide":12,"name":"Rectangle 4","text":"Wall time","textPreview":"Wall time","textChars":9,"textLines":1,"bbox":[58,296,350,28]}
+{"kind":"textbox","id":"sh/dcbm583y","slide":12,"name":"Rectangle 5","text":"Lower is better; adding nodes reduced total training time.","textPreview":"Lower is better; adding nodes reduced total training time.","textChars":58,"textLines":1,"bbox":[58,326,350,42]}
+{"kind":"textbox","id":"sh/b6d4f2lc","slide":12,"name":"Rectangle 7","text":"Throughput","textPreview":"Throughput","textChars":10,"textLines":1,"bbox":[468,296,350,28]}
+{"kind":"textbox","id":"sh/a543mx4r","slide":12,"name":"Rectangle 8","text":"Total train images processed per second across synchronized rounds.","textPreview":"Total train images processed per second across synchronized rounds.","textChars":67,"textLines":1,"bbox":[468,326,350,42]}
+{"kind":"textbox","id":"sh/xw3q94ne","slide":12,"name":"Rectangle 10","text":"Speedup","textPreview":"Speedup","textChars":7,"textLines":1,"bbox":[878,296,350,28]}
+{"kind":"textbox","id":"sh/atc7epon","slide":12,"name":"Rectangle 11","text":"Measured speedup relative to the one-node baseline.","textPreview":"Measured speedup relative to the one-node baseline.","textChars":51,"textLines":1,"bbox":[878,326,350,42]}
+{"kind":"textbox","id":"sh/orapcf6h","slide":12,"name":"Rectangle 13","text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/9sj65kn2","slide":12,"name":"Rectangle 14","text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"chart","id":"ch/bu10r694","slide":12,"name":"Chart","chartType":"bar","bbox":[58,368,350,208]}
+{"kind":"chart","id":"ch/o7ahgbqd","slide":12,"name":"Chart","chartType":"bar","bbox":[468,368,350,208]}
+{"kind":"chart","id":"ch/p8jipgry","slide":12,"name":"Chart","chartType":"line","bbox":[878,368,350,208]}
+{"kind":"notes","id":"nt/8f2psfyx","slide":12,"text":"[Sources]\nMNIST benchmark source data: benchmark/reports/mnist-cnn-ray-results.json.\nCharts are native PowerPoint chart objects generated from the JSON results rather than a single flattened screenshot."}
+{"kind":"slide","id":"sl/hgzapcr6","slide":13,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":14}
+{"kind":"textbox","id":"sh/kjmxsfm1","slide":13,"name":"Rectangle 18","text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/q50nydsj","slide":13,"name":"Rectangle 1","text":"Accuracy stayed strong while all nodes contributed work","textPreview":"Accuracy stayed strong while all nodes contributed work","textChars":55,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/bq9orito","slide":13,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/o3i5w3ad","slide":13,"name":"Rectangle 3","text":"The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local training time alongside CPU share, which helps explain the different per-host timings.","textPreview":"The largest run trained the same simple CNN across three selected nodes. The contribution chart shows local training time alongside CPU s...","textChars":194,"textLines":1,"bbox":[58,204,1060,54]}
+{"kind":"textbox","id":"sh/p4r6p8by","slide":13,"name":"Rectangle 4","text":"Test accuracy by round","textPreview":"Test accuracy by round","textChars":22,"textLines":1,"bbox":[58,300,350,28]}
+{"kind":"textbox","id":"sh/21gnuts7","slide":13,"name":"Rectangle 5","text":"Largest three-node run; values are final evaluation after each synchronization round.","textPreview":"Largest three-node run; values are final evaluation after each synchronization round.","textChars":85,"textLines":1,"bbox":[58,330,350,42]}
+{"kind":"textbox","id":"sh/gzy5s3a1","slide":13,"name":"Rectangle 7","text":"Test loss by round","textPreview":"Test loss by round","textChars":18,"textLines":1,"bbox":[468,300,350,28]}
+{"kind":"textbox","id":"sh/1076lobm","slide":13,"name":"Rectangle 8","text":"Loss improved across the synchronized rounds in the three-node run.","textPreview":"Loss improved across the synchronized rounds in the three-node run.","textChars":67,"textLines":1,"bbox":[468,330,350,42]}
+{"kind":"textbox","id":"sh/gb6x0zm9","slide":13,"name":"Rectangle 10","text":"Per-host train seconds","textPreview":"Per-host train seconds","textChars":22,"textLines":1,"bbox":[878,300,350,28]}
+{"kind":"textbox","id":"sh/vaxg7ulo","slide":13,"name":"Rectangle 11","text":"Each host trained an equal image share in the largest run.","textPreview":"Each host trained an equal image share in the largest run.","textChars":58,"textLines":1,"bbox":[878,330,350,42]}
+{"kind":"textbox","id":"sh/t8fy5k3i","slide":13,"name":"Rectangle 13","text":"Abimbolas: 4 CPUs","textPreview":"Abimbolas: 4 CPUs","textChars":17,"textLines":1,"bbox":[878,584,330,20]}
+{"kind":"textbox","id":"sh/876xwfmx","slide":13,"name":"Rectangle 14","text":"BaddestM4.local: 10 CPUs","textPreview":"BaddestM4.local: 10 CPUs","textChars":24,"textLines":1,"bbox":[878,606,330,20]}
+{"kind":"textbox","id":"sh/7mdg3als","slide":13,"name":"Rectangle 15","text":"F6TMFW21C3: 12 CPUs","textPreview":"F6TMFW21C3: 12 CPUs","textChars":19,"textLines":1,"bbox":[878,628,330,20]}
+{"kind":"textbox","id":"sh/6l4fu547","slide":13,"name":"Rectangle 16","text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/lkvy103m","slide":13,"name":"Rectangle 17","text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"chart","id":"ch/sfqdonu9","slide":13,"name":"Chart","chartType":"line","bbox":[58,372,350,194]}
+{"kind":"chart","id":"ch/dgzexsbu","slide":13,"name":"Chart","chartType":"line","bbox":[468,372,350,194]}
+{"kind":"chart","id":"ch/qd8vmdcj","slide":13,"name":"Chart","chartType":"bar","bbox":[878,372,350,194]}
+{"kind":"notes","id":"nt/hgzapcr6","slide":13,"text":"[Sources]\nMNIST benchmark source data: benchmark/reports/mnist-cnn-ray-results.json.\nNode CPU counts and per-host contribution are from nodes_selected and the largest run's by_host/history fields."}
+{"kind":"slide","id":"sl/6lsnupw7","slide":14,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":24}
+{"kind":"textbox","id":"sh/xw7mts3y","slide":14,"name":"Rectangle 32","text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/xc7eds76","slide":14,"name":"Rectangle 1","text":"Ray ports are not personal file access","textPreview":"Ray ports are not personal file access","textChars":38,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/wbydknq1","slide":14,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/jepwf2pc","slide":14,"name":"Rectangle 3","text":"RayLab treats ports as a narrow cluster-control channel. The app uses a fixed allowlist, private-network firewall scope, and a dedicated worker account so compute can be shared without turning a laptop into a file server.","textPreview":"RayLab treats ports as a narrow cluster-control channel. The app uses a fixed allowlist, private-network firewall scope, and a dedicated ...","textChars":221,"textLines":1,"bbox":[58,204,1080,64]}
+{"kind":"shape","id":"sh/idgvmx8r","slide":14,"name":"Rectangle 4","bbox":[58,292,1164,40]}
+{"kind":"textbox","id":"sh/5grehs7i","slide":14,"name":"Rectangle 5","text":"Port or range","textPreview":"Port or range","textChars":13,"textLines":1,"bbox":[76,303,180,22]}
+{"kind":"textbox","id":"sh/kfidonqx","slide":14,"name":"Rectangle 6","text":"What it is for","textPreview":"What it is for","textChars":14,"textLines":1,"bbox":[278,303,360,22]}
+{"kind":"textbox","id":"sh/zi5c3y98","slide":14,"name":"Rectangle 7","text":"Security boundary","textPreview":"Security boundary","textChars":17,"textLines":1,"bbox":[728,303,360,22]}
+{"kind":"shape","id":"sh/ehwvat8n","slide":14,"name":"Rectangle 8","bbox":[58,332,1164,52]}
+{"kind":"textbox","id":"sh/c3e1gjyd","slide":14,"name":"Rectangle 9","text":"6379","textPreview":"6379","textChars":4,"textLines":1,"bbox":[76,343,185,30]}
+{"kind":"textbox","id":"sh/x4ni9ofy","slide":14,"name":"Rectangle 10","text":"Ray head / GCS registration","textPreview":"Ray head / GCS registration","textChars":27,"textLines":1,"bbox":[278,343,420,30]}
+{"kind":"textbox","id":"sh/a1wze9g7","slide":14,"name":"Rectangle 11","text":"Coordinator port; private lab network only.","textPreview":"Coordinator port; private lab network only.","textChars":43,"textLines":1,"bbox":[728,343,500,30]}
+{"kind":"shape","id":"sh/b2507exs","slide":14,"name":"Rectangle 12","bbox":[58,384,1164,52]}
+{"kind":"textbox","id":"sh/kre1k3y9","slide":14,"name":"Rectangle 13","text":"8265","textPreview":"8265","textChars":4,"textLines":1,"bbox":[76,395,185,30]}
+{"kind":"textbox","id":"sh/ls7idofu","slide":14,"name":"Rectangle 14","text":"Dashboard and jobs endpoint","textPreview":"Dashboard and jobs endpoint","textChars":27,"textLines":1,"bbox":[278,395,420,30]}
+{"kind":"textbox","id":"sh/y5wjitgj","slide":14,"name":"Rectangle 15","text":"Token/session guarded and not exposed to the internet.","textPreview":"Token/session guarded and not exposed to the internet.","textChars":54,"textLines":1,"bbox":[728,395,500,30]}
+{"kind":"shape","id":"sh/z650byxo","slide":14,"name":"Rectangle 16","bbox":[58,436,1164,52]}
+{"kind":"textbox","id":"sh/0buh8zy5","slide":14,"name":"Rectangle 17","text":"10001","textPreview":"10001","textChars":5,"textLines":1,"bbox":[76,447,185,30]}
+{"kind":"textbox","id":"sh/1w3i14fq","slide":14,"name":"Rectangle 18","text":"Optional Ray client traffic","textPreview":"Optional Ray client traffic","textChars":27,"textLines":1,"bbox":[278,447,420,30]}
+{"kind":"textbox","id":"sh/hsvy50re","slide":14,"name":"Rectangle 19","text":"Same private-network scope as the coordinator.","textPreview":"Same private-network scope as the coordinator.","textChars":46,"textLines":1,"bbox":[728,447,500,30]}
+{"kind":"shape","id":"sh/grmxwvqt","slide":14,"name":"Rectangle 20","bbox":[58,488,1164,52]}
+{"kind":"textbox","id":"sh/fqdg3q98","slide":14,"name":"Rectangle 21","text":"18075-18077","textPreview":"18075-18077","textChars":11,"textLines":1,"bbox":[76,499,185,30]}
+{"kind":"textbox","id":"sh/up4fal83","slide":14,"name":"Rectangle 22","text":"Preflight and worker callbacks","textPreview":"Preflight and worker callbacks","textChars":30,"textLines":1,"bbox":[278,499,420,30]}
+{"kind":"textbox","id":"sh/pwvy90rq","slide":14,"name":"Rectangle 23","text":"Used to verify bidirectional reachability before startup.","textPreview":"Used to verify bidirectional reachability before startup.","textChars":57,"textLines":1,"bbox":[728,499,500,30]}
+{"kind":"shape","id":"sh/4vmh0vq5","slide":14,"name":"Rectangle 24","bbox":[58,540,1164,52]}
+{"kind":"textbox","id":"sh/3udg7q9k","slide":14,"name":"Rectangle 25","text":"20000-29999","textPreview":"20000-29999","textChars":11,"textLines":1,"bbox":[76,551,185,30]}
+{"kind":"textbox","id":"sh/2t4fyl8z","slide":14,"name":"Rectangle 26","text":"Ray worker task ports","textPreview":"Ray worker task ports","textChars":21,"textLines":1,"bbox":[278,551,420,30]}
+{"kind":"textbox","id":"sh/d0fydk7m","slide":14,"name":"Rectangle 27","text":"Inbound rules are scoped to coordinator/local subnet.","textPreview":"Inbound rules are scoped to coordinator/local subnet.","textChars":53,"textLines":1,"bbox":[728,551,500,30]}
+{"kind":"shape","id":"sh/cz6h4fq1","slide":14,"name":"Rectangle 28","bbox":[58,610,1164,34]}
+{"kind":"textbox","id":"sh/atg3idk7","slide":14,"name":"Rectangle 29","text":"Key distinction: RayLab opens compute coordination, not SMB, AFP, OneDrive, SSH, or arbitrary file sharing.","textPreview":"Key distinction: RayLab opens compute coordination, not SMB, AFP, OneDrive, SSH, or arbitrary file sharing.","textChars":107,"textLines":1,"bbox":[76,618,1118,20]}
+{"kind":"textbox","id":"sh/bup4rils","slide":14,"name":"Rectangle 30","text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/cvylkn2d","slide":14,"name":"Rectangle 31","text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"notes","id":"nt/6lsnupw7","slide":14,"text":"[Sources]\nLocal RayLab default port map source: electron/src/storage.js and frontend/src/store.ts.\nRayLab rollout port policy source: docs/rollout.md, especially the 'No public exposure' and port map sections.\nRay startup arguments for fixed node manager, object manager, and worker port ranges source: electron/src/ray_control.js.\nRay security guidance recommends controlled networks for Ray clusters: https://docs.ray.io/en/latest/ray-security/index.html."}
+{"kind":"slide","id":"sl/vaxsvy10","slide":15,"title":"RAYLAB DISTRIBUTED COMPUTING","textShapes":17}
+{"kind":"textbox","id":"sh/o7ah4nm5","slide":15,"name":"Rectangle 24","text":"RAYLAB DISTRIBUTED COMPUTING","textPreview":"RAYLAB DISTRIBUTED COMPUTING","textChars":28,"textLines":1,"bbox":[58,34,620,28]}
+{"kind":"textbox","id":"sh/547mhg3m","slide":15,"name":"Rectangle 1","text":"The security case is layered, not just a port number","textPreview":"The security case is layered, not just a port number","textChars":52,"textLines":1,"bbox":[58,72,1010,106]}
+{"kind":"shape","id":"sh/k3y5ov21","slide":15,"name":"Rectangle 2","bbox":[58,184,1164,1.4]}
+{"kind":"textbox","id":"sh/76p4jqls","slide":15,"name":"Rectangle 3","text":"The answer to the security concern is not 'trust the open port'. It is: restrict who can reach it, keep the port list explicit, run work under a constrained account, and block startup when the network is wrong.","textPreview":"The answer to the security concern is not 'trust the open port'. It is: restrict who can reach it, keep the port list explicit, run work ...","textChars":210,"textLines":1,"bbox":[58,204,1080,64]}
+{"kind":"shape","id":"sh/65gnqlk7","slide":15,"name":"Rectangle 4","bbox":[58,302,535,138]}
+{"kind":"textbox","id":"sh/t87ml0ji","slide":15,"name":"Rectangle 5","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[80,326,58,36]}
+{"kind":"textbox","id":"sh/s7y5sv2x","slide":15,"name":"Rectangle 6","text":"Fixed allowlist","textPreview":"Fixed allowlist","textChars":15,"textLines":1,"bbox":[150,324,390,30]}
+{"kind":"textbox","id":"sh/na5476l8","slide":15,"name":"Rectangle 7","text":"RayLab uses known ports for head, dashboard, client, callback, and task traffic instead of leaving the network surface implicit.","textPreview":"RayLab uses known ports for head, dashboard, client, callback, and task traffic instead of leaving the network surface implicit.","textChars":128,"textLines":1,"bbox":[150,364,390,58]}
+{"kind":"shape","id":"sh/m9c3e1kn","slide":15,"name":"Rectangle 8","bbox":[648,302,535,138]}
+{"kind":"textbox","id":"sh/wrm9kvep","slide":15,"name":"Rectangle 9","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[670,326,58,36]}
+{"kind":"textbox","id":"sh/hsvat0fa","slide":15,"name":"Rectangle 10","text":"Private network scope","textPreview":"Private network scope","textChars":21,"textLines":1,"bbox":[740,324,390,30]}
+{"kind":"textbox","id":"sh/upkrilwj","slide":15,"name":"Rectangle 11","text":"Firewall setup allows only the coordinator or local subnet. Public internet and broad campus exposure are out of policy.","textPreview":"Firewall setup allows only the coordinator or local subnet. Public internet and broad campus exposure are out of policy.","textChars":120,"textLines":1,"bbox":[740,364,390,58]}
+{"kind":"shape","id":"sh/vqdsrqx4","slide":15,"name":"Rectangle 12","bbox":[58,470,535,138]}
+{"kind":"textbox","id":"sh/4vm9ovel","slide":15,"name":"Rectangle 13","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[80,494,58,36]}
+{"kind":"textbox","id":"sh/5wvax0f6","slide":15,"name":"Rectangle 14","text":"Dedicated worker account","textPreview":"Dedicated worker account","textChars":24,"textLines":1,"bbox":[150,492,390,30]}
+{"kind":"textbox","id":"sh/it4rm5wv","slide":15,"name":"Rectangle 15","text":"Worker jobs run under the RayLab worker identity, separating contributed compute from a participant's normal desktop profile.","textPreview":"Worker jobs run under the RayLab worker identity, separating contributed compute from a participant's normal desktop profile.","textChars":125,"textLines":1,"bbox":[150,532,390,58]}
+{"kind":"shape","id":"sh/judsvqxg","slide":15,"name":"Rectangle 16","bbox":[648,470,535,138]}
+{"kind":"textbox","id":"sh/0z29cbyh","slide":15,"name":"Rectangle 17","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[670,494,58,36]}
+{"kind":"textbox","id":"sh/l0bqlgf2","slide":15,"name":"Rectangle 18","text":"Preflight and audit","textPreview":"Preflight and audit","textChars":19,"textLines":1,"bbox":[740,492,390,30]}
+{"kind":"textbox","id":"sh/1kjyt83e","slide":15,"name":"Rectangle 19","text":"Network checks verify the callback path before Ray starts, and setup/terminal logs show what was opened or changed.","textPreview":"Network checks verify the callback path before Ray starts, and setup/terminal logs show what was opened or changed.","textChars":115,"textLines":1,"bbox":[740,532,390,58]}
+{"kind":"shape","id":"sh/gjax03m9","slide":15,"name":"Rectangle 20","bbox":[58,622,1125,56]}
+{"kind":"textbox","id":"sh/fi1grylo","slide":15,"name":"Rectangle 21","text":"Positioning for colleagues: RayLab shares compute capacity, not personal folders. File access still follows the operating-system account, folder permissions, and explicit data paths chosen for the job.","textPreview":"Positioning for colleagues: RayLab shares compute capacity, not personal folders. File access still follows the operating-system account,...","textChars":201,"textLines":1,"bbox":[76,630,1118,56]}
+{"kind":"textbox","id":"sh/p8jyx83q","slide":15,"name":"Rectangle 23","text":"15","textPreview":"15","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"notes","id":"nt/vaxsvy10","slide":15,"text":"[Sources]\nDedicated worker-account design source: docs/rollout.md and local setup behavior implemented in electron/src/setup_runner.js.\nWindows firewall rule scoping source: electron/src/setup_runner.js, which creates RayLab rules for coordinator/local-subnet access rather than unrestricted public access.\nNetwork preflight source: electron/src/network_preflight.js and electron/src/setup_runner.js.\nRay security guidance notes that Ray should run in a controlled network environment: https://docs.ray.io/en/latest/ray-security/index.html."}
+{"kind":"slide","id":"sl/gny5sjyp","slide":16,"title":"What we can do next","textShapes":14}
+{"kind":"textbox","id":"sh/2pcfa5oz","slide":16,"name":"Rectangle 14","text":"What we can do next","textPreview":"What we can do next","textChars":19,"textLines":1,"bbox":[58,70,760,76]}
+{"kind":"textbox","id":"sh/8z2h8bq1","slide":16,"name":"Rectangle 1","text":"The prototype is far enough to demonstrate value. The next step is to pick two or three real lab workloads and make RayLab the easiest way to run them together.","textPreview":"The prototype is far enough to demonstrate value. The next step is to pick two or three real lab workloads and make RayLab the easiest wa...","textChars":160,"textLines":1,"bbox":[58,176,880,80]}
+{"kind":"textbox","id":"sh/9kby1g7m","slide":16,"name":"Rectangle 2","text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[58,326,44,44]}
+{"kind":"textbox","id":"sh/ytkf2h8j","slide":16,"name":"Rectangle 3","text":"Package a reproducible demo","textPreview":"Package a reproducible demo","textChars":27,"textLines":1,"bbox":[130,324,430,30]}
+{"kind":"textbox","id":"sh/zutgvm94","slide":16,"name":"Rectangle 4","text":"Keep Monte Carlo and MNIST as the baseline demos for new machines.","textPreview":"Keep Monte Carlo and MNIST as the baseline demos for new machines.","textChars":66,"textLines":1,"bbox":[130,360,660,44]}
+{"kind":"textbox","id":"sh/kv2h4rqp","slide":16,"name":"Rectangle 5","text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[58,418,44,44]}
+{"kind":"textbox","id":"sh/lwbyxwra","slide":16,"name":"Rectangle 6","text":"Invite a small pilot group","textPreview":"Invite a small pilot group","textChars":26,"textLines":1,"bbox":[130,416,430,30]}
+{"kind":"textbox","id":"sh/ip4zel83","slide":16,"name":"Rectangle 7","text":"Test with colleagues who already run Python, ML, or simulation jobs.","textPreview":"Test with colleagues who already run Python, ML, or simulation jobs.","textChars":68,"textLines":1,"bbox":[130,452,660,44]}
+{"kind":"textbox","id":"sh/3qdg7qpo","slide":16,"name":"Rectangle 8","text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[58,510,44,44]}
+{"kind":"textbox","id":"sh/fm1gzq5o","slide":16,"name":"Rectangle 9","text":"Add workload templates","textPreview":"Add workload templates","textChars":22,"textLines":1,"bbox":[130,508,430,30]}
+{"kind":"textbox","id":"sh/e1sf65o3","slide":16,"name":"Rectangle 10","text":"Make common jobs one-click: batch inference, Ray Tune sweeps, and data transforms.","textPreview":"Make common jobs one-click: batch inference, Ray Tune sweeps, and data transforms.","textChars":82,"textLines":1,"bbox":[130,544,660,44]}
+{"kind":"textbox","id":"sh/1ojy10ne","slide":16,"name":"Rectangle 11","text":"Distributed computing becomes useful when it feels ordinary enough to try.","textPreview":"Distributed computing becomes useful when it feels ordinary enough to try.","textChars":74,"textLines":1,"bbox":[861.3,371,369.95,120]}
+{"kind":"textbox","id":"sh/gnax8v6t","slide":16,"name":"Rectangle 12","text":"RayLab · university lab cluster","textPreview":"RayLab · university lab cluster","textChars":31,"textLines":1,"bbox":[58,668,360,24]}
+{"kind":"textbox","id":"sh/nqlg3a5k","slide":16,"name":"Rectangle 13","text":"16","textPreview":"16","textChars":2,"textLines":1,"bbox":[1162,668,60,24]}
+{"kind":"notes","id":"nt/gny5sjyp","slide":16,"text":"[Sources]\nNext steps synthesized from local RayLab prototype state and benchmark outcomes.\nRay documentation for Ray Tune, Ray Train, and Ray Data: https://docs.ray.io/"}

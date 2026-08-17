@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html, body { margin: 0; width: 1120px; height: 512px; overflow: hidden; background: #111C22; }
+pre { box-sizing: border-box; width: 1120px; height: 512px; margin: 0; padding: 30px 36px; color: #DCE7EA; font: 30px/38px SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+.cmt { color: #7FA99B; } .prompt { color: #8FA2AA; } .cmd { color: #7DD3FC; font-weight: 700; }
+.flag { color: #A7C7FF; } .value { color: #F8C471; } .var { color: #FCA5A5; }
+</style></head><body><pre><span class="cmt"># On each worker machine</span>
+<span class="prompt">$</span> <span class="cmd">ray</span> <span class="cmd">start</span> \
+  <span class="flag">--address</span>=<span class="var">&lt;HEAD_IP&gt;:6379</span> \
+  <span class="flag">--node-ip-address</span>=<span class="var">&lt;WORKER_IP&gt;</span> \
+  <span class="flag">--node-manager-port</span>=<span class="value">18076</span> \
+  <span class="flag">--object-manager-port</span>=<span class="value">18077</span> \
+  <span class="flag">--min-worker-port</span>=<span class="value">20000</span> \
+  <span class="flag">--max-worker-port</span>=<span class="value">29999</span>
+
+<span class="cmt"># Quick check from any machine with Ray installed</span>
+<span class="prompt">$</span> <span class="cmd">ray</span> <span class="cmd">status</span> <span class="flag">--address</span>=<span class="var">&lt;HEAD_IP&gt;:6379</span></pre></body></html>
