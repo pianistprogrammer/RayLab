@@ -12,6 +12,8 @@ pub struct DesktopState {
     pub selected_job_id: Option<String>,
     pub saved_clusters: Vec<SavedCluster>,
     pub preferences: Preferences,
+    pub app_mode: AppMode,
+    pub lifecycle: LifecycleConfig,
 }
 
 impl Default for DesktopState {
@@ -22,15 +24,58 @@ impl Default for DesktopState {
             selected_job_id: None,
             saved_clusters: Vec::new(),
             preferences: Preferences::default(),
+            app_mode: AppMode::Unconfigured,
+            lifecycle: LifecycleConfig::default(),
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
 pub struct SavedCluster {
     pub id: String,
     pub name: String,
     pub dashboard_url: String,
+    pub managed: bool,
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum AppMode {
+    #[default]
+    Unconfigured,
+    Coordinator,
+    Worker,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
+pub struct LifecycleConfig {
+    pub head_host: String,
+    pub node_ip_address: String,
+    pub ray_port: u16,
+    pub dashboard_port: u16,
+    pub client_port: u16,
+    pub cpus: f64,
+    pub gpus: f64,
+    pub max_concurrent_jobs: u16,
+    pub auth_enabled: bool,
+}
+
+impl Default for LifecycleConfig {
+    fn default() -> Self {
+        Self {
+            head_host: "127.0.0.1".into(),
+            node_ip_address: String::new(),
+            ray_port: 6379,
+            dashboard_port: 8265,
+            client_port: 10001,
+            cpus: 4.0,
+            gpus: 0.0,
+            max_concurrent_jobs: 1,
+            auth_enabled: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -87,6 +132,8 @@ mod tests {
         assert_eq!(state.active_view, "overview");
         assert!(state.preferences.auto_refresh);
         assert_eq!(state.preferences.poll_interval_ms, 5000);
+        assert_eq!(state.app_mode, AppMode::Unconfigured);
+        assert_eq!(state.lifecycle, LifecycleConfig::default());
     }
 
     #[test]
@@ -97,5 +144,7 @@ mod tests {
         .expect("state should decode");
         assert_eq!(decoded.active_view, "jobs");
         assert_eq!(decoded.preferences, Preferences::default());
+        assert_eq!(decoded.app_mode, AppMode::Unconfigured);
+        assert_eq!(decoded.lifecycle, LifecycleConfig::default());
     }
 }

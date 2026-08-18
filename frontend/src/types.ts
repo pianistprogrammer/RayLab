@@ -1,10 +1,13 @@
 export type AppView = "overview" | "jobs" | "nodes" | "settings";
 export type ConnectionState = "idle" | "connecting" | "connected" | "error";
+export type AppMode = "unconfigured" | "coordinator" | "worker";
+export type LifecycleState = "stopped" | "running" | "error";
 
 export interface SavedCluster {
   id: string;
   name: string;
   dashboard_url: string;
+  managed?: boolean;
 }
 
 export interface Preferences {
@@ -18,6 +21,43 @@ export interface DesktopState {
   selected_job_id: string | null;
   saved_clusters: SavedCluster[];
   preferences: Preferences;
+  app_mode: AppMode;
+  lifecycle: LifecycleConfig;
+}
+
+export interface LifecycleConfig {
+  head_host: string;
+  node_ip_address: string;
+  ray_port: number;
+  dashboard_port: number;
+  client_port: number;
+  cpus: number;
+  gpus: number;
+  max_concurrent_jobs: number;
+  auth_enabled: boolean;
+}
+
+export interface RuntimeStatus {
+  ready: boolean;
+  installing_supported: boolean;
+  ray_version: string | null;
+  ray_path: string | null;
+  message: string;
+}
+
+export interface LifecycleStatus {
+  state: LifecycleState;
+  mode: AppMode;
+  message: string;
+  local_node_ip: string;
+  join_address: string;
+  dashboard_url: string;
+  runtime: RuntimeStatus;
+}
+
+export interface ClusterTokenStatus {
+  configured: boolean;
+  token: string | null;
 }
 
 export interface RayApiVersion {
@@ -49,6 +89,7 @@ export interface JobSubmission {
   submission_id?: string;
   entrypoint_num_cpus?: number;
   entrypoint_num_gpus?: number;
+  entrypoint_resources?: Record<string, number>;
 }
 
 export interface SubmitJobResult {

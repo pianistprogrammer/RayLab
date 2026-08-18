@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildJobSubmission, formatRayTime, isTerminalJob, parseObjectJson } from "./jobs";
+import { defaultLifecycleConfig, managedCluster, normalizeLifecycleConfig, validateRoleSetup } from "./roles";
 import { normalizeDashboardUrl, normalizeDesktopState, normalizePreferences } from "./store";
 
 describe("Ray Jobs submission", () => {
@@ -65,5 +66,39 @@ describe("desktop state", () => {
   it("bounds unsafe polling intervals", () => {
     expect(normalizePreferences({ auto_refresh: true, poll_interval_ms: 100 }).poll_interval_ms).toBe(2000);
     expect(normalizePreferences({ auto_refresh: true, poll_interval_ms: 100_000 }).poll_interval_ms).toBe(60_000);
+  });
+
+  it("migrates API-only state into an explicit unconfigured role", () => {
+    const state = normalizeDesktopState({
+      active_view: "overview",
+      selected_cluster_id: null,
+      selected_job_id: null,
+      saved_clusters: [],
+      preferences: { auto_refresh: true, poll_interval_ms: 5000 },
+    });
+    expect(state.app_mode).toBe("unconfigured");
+    expect(state.lifecycle).toEqual(defaultLifecycleConfig);
+  });
+});
+
+describe("exclusive coordinator and worker setup", () => {
+  it("creates the coordinator's managed Dashboard connection from the detected node IP", () => {
+    expect(managedCluster("coordinator", defaultLifecycleConfig, "10.0.0.20")).toEqual({
+      id: "raylab-managed-cluster",
+      name: "My RayLab cluster",
+      dashboard_url: "http://10.0.0.20:8265",
+      managed: true,
+    });
+  });
+
+  it("creates a worker connection to the chosen coordinator", () => {
+    const config = normalizeLifecycleConfig({ ...defaultLifecycleConfig, head_host: "10.0.0.20" });
+    expect(managedCluster("worker", config, "10.0.0.21").dashboard_url).toBe("http://10.0.0.20:8265");
+  });
+
+  it("requires a protected worker join token", () => {
+    const config = { ...defaultLifecycleConfig, head_host: "10.0.0.20" };
+    expect(() => validateRoleSetup("worker", config, "short")).toThrow("shared token");
+    expect(() => validateRoleSetup("worker", config, "0123456789abcdef")).not.toThrow();
   });
 });

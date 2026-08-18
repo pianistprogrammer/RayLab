@@ -1,62 +1,101 @@
 # RayLab rollout and acceptance
 
-## 1. Prepare the Ray cluster
+## 1. Network preparation
 
-RayLab expects a running Ray Dashboard with the Jobs API enabled. Cluster creation and worker lifecycle are managed outside RayLab.
+Use two machines on the same trusted private LAN/VLAN/VPN. Permit TCP traffic required by the configured Ray ports:
 
-- Keep the Dashboard on a private VLAN, VPN, loopback tunnel, or authenticated internal proxy.
-- Confirm the intended desktop can reach `GET http://<head>:8265/api/version`.
-- Confirm `GET /api/jobs/` is available.
-- Enable the State API if operators need the Nodes view.
-- Do not expose an unauthenticated Dashboard directly to the public internet.
+```text
+6379
+8265
+10001
+8076-8077
+52365-52367
+20000-20100
+```
 
-## 2. Build RayLab
+Do not expose these services to the public internet. Ray token authentication is an additional control, not a replacement for network isolation.
+
+## 2. Build and install
 
 ```bash
 corepack pnpm install
 corepack pnpm test
 corepack pnpm check
+corepack pnpm audit --audit-level high
 corepack pnpm build
 ```
 
-On macOS, bundles are written under:
+macOS output:
 
 ```text
 src-tauri/target/release/bundle/macos/RayLab.app
 src-tauri/target/release/bundle/dmg/RayLab_<version>_<arch>.dmg
 ```
 
-Production distribution still requires the appropriate platform signing and notarization credentials.
+Install the same RayLab build on both machines. Production distribution still requires platform signing/notarization. In-app runtime setup requires `uv` or Python 3.10+ until `uv` is bundled with each platform installer.
 
-## 3. First launch
+## 3. Coordinator acceptance
 
-1. Open RayLab.
-2. Enter a recognizable cluster name.
-3. Enter the Ray Dashboard origin, normally `http://<head>:8265`.
-4. Confirm the Overview reports Connected and shows the Ray version.
-5. Open Dashboard and confirm it launches in the system browser.
+On machine A:
 
-## 4. Job acceptance checks
+1. Open RayLab and choose **Host this cluster**.
+2. Confirm the detected LAN address is reachable from machine B. Override it if necessary.
+3. Set a small test offer, for example 2 CPUs and 0 GPUs.
+4. Click **Install managed runtime** and verify Ray 2.57.0 becomes ready.
+5. Click **Start coordinator**.
+6. Verify status becomes `running` only after the authenticated Dashboard health check succeeds.
+7. Record the displayed join address and explicitly reveal/copy the shared token.
+8. Verify the Dashboard and Nodes view report machine A.
 
-Use a harmless job such as `python -c "print('raylab-ok')"` with a runtime environment appropriate for the cluster.
+## 4. Worker acceptance
+
+On machine B:
+
+1. Open the same RayLab build and choose **Join a cluster**.
+2. Enter only machine A's hostname/IP—not a URL and not `:6379`.
+3. Paste the shared token from machine A.
+4. Configure a small resource offer.
+5. Install the managed Ray 2.57.0 runtime.
+6. Click **Join cluster**.
+7. Verify RayLab does not report `running` until machine B appears alive in A's State API.
+8. On machine A, verify Nodes shows both machines and B's offered resources.
+
+## 5. Job acceptance
+
+Submit a harmless job from either installation:
+
+```text
+python -c "print('raylab-ok')"
+```
+
+Verify:
 
 - Submission returns a Ray submission ID.
-- The job appears in the list without changing views or restarting the app.
-- Status reaches a terminal state.
-- Logs contain the expected output.
-- A long-running test job accepts a stop request and reaches `STOPPED`.
-- A terminal test job can be deleted only after confirmation.
+- Status reaches `SUCCEEDED`.
+- Logs contain `raylab-ok`.
+- The managed job requests one `raylab_max_jobs` slot.
+- A long-running job can be stopped.
+- A terminal job can be deleted after confirmation.
 - Invalid runtime-environment JSON is rejected before a request is sent.
-- A Ray 4xx/5xx response is shown as an actionable UI error.
+- Wrong tokens and Ray 4xx/5xx responses produce actionable errors.
 
-## 5. State and recovery checks
+## 6. Leave, stop, and role exclusivity
 
-- Add two clusters and switch between them.
-- Restart RayLab and confirm the selected cluster, active view, selected job, and refresh preference are restored.
-- Stop the Dashboard and confirm RayLab reports Unavailable without crashing.
-- Restore the Dashboard and confirm Refresh reconnects.
-- Navigate between Overview, Jobs, Nodes, and Settings while a job runs; the job must continue independently.
+1. Attempt to switch machine B to Coordinator while it is sharing. The UI and Rust persistence boundary must reject the switch.
+2. Click **Leave cluster** on B, then verify B disappears or becomes dead in A's Nodes view.
+3. Switch B to Coordinator mode only after its lifecycle status is stopped.
+4. Attempt to switch A to Worker while its coordinator is active; it must be rejected.
+5. Stop A, then confirm the Dashboard is unavailable and the role can be changed.
 
-## 6. Network policy
+## 7. Recovery and negative cases
 
-Ray Jobs execute arbitrary code by design. Treat access to the Dashboard endpoint as privileged cluster access. RayLab does not weaken or replace the cluster's network and authentication controls; it is a typed client for them.
+- Restart RayLab while its coordinator/worker is active; status must recover from the private lifecycle marker plus Ray APIs.
+- Use a wrong token; the worker must not report a successful join.
+- Occupy a configured local port; startup must fail before Ray launches and identify the port.
+- Enter an invalid host, URL, embedded port, negative resource value, or malformed IP; validation must reject it.
+- Remove or corrupt the managed runtime; RayLab must report setup required instead of launching an arbitrary incompatible Ray.
+- Navigate between Overview, Jobs, Nodes, and Settings while jobs run; navigation must not affect Ray processes or workloads.
+
+## 8. Trust boundary
+
+Ray executes cluster workloads as the OS user running its local processes. v0.3 must only be deployed among trusted users running trusted code. Before supporting untrusted workloads, add a dedicated unprivileged service account and container/sandbox enforcement on every worker.

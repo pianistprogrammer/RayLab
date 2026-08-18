@@ -1,18 +1,23 @@
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type {
+  AppMode,
+  ClusterTokenStatus,
   DesktopState,
   JobAction,
   JobSubmission,
+  LifecycleConfig,
+  LifecycleStatus,
   RayApiVersion,
   RayJob,
   RayNode,
+  RuntimeStatus,
   SavedCluster,
   SubmitJobResult,
 } from "./types";
 
 function clusterInput(cluster: SavedCluster) {
-  return { dashboard_url: cluster.dashboard_url };
+  return { id: cluster.id, dashboard_url: cluster.dashboard_url };
 }
 
 export const api = {
@@ -27,6 +32,14 @@ export const api = {
   deleteJob: (cluster: SavedCluster, id: string) => invoke<JobAction>("delete_job", { cluster: clusterInput(cluster), id }),
   listNodes: (cluster: SavedCluster) => invoke<RayNode[]>("list_nodes", { cluster: clusterInput(cluster) }),
   openDashboard: (cluster: SavedCluster) => openUrl(cluster.dashboard_url),
+  runtimeStatus: () => invoke<RuntimeStatus>("ray_runtime_status"),
+  installRuntime: () => invoke<RuntimeStatus>("install_ray_runtime"),
+  lifecycleStatus: (config: LifecycleConfig, mode: AppMode) => invoke<LifecycleStatus>("lifecycle_status", { config, mode }),
+  startLifecycle: (config: LifecycleConfig, mode: AppMode) => invoke<LifecycleStatus>("start_lifecycle", { config, mode }),
+  stopLifecycle: (config: LifecycleConfig, mode: AppMode) => invoke<LifecycleStatus>("stop_lifecycle", { config, mode }),
+  ensureClusterToken: (clusterId: string) => invoke<ClusterTokenStatus>("ensure_cluster_token", { clusterId }),
+  saveClusterToken: (clusterId: string, token: string) => invoke<ClusterTokenStatus>("save_cluster_token", { clusterId, token }),
+  revealClusterToken: (clusterId: string) => invoke<ClusterTokenStatus>("reveal_cluster_token", { clusterId }),
 };
 
 export function errorMessage(error: unknown, fallback = "Something went wrong") {

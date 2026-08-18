@@ -10,6 +10,8 @@ const ERROR_BODY_LIMIT: usize = 800;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterInput {
+    #[serde(default)]
+    pub id: String,
     pub dashboard_url: String,
 }
 
@@ -50,6 +52,8 @@ pub struct JobSubmission {
     pub entrypoint_num_cpus: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub entrypoint_num_gpus: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub entrypoint_resources: Option<HashMap<String, f64>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -80,10 +84,15 @@ pub struct RayNode {
 pub struct RayApiClient {
     base_url: Url,
     client: Client,
+    token: Option<String>,
 }
 
 impl RayApiClient {
     pub fn new(raw_url: &str) -> Result<Self, String> {
+        Self::with_token(raw_url, None)
+    }
+
+    pub fn with_token(raw_url: &str, token: Option<&str>) -> Result<Self, String> {
         let mut base_url = Url::parse(raw_url.trim())
             .map_err(|error| format!("Invalid Ray Dashboard URL: {error}"))?;
         if !matches!(base_url.scheme(), "http" | "https") {
@@ -103,7 +112,14 @@ impl RayApiClient {
             .timeout(REQUEST_TIMEOUT)
             .build()
             .map_err(|error| format!("Could not create Ray API client: {error}"))?;
-        Ok(Self { base_url, client })
+        Ok(Self {
+            base_url,
+            client,
+            token: token
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(str::to_string),
+        })
     }
 
     pub async fn version(&self) -> Result<RayApiVersion, String> {
@@ -152,6 +168,11 @@ impl RayApiClient {
         }
         if job.entrypoint_num_cpus.is_some_and(|value| value < 0.0)
             || job.entrypoint_num_gpus.is_some_and(|value| value < 0.0)
+            || job.entrypoint_resources.as_ref().is_some_and(|resources| {
+                resources
+                    .values()
+                    .any(|value| !value.is_finite() || *value < 0.0)
+            })
         {
             return Err("Entrypoint CPU and GPU reservations cannot be negative".into());
         }
@@ -228,6 +249,9 @@ impl RayApiClient {
             .join(path)
             .map_err(|error| format!("Could not build Ray API URL: {error}"))?;
         let mut request = self.client.request(method.clone(), url.clone());
+        if let Some(token) = &self.token {
+            request = request.bearer_auth(token);
+        }
         if let Some(body) = body {
             request = request.json(&body);
         }
@@ -572,6 +596,7 @@ mod tests {
                 submission_id: Some("training-42".into()),
                 entrypoint_num_cpus: Some(2.0),
                 entrypoint_num_gpus: Some(1.0),
+                entrypoint_resources: Some(HashMap::from([("raylab_max_jobs".into(), 1.0)])),
             })
             .await
             .expect("HTTP job submission");
@@ -596,10 +621,45 @@ mod tests {
         assert!(error.contains("dashboard is starting"));
     }
 
+    #[tokio::test]
+    async fn sends_bearer_tokens_without_putting_them_in_urls() {
+        let (base_url, server) = serve_once_with_bearer(
+            "GET /api/version HTTP/1.1",
+            200,
+            r#"{"version":"1","ray_version":"2.57.0","ray_commit":"abc"}"#,
+            "private-ray-token",
+        );
+        let version = RayApiClient::with_token(&base_url, Some("private-ray-token"))
+            .unwrap()
+            .version()
+            .await
+            .expect("authenticated version request");
+        server.join().expect("mock server");
+        assert_eq!(version.ray_version, "2.57.0");
+    }
+
     fn serve_once(
         expected_request_line: &'static str,
         status: u16,
         body: &'static str,
+    ) -> (String, thread::JoinHandle<()>) {
+        serve_once_internal(expected_request_line, status, body, None)
+    }
+
+    fn serve_once_with_bearer(
+        expected_request_line: &'static str,
+        status: u16,
+        body: &'static str,
+        bearer: &'static str,
+    ) -> (String, thread::JoinHandle<()>) {
+        serve_once_internal(expected_request_line, status, body, Some(bearer))
+    }
+
+    fn serve_once_internal(
+        expected_request_line: &'static str,
+        status: u16,
+        body: &'static str,
+        bearer: Option<&'static str>,
     ) -> (String, thread::JoinHandle<()>) {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind mock server");
         let address = listener.local_addr().expect("mock address");
@@ -610,10 +670,20 @@ mod tests {
                 request.starts_with(expected_request_line),
                 "unexpected request: {request}"
             );
+            if let Some(bearer) = bearer {
+                assert!(
+                    request.to_ascii_lowercase().contains(&format!(
+                        "authorization: bearer {}",
+                        bearer.to_ascii_lowercase()
+                    )),
+                    "missing bearer header: {request}"
+                );
+            }
             if expected_request_line.starts_with("POST") {
                 assert!(request.contains("\"entrypoint\":\"python train.py\""));
                 assert!(request
                     .contains("\"runtime_env\":{\"working_dir\":\"s3://bucket/project.zip\"}"));
+                assert!(request.contains("\"entrypoint_resources\":{\"raylab_max_jobs\":1.0}"));
             }
             let reason = if status < 300 { "OK" } else { "Error" };
             write!(

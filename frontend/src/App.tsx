@@ -5,27 +5,36 @@ import {
   Boxes,
   CheckCircle2,
   CircleStop,
+  Copy,
+  Cpu,
   ExternalLink,
   FileText,
   Gauge,
+  HardDriveDownload,
   LayoutDashboard,
   ListRestart,
+  Network,
+  Play,
   Plus,
   RefreshCw,
   Rocket,
   Search,
   Server,
   Settings,
+  ShieldCheck,
+  Square,
   SquareTerminal,
   Trash2,
+  Wifi,
   X,
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api";
 import { buildJobSubmission, canStopJob, defaultJobDraft, formatRayTime, isTerminalJob, type JobDraft } from "./jobs";
+import { defaultLifecycleConfig, MANAGED_CLUSTER_ID } from "./roles";
 import { normalizeDashboardUrl, useStore } from "./store";
-import type { AppView, RayJob, SavedCluster } from "./types";
+import type { AppMode, AppView, LifecycleConfig, RayJob, SavedCluster } from "./types";
 
 function cls(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
@@ -38,6 +47,8 @@ function Spinner({ size = 17 }: { size?: number }) {
 export function App() {
   const hydrated = useStore((state) => state.hydrated);
   const activeView = useStore((state) => state.active_view);
+  const appMode = useStore((state) => state.app_mode);
+  const lifecycleStatus = useStore((state) => state.lifecycleStatus);
   const selectedClusterId = useStore((state) => state.selected_cluster_id);
   const clusters = useStore((state) => state.saved_clusters);
   const preferences = useStore((state) => state.preferences);
@@ -45,6 +56,7 @@ export function App() {
   const notice = useStore((state) => state.notice);
   const hydrate = useStore((state) => state.hydrate);
   const refreshCluster = useStore((state) => state.refreshCluster);
+  const refreshLifecycle = useStore((state) => state.refreshLifecycle);
   const setNotice = useStore((state) => state.setNotice);
 
   const cluster = useMemo(
@@ -57,15 +69,23 @@ export function App() {
   }, [hydrate]);
 
   useEffect(() => {
-    if (!hydrated || !cluster) return;
+    if (!hydrated || !cluster || (cluster.managed && lifecycleStatus?.state !== "running")) return;
     void refreshCluster();
-  }, [cluster?.id, hydrated, refreshCluster]);
+  }, [cluster?.id, hydrated, lifecycleStatus?.state, refreshCluster]);
 
   useEffect(() => {
-    if (!hydrated || !cluster || !preferences.auto_refresh) return;
-    const timer = window.setInterval(() => void refreshCluster(), preferences.poll_interval_ms);
+    if (!hydrated || appMode === "unconfigured") return;
+    void refreshLifecycle();
+  }, [appMode, hydrated, refreshLifecycle]);
+
+  useEffect(() => {
+    if (!hydrated || appMode === "unconfigured" || !preferences.auto_refresh) return;
+    const timer = window.setInterval(() => {
+      void refreshLifecycle();
+      if (cluster && (!cluster.managed || lifecycleStatus?.state === "running")) void refreshCluster();
+    }, preferences.poll_interval_ms);
     return () => window.clearInterval(timer);
-  }, [cluster?.id, hydrated, preferences.auto_refresh, preferences.poll_interval_ms, refreshCluster]);
+  }, [appMode, cluster?.id, hydrated, lifecycleStatus?.state, preferences.auto_refresh, preferences.poll_interval_ms, refreshCluster, refreshLifecycle]);
 
   useEffect(() => {
     if (!notice) return;
@@ -77,8 +97,8 @@ export function App() {
     return <div className="loading-screen"><div className="brand-mark"><Server size={24} /></div><Spinner size={24} /><p>Loading RayLab…</p></div>;
   }
 
-  if (clusters.length === 0 || !cluster) {
-    return <Onboarding />;
+  if (appMode === "unconfigured" || clusters.length === 0 || !cluster) {
+    return <RoleOnboarding />;
   }
 
   return (
@@ -103,6 +123,8 @@ function Sidebar({ activeView }: { activeView: AppView }) {
   const setView = useStore((state) => state.setActiveView);
   const connection = useStore((state) => state.connection);
   const version = useStore((state) => state.version);
+  const mode = useStore((state) => state.app_mode);
+  const lifecycle = useStore((state) => state.lifecycleStatus);
   const items: Array<{ id: AppView; label: string; icon: typeof LayoutDashboard }> = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "jobs", label: "Jobs", icon: SquareTerminal },
@@ -120,8 +142,8 @@ function Sidebar({ activeView }: { activeView: AppView }) {
         ))}
       </nav>
       <div className="sidebar-status">
-        <span className={cls("connection-dot", connection)} />
-        <div><strong>{connectionLabel(connection)}</strong><small>{version?.ray_version ? `Ray ${version.ray_version}` : "Jobs REST API"}</small></div>
+        <span className={cls("connection-dot", lifecycle?.state === "running" ? "connected" : lifecycle?.state === "error" ? "error" : connection)} />
+        <div><strong>{lifecycle?.state === "running" ? (mode === "coordinator" ? "Coordinator online" : "Worker sharing") : lifecycle?.state === "error" ? "Lifecycle needs attention" : "Ray stopped"}</strong><small>{version?.ray_version ? `Ray ${version.ray_version}` : mode === "coordinator" ? "Host mode" : "Worker mode"}</small></div>
       </div>
     </aside>
   );
@@ -134,10 +156,11 @@ function Topbar({ cluster }: { cluster: SavedCluster }) {
   const loading = useStore((state) => state.loading);
   const connection = useStore((state) => state.connection);
   const setError = useStore((state) => state.setError);
+  const mode = useStore((state) => state.app_mode);
   return (
     <header className="topbar">
       <div className="cluster-heading">
-        <p className="eyebrow">Connected workspace</p>
+        <p className="eyebrow">{mode === "coordinator" ? "Coordinator mode" : "Worker mode"}</p>
         <div className="cluster-title"><h1>{cluster.name}</h1><span className={cls("status-pill", connection)}>{connectionLabel(connection)}</span></div>
       </div>
       <div className="topbar-actions">
@@ -161,17 +184,19 @@ function Overview({ cluster }: { cluster: SavedCluster }) {
   const version = useStore((state) => state.version);
   const connection = useStore((state) => state.connection);
   const setView = useStore((state) => state.setActiveView);
+  const mode = useStore((state) => state.app_mode);
   const activeJobs = jobs.filter((job) => !isTerminalJob(job)).length;
   const failedJobs = jobs.filter((job) => job.status === "FAILED").length;
   const aliveNodes = nodes.filter((node) => ["ALIVE", "RUNNING"].includes(node.status)).length;
 
   return (
     <div className="page-stack">
+      <LifecyclePanel />
       <section className="hero-card">
         <div>
-          <span className="hero-kicker"><Activity size={15} /> API-first cluster operations</span>
-          <h2>{connection === "connected" ? "Your Ray cluster is ready." : "Connect to your Ray Dashboard."}</h2>
-          <p>Submit durable workloads, inspect their state, and read logs without spawning or parsing a Ray CLI process.</p>
+          <span className="hero-kicker"><Activity size={15} /> {mode === "coordinator" ? "Cluster coordination" : "Shared compute node"}</span>
+          <h2>{connection === "connected" ? "Your Ray cluster is ready." : mode === "coordinator" ? "Start the coordinator to accept workers." : "Join the coordinator to share this machine."}</h2>
+          <p>RayLab uses a narrow native adapter for local node start/stop, then manages jobs, logs, health, and observability through Ray’s structured APIs.</p>
           <div className="hero-actions">
             <button onClick={() => setView("jobs")}><Rocket size={17} />Submit a job</button>
             <button className="secondary" onClick={() => setView("nodes")}><Boxes size={17} />Inspect nodes</button>
@@ -197,6 +222,89 @@ function Overview({ cluster }: { cluster: SavedCluster }) {
 
 function Metric({ icon: Icon, label, value, detail, tone }: { icon: typeof Gauge; label: string; value: string | number; detail: string; tone: string }) {
   return <div className="metric-card"><div className={cls("metric-icon", tone)}><Icon size={19} /></div><div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div></div>;
+}
+
+function LifecyclePanel() {
+  const mode = useStore((state) => state.app_mode);
+  const status = useStore((state) => state.lifecycleStatus);
+  const busy = useStore((state) => state.lifecycleLoading);
+  const installing = useStore((state) => state.runtimeInstalling);
+  const start = useStore((state) => state.startLifecycle);
+  const stop = useStore((state) => state.stopLifecycle);
+  const install = useStore((state) => state.installRuntime);
+  const setNotice = useStore((state) => state.setNotice);
+  const setError = useStore((state) => state.setError);
+  const [token, setToken] = useState<string | null>(null);
+  const isRunning = status?.state === "running";
+  const runtimeReady = status?.runtime.ready === true;
+
+  async function revealToken() {
+    try {
+      const result = await api.revealClusterToken(MANAGED_CLUSTER_ID);
+      setToken(result.token);
+    } catch (error) {
+      setError(errorMessage(error, "Could not reveal the cluster token"));
+    }
+  }
+
+  async function copyToken() {
+    if (!token) return;
+    try {
+      await navigator.clipboard.writeText(token);
+      setNotice("Cluster token copied");
+    } catch {
+      setError("Clipboard access was unavailable. Select and copy the displayed token manually.");
+    }
+  }
+
+  return (
+    <section className={cls("lifecycle-panel", status?.state || "stopped")}>
+      <div className="lifecycle-main">
+        <div className="lifecycle-icon">{mode === "coordinator" ? <Server size={23} /> : <Cpu size={23} />}</div>
+        <div>
+          <p className="eyebrow">Local Ray lifecycle</p>
+          <h2>{mode === "coordinator" ? "Coordinator" : "Worker"} · {status?.state || "checking"}</h2>
+          <p>{status?.message || "Checking this machine…"}</p>
+        </div>
+      </div>
+
+      <div className="lifecycle-details">
+        <div><small>{mode === "coordinator" ? "Workers join" : "Coordinator"}</small><code>{status?.join_address || "Detecting…"}</code></div>
+        <div><small>Local node</small><code>{status?.local_node_ip || "Detecting…"}</code></div>
+        <div><small>Runtime</small><strong>{status?.runtime.ray_version ? `Ray ${status.runtime.ray_version}` : "Not installed"}</strong></div>
+      </div>
+
+      {mode === "coordinator" && (
+        <div className="join-secret">
+          <div><ShieldCheck size={16} /><span><strong>Shared cluster token</strong><small>Give this and the join address only to trusted workers.</small></span></div>
+          <div className="secret-actions">
+            {token && <input aria-label="Shared cluster token" readOnly value={token} onFocus={(event) => event.currentTarget.select()} />}
+            {!token && <button className="secondary" onClick={() => void revealToken()}>Reveal token</button>}
+            {token && <button className="secondary" onClick={() => void copyToken()}><Copy size={15} />Copy</button>}
+          </div>
+        </div>
+      )}
+
+      <div className="lifecycle-actions">
+        {!runtimeReady && (
+          <button onClick={() => void install()} disabled={installing || busy || status?.state === "error"}>
+            {installing ? <Spinner /> : <HardDriveDownload size={17} />}{installing ? "Installing Ray…" : "Install managed runtime"}
+          </button>
+        )}
+        {runtimeReady && !isRunning && status?.state !== "error" && (
+          <button onClick={() => void start()} disabled={busy}>
+            {busy ? <Spinner /> : <Play size={17} />}{mode === "coordinator" ? "Start coordinator" : "Join cluster"}
+          </button>
+        )}
+        {(isRunning || status?.state === "error") && (
+          <button className="danger" onClick={() => void stop()} disabled={busy}>
+            {busy ? <Spinner /> : <Square size={16} />}{mode === "coordinator" ? "Stop coordinator" : "Leave cluster"}
+          </button>
+        )}
+        <span><ShieldCheck size={14} />Lifecycle commands are fixed and validated by Tauri.</span>
+      </div>
+    </section>
+  );
 }
 
 function JobsView({ cluster }: { cluster: SavedCluster }) {
@@ -390,21 +498,118 @@ function SettingsView() {
   const addCluster = useStore((state) => state.addCluster);
   const setPreferences = useStore((state) => state.setPreferences);
   const setError = useStore((state) => state.setError);
-  return <div className="page-stack"><div className="page-heading"><div><p className="eyebrow">Desktop preferences</p><h2>Settings</h2><p>Cluster connections and UI preferences are stored by the Tauri application.</p></div></div><section className="panel"><div className="panel-heading"><div><p className="eyebrow">Connections</p><h2>Saved clusters</h2></div></div><div className="settings-list">{clusters.map((cluster) => <ClusterEditor key={cluster.id} cluster={cluster} selected={cluster.id === selectedId} onSave={updateCluster} onRemove={() => { if (window.confirm(`Remove ${cluster.name} from RayLab?`)) removeCluster(cluster.id); }} />)}</div><div className="add-connection"><h3>Add another cluster</h3><ClusterForm compact onSubmit={(input) => { try { addCluster(input); } catch (error) { setError(errorMessage(error, "Invalid cluster")); } }} /></div></section><section className="panel preferences"><div className="panel-heading"><div><p className="eyebrow">Refresh behavior</p><h2>Live updates</h2></div></div><label className="toggle-line"><span><strong>Auto-refresh</strong><small>Poll jobs, nodes, and connection health while RayLab is open.</small></span><input type="checkbox" checked={preferences.auto_refresh} onChange={(event) => setPreferences({ ...preferences, auto_refresh: event.target.checked })} /></label><label>Polling interval (seconds)<input type="number" min="2" max="60" value={preferences.poll_interval_ms / 1000} onChange={(event) => setPreferences({ ...preferences, poll_interval_ms: Number(event.target.value) * 1000 })} /></label></section></div>;
+  return (
+    <div className="page-stack">
+      <div className="page-heading"><div><p className="eyebrow">Desktop preferences</p><h2>Settings</h2><p>Machine role, resources, connections, and UI preferences are persisted by Tauri.</p></div></div>
+      <RoleSettings />
+      <LifecycleSettings />
+      <section className="panel">
+        <div className="panel-heading"><div><p className="eyebrow">Connections</p><h2>Saved clusters</h2></div></div>
+        <div className="settings-list">{clusters.map((cluster) => <ClusterEditor key={cluster.id} cluster={cluster} selected={cluster.id === selectedId} onSave={updateCluster} onRemove={() => { if (window.confirm(`Remove ${cluster.name} from RayLab?`)) removeCluster(cluster.id); }} />)}</div>
+        <div className="add-connection"><h3>Add another API-only connection</h3><ClusterForm compact onSubmit={(input) => { try { addCluster(input); } catch (error) { setError(errorMessage(error, "Invalid cluster")); } }} /></div>
+      </section>
+      <section className="panel preferences">
+        <div className="panel-heading"><div><p className="eyebrow">Refresh behavior</p><h2>Live updates</h2></div></div>
+        <label className="toggle-line"><span><strong>Auto-refresh</strong><small>Poll lifecycle, jobs, nodes, and connection health while RayLab is open.</small></span><input type="checkbox" checked={preferences.auto_refresh} onChange={(event) => setPreferences({ ...preferences, auto_refresh: event.target.checked })} /></label>
+        <label>Polling interval (seconds)<input type="number" min="2" max="60" value={preferences.poll_interval_ms / 1000} onChange={(event) => setPreferences({ ...preferences, poll_interval_ms: Number(event.target.value) * 1000 })} /></label>
+      </section>
+    </div>
+  );
+}
+
+function RoleSettings() {
+  const mode = useStore((state) => state.app_mode);
+  const lifecycle = useStore((state) => state.lifecycleStatus);
+  const [target, setTarget] = useState<Exclude<AppMode, "unconfigured"> | null>(null);
+  if (target) {
+    return <section className="panel role-settings"><RoleConfiguration mode={target} onBack={() => setTarget(null)} compact /></section>;
+  }
+  const otherMode = mode === "coordinator" ? "worker" : "coordinator";
+  const stopped = lifecycle?.state === "stopped";
+  return (
+    <section className="panel role-settings">
+      <div className="panel-heading"><div><p className="eyebrow">Exclusive machine role</p><h2>{mode === "coordinator" ? "Coordinator" : "Worker"} mode</h2><p>One role is active at a time. Stop Ray before changing it.</p></div><div className={cls("role-badge", mode)}>{mode === "coordinator" ? <Server size={16} /> : <Cpu size={16} />}{mode}</div></div>
+      <button className="secondary" disabled={!stopped} onClick={() => setTarget(otherMode)}>{mode === "coordinator" ? <Cpu size={16} /> : <Server size={16} />}Switch to {otherMode}</button>
+      {!stopped && <small className="setting-hint">Use {mode === "coordinator" ? "Stop coordinator" : "Leave cluster"} on Overview before switching.</small>}
+    </section>
+  );
+}
+
+function LifecycleSettings() {
+  const config = useStore((state) => state.lifecycle);
+  const mode = useStore((state) => state.app_mode);
+  const status = useStore((state) => state.lifecycleStatus);
+  const update = useStore((state) => state.updateLifecycleConfig);
+  const [draft, setDraft] = useState(config);
+  useEffect(() => setDraft(config), [config]);
+  const locked = status?.state !== "stopped";
+  return (
+    <section className="panel lifecycle-settings">
+      <div className="panel-heading"><div><p className="eyebrow">Local node</p><h2>Lifecycle and resource settings</h2><p>These values become validated arguments to Ray’s local node startup adapter.</p></div></div>
+      <fieldset disabled={locked}>
+        {mode === "worker" && <label>Coordinator host<input value={draft.head_host} onChange={(event) => setDraft({ ...draft, head_host: event.target.value })} placeholder="10.0.0.20" /></label>}
+        <label>Node IP override <span className="optional">blank = automatic</span><input value={draft.node_ip_address} onChange={(event) => setDraft({ ...draft, node_ip_address: event.target.value })} placeholder="10.0.0.21" /></label>
+        <div className="field-row three"><NumberField label="Shared CPUs" value={draft.cpus} min={0} step={1} onChange={(cpus) => setDraft({ ...draft, cpus })} /><NumberField label="Shared GPUs" value={draft.gpus} min={0} step={1} onChange={(gpus) => setDraft({ ...draft, gpus })} /><NumberField label="Concurrent jobs" value={draft.max_concurrent_jobs} min={1} step={1} onChange={(max_concurrent_jobs) => setDraft({ ...draft, max_concurrent_jobs })} /></div>
+        <details><summary>Network ports</summary><div className="field-row three ports"><NumberField label="Ray head" value={draft.ray_port} min={1} step={1} onChange={(ray_port) => setDraft({ ...draft, ray_port })} /><NumberField label="Dashboard" value={draft.dashboard_port} min={1} step={1} onChange={(dashboard_port) => setDraft({ ...draft, dashboard_port })} /><NumberField label="Ray Client" value={draft.client_port} min={1} step={1} onChange={(client_port) => setDraft({ ...draft, client_port })} /></div><p className="setting-hint">Workers also use fixed local ports 8076–8077, 52365–52367, and 20000–20100.</p></details>
+        <button onClick={() => void update(draft)}>Save lifecycle settings</button>
+      </fieldset>
+      {locked && <p className="setting-hint">Stop Ray before changing addresses, ports, or resource offers.</p>}
+    </section>
+  );
 }
 
 function ClusterEditor({ cluster, selected, onSave, onRemove }: { cluster: SavedCluster; selected: boolean; onSave: (cluster: SavedCluster) => void; onRemove: () => void }) {
   const [draft, setDraft] = useState(cluster);
   const [editing, setEditing] = useState(false);
   const setError = useStore((state) => state.setError);
-  return <div className={cls("cluster-editor", selected && "selected")}><div className="cluster-editor-title"><div><strong>{cluster.name}</strong>{selected && <span>Selected</span>}<small>{cluster.dashboard_url}</small></div><div><button className="text-button" onClick={() => setEditing((value) => !value)}>{editing ? "Cancel" : "Edit"}</button><button className="icon-button subtle danger-icon" aria-label={`Remove ${cluster.name}`} onClick={onRemove}><Trash2 size={15} /></button></div></div>{editing && <div className="cluster-edit-fields"><input aria-label="Cluster name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /><input aria-label="Dashboard URL" value={draft.dashboard_url} onChange={(event) => setDraft({ ...draft, dashboard_url: event.target.value })} /><button onClick={() => { try { onSave({ ...draft, dashboard_url: normalizeDashboardUrl(draft.dashboard_url) }); setEditing(false); } catch (error) { setError(errorMessage(error, "Invalid dashboard URL")); } }}>Save</button></div>}</div>;
+  return <div className={cls("cluster-editor", selected && "selected")}><div className="cluster-editor-title"><div><strong>{cluster.name}</strong>{selected && <span>Selected</span>}{cluster.managed && <span>Role managed</span>}<small>{cluster.dashboard_url}</small></div>{!cluster.managed && <div><button className="text-button" onClick={() => setEditing((value) => !value)}>{editing ? "Cancel" : "Edit"}</button><button className="icon-button subtle danger-icon" aria-label={`Remove ${cluster.name}`} onClick={onRemove}><Trash2 size={15} /></button></div>}</div>{editing && !cluster.managed && <div className="cluster-edit-fields"><input aria-label="Cluster name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /><input aria-label="Dashboard URL" value={draft.dashboard_url} onChange={(event) => setDraft({ ...draft, dashboard_url: event.target.value })} /><button onClick={() => { try { onSave({ ...draft, dashboard_url: normalizeDashboardUrl(draft.dashboard_url) }); setEditing(false); } catch (error) { setError(errorMessage(error, "Invalid dashboard URL")); } }}>Save</button></div>}</div>;
 }
 
-function Onboarding() {
-  const addCluster = useStore((state) => state.addCluster);
+function RoleOnboarding() {
   const error = useStore((state) => state.error);
+  const [mode, setMode] = useState<Exclude<AppMode, "unconfigured"> | null>(null);
+  return <main className="onboarding"><section className="onboarding-copy"><div className="brand"><div className="brand-mark"><Server size={19} /></div><div><strong>RayLab</strong><small>Ray control plane</small></div></div><span className="hero-kicker"><CheckCircle2 size={15} /> One app · two exclusive roles</span><h1>Host the cluster or share this machine.</h1><p>RayLab owns the local Ray lifecycle through a narrow Tauri adapter, while durable jobs, logs, health, and node state remain API-first.</p><ul><li><Server size={17} />Start a coordinator others can join</li><li><Cpu size={17} />Join as a resource-capped worker</li><li><ShieldCheck size={17} />Authenticate every cluster connection</li></ul></section><section className="onboarding-card role-onboarding"><p className="eyebrow">First launch</p>{error && <Banner kind="error" message={error} />}{mode ? <RoleConfiguration mode={mode} onBack={() => setMode(null)} /> : <><h2>Choose this machine’s role</h2><p>You can switch later, but only after stopping the active Ray node.</p><div className="role-choice"><button onClick={() => setMode("coordinator")}><Server size={23} /><span><strong>Host this cluster</strong><small>Start the Ray head node and accept workers.</small></span><ArrowRight size={18} /></button><button onClick={() => setMode("worker")}><Cpu size={23} /><span><strong>Join a cluster</strong><small>Offer this machine’s CPU and GPU resources.</small></span><ArrowRight size={18} /></button></div></>}</section></main>;
+}
+
+function RoleConfiguration({ mode, onBack, compact = false }: { mode: Exclude<AppMode, "unconfigured">; onBack: () => void; compact?: boolean }) {
+  const existing = useStore((state) => state.lifecycle);
+  const configure = useStore((state) => state.configureMode);
   const setError = useStore((state) => state.setError);
-  return <main className="onboarding"><section className="onboarding-copy"><div className="brand"><div className="brand-mark"><Server size={19} /></div><div><strong>RayLab</strong><small>Ray control plane</small></div></div><span className="hero-kicker"><CheckCircle2 size={15} /> No CLI. No sidecar state.</span><h1>Operate Ray through its APIs.</h1><p>Connect RayLab to a running Ray Dashboard. The Rust backend handles typed Jobs and State API calls while React keeps your desktop workflow stable.</p><ul><li><Rocket size={17} />Submit durable jobs</li><li><FileText size={17} />Inspect status and logs</li><li><Boxes size={17} />See cluster nodes</li></ul></section><section className="onboarding-card"><p className="eyebrow">First connection</p><h2>Add a Ray cluster</h2><p>Ray’s Dashboard and Jobs API normally listen on port 8265.</p>{error && <Banner kind="error" message={error} />}<ClusterForm onSubmit={(input) => { try { setError(null); addCluster(input); } catch (error) { setError(errorMessage(error, "Invalid cluster")); } }} /></section></main>;
+  const [draft, setDraft] = useState<LifecycleConfig>(compact ? existing : defaultLifecycleConfig);
+  const [token, setToken] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await configure(mode, { ...draft, auth_enabled: true }, token);
+      onBack();
+    } catch {
+      // The store exposes the actionable backend error in the global banner.
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="role-configuration" onSubmit={(event) => void submit(event)}>
+      <div className="role-form-heading"><button type="button" className="text-button" onClick={onBack}>← Back</button><div className={cls("role-badge", mode)}>{mode === "coordinator" ? <Server size={15} /> : <Cpu size={15} />}{mode}</div></div>
+      <h2>{mode === "coordinator" ? "Host this cluster" : "Join a coordinator"}</h2>
+      <p>{mode === "coordinator" ? "RayLab will generate a shared token and show the address workers need." : "Use the address and token shown by the coordinator’s RayLab app."}</p>
+      {mode === "worker" && <><label>Coordinator host<input autoFocus value={draft.head_host} onChange={(event) => setDraft({ ...draft, head_host: event.target.value })} placeholder="10.0.0.20" required /></label><label>Shared cluster token<input type="password" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Paste token from coordinator" minLength={16} required /></label></>}
+      {mode === "coordinator" && <label>Node IP override <span className="optional">blank = automatic LAN address</span><input autoFocus value={draft.node_ip_address} onChange={(event) => setDraft({ ...draft, node_ip_address: event.target.value })} placeholder="10.0.0.20" /></label>}
+      <div className="field-row three"><NumberField label="Shared CPUs" value={draft.cpus} min={0} step={1} onChange={(cpus) => setDraft({ ...draft, cpus })} /><NumberField label="Shared GPUs" value={draft.gpus} min={0} step={1} onChange={(gpus) => setDraft({ ...draft, gpus })} /><NumberField label="Concurrent jobs" value={draft.max_concurrent_jobs} min={1} step={1} onChange={(max_concurrent_jobs) => setDraft({ ...draft, max_concurrent_jobs })} /></div>
+      <details><summary>Advanced network settings</summary><div className="field-row three ports"><NumberField label="Ray head" value={draft.ray_port} min={1} step={1} onChange={(ray_port) => setDraft({ ...draft, ray_port })} /><NumberField label="Dashboard" value={draft.dashboard_port} min={1} step={1} onChange={(dashboard_port) => setDraft({ ...draft, dashboard_port })} /><NumberField label="Ray Client" value={draft.client_port} min={1} step={1} onChange={(client_port) => setDraft({ ...draft, client_port })} /></div></details>
+      <div className="security-note"><ShieldCheck size={17} /><span><strong>Token authentication is enabled</strong><small>All machines must use Ray 2.57.0 and remain on a trusted private network.</small></span></div>
+      <button className="wide-button" type="submit" disabled={busy}>{busy ? <Spinner /> : mode === "coordinator" ? <Network size={17} /> : <Wifi size={17} />}{busy ? "Saving…" : mode === "coordinator" ? "Configure coordinator" : "Configure worker"}</button>
+    </form>
+  );
+}
+
+function NumberField({ label, value, min, step, onChange }: { label: string; value: number; min: number; step: number; onChange: (value: number) => void }) {
+  return <label>{label}<input type="number" min={min} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} /></label>;
 }
 
 function ClusterForm({ onSubmit, compact = false }: { onSubmit: (cluster: Omit<SavedCluster, "id">) => void; compact?: boolean }) {
