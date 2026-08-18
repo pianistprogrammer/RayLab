@@ -1,30 +1,36 @@
-import type { AppConfig, AuditEvent, ClusterStatus, DiagnosticCheck, DiscoveryCandidate, HardwareInfo, InstallStatus, JobSubmission, NetworkPreflightResult, NodeInfo, PortConflict, SetupRunStatus, TerminalLogEntry } from "./types";
+import { invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import type {
+  DesktopState,
+  JobAction,
+  JobSubmission,
+  RayApiVersion,
+  RayJob,
+  RayNode,
+  SavedCluster,
+  SubmitJobResult,
+} from "./types";
+
+function clusterInput(cluster: SavedCluster) {
+  return { dashboard_url: cluster.dashboard_url };
+}
 
 export const api = {
-  health:               ()           => window.electronAPI.invoke('health') as Promise<{ ok: boolean; version: string; ray_available: boolean; ray_version?: string }>,
-  getConfig:            ()           => window.electronAPI.invoke('get_config') as Promise<AppConfig>,
-  saveConfig:           (cfg: AppConfig) => window.electronAPI.invoke('save_config', cfg as unknown as Record<string, unknown>) as Promise<AppConfig>,
-  status:               ()           => window.electronAPI.invoke('cluster_status') as Promise<ClusterStatus>,
-  diagnostics:          ()           => window.electronAPI.invoke('diagnostics') as Promise<DiagnosticCheck[]>,
-  runNetworkPreflight:  ()           => window.electronAPI.invoke('run_network_preflight') as Promise<NetworkPreflightResult>,
-  hardware:             ()           => window.electronAPI.invoke('hardware') as Promise<HardwareInfo>,
-  terminalLogs:         ()           => window.electronAPI.invoke('terminal_logs') as Promise<TerminalLogEntry[]>,
-  discoverCoordinators: ()           => window.electronAPI.invoke('discovery_coordinators') as Promise<DiscoveryCandidate[]>,
-  rayInstallStatus:     ()           => window.electronAPI.invoke('ray_install_status') as Promise<InstallStatus>,
-  installRay:           ()           => window.electronAPI.invoke('install_ray') as Promise<InstallStatus>,
-  setupStatus:          ()           => window.electronAPI.invoke('setup_status') as Promise<SetupRunStatus>,
-  runSetup:             ()           => window.electronAPI.invoke('run_setup') as Promise<SetupRunStatus>,
-  createWorkerAccount:  ()           => window.electronAPI.invoke('create_worker_account') as Promise<{ created: boolean; message: string }>,
-  installDocker:        ()           => window.electronAPI.invoke('install_docker') as Promise<{ installed: boolean; message: string }>,
-  start:                ()           => window.electronAPI.invoke('cluster_start') as Promise<ClusterStatus>,
-  portConflicts:        ()           => window.electronAPI.invoke('cluster_port_conflicts') as Promise<PortConflict[]>,
-  clearPortConflicts:   ()           => window.electronAPI.invoke('cluster_clear_port_conflicts') as Promise<{ killed: number; conflicts: PortConflict[] }>,
-  stop:                 ()           => window.electronAPI.invoke('cluster_stop') as Promise<ClusterStatus>,
-  panic:                ()           => window.electronAPI.invoke('cluster_panic') as Promise<ClusterStatus>,
-  nodes:                ()           => window.electronAPI.invoke('nodes') as Promise<NodeInfo[]>,
-  audit:                ()           => window.electronAPI.invoke('audit') as Promise<AuditEvent[]>,
-  createSubmitter:      (name: string) => window.electronAPI.invoke('create_submitter', { name }) as Promise<{ id: string; name: string; token: string }>,
-  revokeSubmitter:      (id: string)  => window.electronAPI.invoke('revoke_submitter', { id }) as Promise<AppConfig>,
-  submitJob:            (job: JobSubmission) => window.electronAPI.invoke('submit_job', job as unknown as Record<string, unknown>) as Promise<{ job_id: string; status: string; message: string }>,
-  killJob:              (id: string)  => window.electronAPI.invoke('kill_job', { id }) as Promise<{ job_id: string; status: string; message: string }>,
+  loadAppState: () => invoke<DesktopState>("load_app_state"),
+  saveAppState: (state: DesktopState) => invoke<DesktopState>("save_app_state", { state }),
+  version: (cluster: SavedCluster) => invoke<RayApiVersion>("ray_api_version", { cluster: clusterInput(cluster) }),
+  listJobs: (cluster: SavedCluster) => invoke<RayJob[]>("list_jobs", { cluster: clusterInput(cluster) }),
+  getJob: (cluster: SavedCluster, id: string) => invoke<RayJob>("get_job", { cluster: clusterInput(cluster), id }),
+  getJobLogs: (cluster: SavedCluster, id: string) => invoke<string>("get_job_logs", { cluster: clusterInput(cluster), id }),
+  submitJob: (cluster: SavedCluster, job: JobSubmission) => invoke<SubmitJobResult>("submit_job", { cluster: clusterInput(cluster), job }),
+  stopJob: (cluster: SavedCluster, id: string) => invoke<JobAction>("stop_job", { cluster: clusterInput(cluster), id }),
+  deleteJob: (cluster: SavedCluster, id: string) => invoke<JobAction>("delete_job", { cluster: clusterInput(cluster), id }),
+  listNodes: (cluster: SavedCluster) => invoke<RayNode[]>("list_nodes", { cluster: clusterInput(cluster) }),
+  openDashboard: (cluster: SavedCluster) => openUrl(cluster.dashboard_url),
 };
+
+export function errorMessage(error: unknown, fallback = "Something went wrong") {
+  if (typeof error === "string" && error.trim()) return error;
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}

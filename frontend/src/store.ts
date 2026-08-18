@@ -1,282 +1,245 @@
 import { create } from "zustand";
-import { api } from "./api";
-import type { AppConfig, AppMode, AuditEvent, ClusterStatus, HardwareInfo, InstallStatus, NodeInfo, SetupRunStatus, TerminalLogEntry } from "./types";
+import { api, errorMessage } from "./api";
+import type {
+  AppView,
+  ConnectionState,
+  DesktopState,
+  Preferences,
+  RayApiVersion,
+  RayJob,
+  RayNode,
+  SavedCluster,
+} from "./types";
 
-const CONFIG_CACHE_KEY = "raylab:last-config";
-
-export const fallbackConfig: AppConfig = {
-  app_mode: "unconfigured",
-  coordinator: {
-    head_host: "127.0.0.1",
-    dashboard_host: "127.0.0.1",
-    node_ip_address: "",
-    ray_port: 6379,
-    dashboard_port: 8265,
-    client_port: 10001,
-    node_manager_port: 18076,
-    object_manager_port: 18077,
-    preflight_port: 18075,
-    cluster_token_ref: "raylab.cluster_token",
-    dashboard_token_ref: "raylab.dashboard_token",
-    bind_private_only: true,
-    allow_external_workers: false,
-  },
-  node_policy: {
-    master_enabled: false,
-    manual_override: "auto",
-    schedule_enabled: false,
-    schedule_windows: [],
-    idle_only_enabled: false,
-    idle_minutes: 10,
-    max_cpu_percent_for_idle: 20,
-    max_gpu_percent_for_idle: 10,
-  },
-  resource_caps: { cpus: 4, gpus: 0, memory_gb: 16, gpu_memory_gb: 0, max_concurrent_jobs: 1 },
-  privacy: {
-    worker_account: "raylab-worker",
-    worker_account_required: true,
-    allow_home_access: false,
-    require_runtime_working_dir: true,
-    container_runtime: "docker",
-    require_gpu_container_runtime: true,
-  },
-  object_store: { endpoint_url: "", bucket: "", region: "", access_key_ref: "raylab.object_store_access_key", secret_key_ref: "raylab.object_store_secret_key" },
-  submitters: [],
-  audit: [],
+export const defaultDesktopState: DesktopState = {
+  active_view: "overview",
+  selected_cluster_id: null,
+  selected_job_id: null,
+  saved_clusters: [],
+  preferences: { auto_refresh: true, poll_interval_ms: 5000 },
 };
 
-export function loadCachedConfig(): AppConfig {
-  try {
-    const raw = window.localStorage.getItem(CONFIG_CACHE_KEY);
-    if (!raw) return fallbackConfig;
-    return { ...fallbackConfig, ...JSON.parse(raw) } as AppConfig;
-  } catch {
-    return fallbackConfig;
-  }
-}
-
-export function cacheConfig(config: AppConfig) {
-  try {
-    window.localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(config));
-  } catch {
-    // The local backend remains the source of truth; this cache only avoids reload flicker.
-  }
-}
-
-export function constrainConfigToHardware(config: AppConfig, hardware: HardwareInfo | null): AppConfig {
-  const caps = { ...config.resource_caps };
-  caps.cpus = positiveNumber(caps.cpus, 1);
-  caps.gpus = nonNegativeInteger(caps.gpus);
-  caps.memory_gb = positiveNumber(caps.memory_gb, 1);
-  caps.gpu_memory_gb = nonNegativeNumber(caps.gpu_memory_gb);
-  caps.max_concurrent_jobs = Math.max(1, nonNegativeInteger(caps.max_concurrent_jobs) || 1);
-
-  if (hardware) {
-    if (Number.isFinite(hardware.cpu_logical) && hardware.cpu_logical > 0) {
-      caps.cpus = Math.min(caps.cpus, hardware.cpu_logical);
-    }
-    const memoryTotalGb = hardware.memory_total_gb;
-    if (typeof memoryTotalGb === "number" && Number.isFinite(memoryTotalGb) && memoryTotalGb > 0) {
-      caps.memory_gb = Math.min(caps.memory_gb, memoryTotalGb);
-    }
-    if (Number.isFinite(hardware.gpu_count) && hardware.gpu_count >= 0) {
-      caps.gpus = Math.min(caps.gpus, Math.floor(hardware.gpu_count));
-    }
-    if (caps.gpus === 0) {
-      caps.gpu_memory_gb = 0;
-    } else if (hardware.gpu_memory_total_gb && hardware.gpu_memory_total_gb > 0) {
-      caps.gpu_memory_gb = Math.min(caps.gpu_memory_gb, hardware.gpu_memory_total_gb);
-    }
-  }
-
-  return { ...config, resource_caps: caps };
-}
-
-function positiveNumber(value: number, fallback: number) {
-  return Number.isFinite(value) && value > 0 ? value : fallback;
-}
-
-function nonNegativeNumber(value: number) {
-  return Number.isFinite(value) && value > 0 ? value : 0;
-}
-
-function nonNegativeInteger(value: number) {
-  return Math.floor(nonNegativeNumber(value));
-}
-
-interface AppState {
-  config: AppConfig;
-  status: ClusterStatus | null;
-  nodes: NodeInfo[];
-  audit: AuditEvent[];
-  rayInstall: InstallStatus | null;
-  setupRun: SetupRunStatus | null;
-  hardware: HardwareInfo | null;
-  terminalLogs: TerminalLogEntry[];
-  backendReady: boolean;
-  // Which named action is in flight — null when idle.
-  activeAction: string | null;
-  modeSaving: boolean;
+interface AppStore extends DesktopState {
+  hydrated: boolean;
+  connection: ConnectionState;
+  version: RayApiVersion | null;
+  jobs: RayJob[];
+  nodes: RayNode[];
+  loading: boolean;
+  jobsLoading: boolean;
   error: string | null;
   notice: string | null;
 
-  setConfig: (config: AppConfig) => void;
+  hydrate: () => Promise<void>;
+  setActiveView: (view: AppView) => void;
+  setSelectedJob: (id: string | null) => void;
+  selectCluster: (id: string) => void;
+  addCluster: (cluster: Omit<SavedCluster, "id">) => void;
+  updateCluster: (cluster: SavedCluster) => void;
+  removeCluster: (id: string) => void;
+  setPreferences: (preferences: Preferences) => void;
   setError: (error: string | null) => void;
   setNotice: (notice: string | null) => void;
-  setActiveAction: (activeAction: string | null) => void;
-  refresh: () => Promise<void>;
-  persistMode: (mode: AppMode) => void;
-  saveConfig: (next?: AppConfig, actionKey?: string) => Promise<void>;
-  runAction: (task: () => Promise<unknown>, success: string, actionKey: string) => Promise<void>;
+  refreshCluster: () => Promise<void>;
+  refreshJobs: () => Promise<void>;
 }
 
-// Only surface a fetch error after this many consecutive poll failures.
-// Transient blips (backend briefly busy, app waking from sleep) are swallowed.
-const CONSECUTIVE_FAIL_THRESHOLD = 3;
-let consecutiveFailCount = 0;
+let persistChain = Promise.resolve<unknown>(undefined);
 
-// Held in the store closure — not in state so it never triggers re-renders.
-let pendingMode: AppMode | null = null;
-
-async function electronBackendStatus(): Promise<{ running: boolean; error?: string | null } | null> {
-  try {
-    return await window.electronAPI.invoke("backend_status") as { running: boolean; error?: string | null };
-  } catch {
-    return null;
-  }
-}
-
-export const useStore = create<AppState>((set, get) => ({
-  config: loadCachedConfig(),
-  status: null,
+export const useStore = create<AppStore>((set, get) => ({
+  ...defaultDesktopState,
+  hydrated: false,
+  connection: "idle",
+  version: null,
+  jobs: [],
   nodes: [],
-  audit: [],
-  rayInstall: null,
-  setupRun: null,
-  hardware: null,
-  terminalLogs: [],
-  backendReady: false,
-  activeAction: null,
-  modeSaving: false,
+  loading: false,
+  jobsLoading: false,
   error: null,
   notice: null,
 
-  setConfig: (config) => set({ config }),
+  hydrate: async () => {
+    try {
+      const saved = await api.loadAppState();
+      const normalized = normalizeDesktopState(saved);
+      set({ ...normalized, hydrated: true });
+    } catch (error) {
+      set({ hydrated: true, error: errorMessage(error, "Could not load RayLab settings") });
+    }
+  },
+
+  setActiveView: (active_view) => {
+    set({ active_view });
+    persist(get);
+  },
+
+  setSelectedJob: (selected_job_id) => {
+    set({ selected_job_id });
+    persist(get);
+  },
+
+  selectCluster: (selected_cluster_id) => {
+    set({ selected_cluster_id, selected_job_id: null, jobs: [], nodes: [], version: null, connection: "idle", error: null });
+    persist(get);
+  },
+
+  addCluster: (input) => {
+    const cluster: SavedCluster = {
+      id: globalThis.crypto.randomUUID(),
+      name: input.name.trim(),
+      dashboard_url: normalizeDashboardUrl(input.dashboard_url),
+    };
+    set((state) => ({
+      saved_clusters: [...state.saved_clusters, cluster],
+      selected_cluster_id: cluster.id,
+      selected_job_id: null,
+      active_view: "overview",
+      jobs: [],
+      nodes: [],
+      version: null,
+      connection: "idle",
+      notice: `${cluster.name} added`,
+    }));
+    persist(get);
+  },
+
+  updateCluster: (cluster) => {
+    const normalized = { ...cluster, name: cluster.name.trim(), dashboard_url: normalizeDashboardUrl(cluster.dashboard_url) };
+    set((state) => ({ saved_clusters: state.saved_clusters.map((item) => item.id === cluster.id ? normalized : item) }));
+    persist(get);
+  },
+
+  removeCluster: (id) => {
+    set((state) => {
+      const saved_clusters = state.saved_clusters.filter((cluster) => cluster.id !== id);
+      const removedSelected = state.selected_cluster_id === id;
+      return {
+        saved_clusters,
+        selected_cluster_id: removedSelected ? saved_clusters[0]?.id ?? null : state.selected_cluster_id,
+        selected_job_id: removedSelected ? null : state.selected_job_id,
+        jobs: removedSelected ? [] : state.jobs,
+        nodes: removedSelected ? [] : state.nodes,
+        version: removedSelected ? null : state.version,
+        connection: removedSelected ? "idle" : state.connection,
+      };
+    });
+    persist(get);
+  },
+
+  setPreferences: (preferences) => {
+    set({ preferences: normalizePreferences(preferences) });
+    persist(get);
+  },
+
   setError: (error) => set({ error }),
   setNotice: (notice) => set({ notice }),
-  setActiveAction: (activeAction) => set({ activeAction }),
 
-  refresh: async () => {
-    let backendStartupError: string | null = null;
-    try {
-      const backendStatus = await electronBackendStatus();
-      backendStartupError = backendStatus?.error ?? null;
-      const [nextConfig, nextStatus] = await Promise.all([api.getConfig(), api.status()]);
-      const [nodesResult, auditResult, installResult, setupResult, hardwareResult, terminalResult] = await Promise.allSettled([
-        api.nodes(),
-        api.audit(),
-        api.rayInstallStatus(),
-        api.setupStatus(),
-        api.hardware(),
-        api.terminalLogs(),
-      ]);
-      const current = get();
-      const nextNodes = nodesResult.status === "fulfilled" ? nodesResult.value : current.nodes;
-      const nextAudit = auditResult.status === "fulfilled" ? auditResult.value : current.audit;
-      const nextInstall = installResult.status === "fulfilled" ? installResult.value : current.rayInstall;
-      const nextSetup = setupResult.status === "fulfilled" ? setupResult.value : current.setupRun;
-      const nextHardware = hardwareResult.status === "fulfilled" ? hardwareResult.value : current.hardware;
-      const nextTerminalLogs = terminalResult.status === "fulfilled" ? terminalResult.value : current.terminalLogs;
+  refreshCluster: async () => {
+    if (get().loading) return;
+    const cluster = selectedCluster(get());
+    if (!cluster) return;
+    set({ loading: true, connection: "connecting", error: null });
+    const [versionResult, jobsResult, nodesResult] = await Promise.allSettled([
+      api.version(cluster),
+      api.listJobs(cluster),
+      api.listNodes(cluster),
+    ]);
 
-      consecutiveFailCount = 0;
-
-      // If the server has caught up to a pending mode switch, clear the lock.
-      if (pendingMode && nextConfig.app_mode === pendingMode) {
-        pendingMode = null;
-      }
-      // While a mode switch is in flight, keep showing the optimistic value.
-      const effectiveConfig = pendingMode
-        ? { ...nextConfig, app_mode: pendingMode }
-        : nextConfig;
-      const hardwareConstrainedConfig = constrainConfigToHardware(effectiveConfig, nextHardware);
-      cacheConfig(hardwareConstrainedConfig);
-
-      // Only update config if it actually changed — avoids triggering
-      // draft resets in editing components when the poll returns identical data.
-      const prevConfig = current.config;
-      const configChanged = JSON.stringify(hardwareConstrainedConfig) !== JSON.stringify(prevConfig);
-
+    if (versionResult.status === "rejected") {
       set({
-        ...(configChanged ? { config: hardwareConstrainedConfig } : {}),
-        status: nextStatus,
-        nodes: nextNodes,
-        audit: nextAudit,
-        rayInstall: nextInstall,
-        setupRun: nextSetup,
-        hardware: nextHardware,
-        terminalLogs: nextTerminalLogs,
-        backendReady: true,
-        error: null,
+        loading: false,
+        connection: "error",
+        error: errorMessage(versionResult.reason, `Cannot connect to ${cluster.name}`),
       });
-    } catch (err) {
-      consecutiveFailCount += 1;
-      set({ backendReady: false });
-      if (consecutiveFailCount >= CONSECUTIVE_FAIL_THRESHOLD) {
-        set({ error: backendStartupError ?? (err instanceof Error ? err.message : "App is not reachable") });
-      }
+      return;
     }
+
+    set((state) => ({
+      loading: false,
+      connection: "connected",
+      version: versionResult.value,
+      jobs: jobsResult.status === "fulfilled" ? sortJobs(jobsResult.value) : state.jobs,
+      nodes: nodesResult.status === "fulfilled" ? nodesResult.value : state.nodes,
+      error: jobsResult.status === "rejected"
+        ? errorMessage(jobsResult.reason, "Connected, but jobs could not be loaded")
+        : null,
+    }));
   },
 
-  persistMode: (mode) => {
-    const current = get().config;
-    const next = { ...current, app_mode: mode };
-    // Set optimistic state immediately — UI reflects the choice at once.
-    pendingMode = mode;
-    set({ config: next, modeSaving: true, error: null });
-    cacheConfig(next);
-
-    void api.saveConfig(next)
-      .then((saved) => {
-        // Only apply if this is still the active switch (user hasn't switched again).
-        if (pendingMode !== mode) return;
-        pendingMode = null;
-        const effective = { ...saved, app_mode: mode };
-        cacheConfig(effective);
-        set({ config: effective, modeSaving: false });
-      })
-      .catch((err) => {
-        if (pendingMode !== mode) return;
-        pendingMode = null;
-        set({
-          modeSaving: false,
-          error: err instanceof Error ? err.message : "Mode save failed",
-        });
-        void get().refresh();
-      });
-  },
-
-  saveConfig: async (next, actionKey = "save") => {
-    const config = constrainConfigToHardware(next ?? get().config, get().hardware);
-    set({ activeAction: actionKey, error: null, config });
+  refreshJobs: async () => {
+    if (get().jobsLoading) return;
+    const cluster = selectedCluster(get());
+    if (!cluster) return;
+    set({ jobsLoading: true });
     try {
-      const saved = await api.saveConfig(config);
-      cacheConfig(saved);
-      set({ config: saved, activeAction: null, notice: "Settings saved" });
-    } catch (err) {
-      set({ activeAction: null, error: err instanceof Error ? err.message : "Save failed" });
-    }
-  },
-
-  runAction: async (task, success, actionKey) => {
-    set({ activeAction: actionKey, error: null });
-    try {
-      await task();
-      set({ notice: success });
-      await get().refresh();
-    } catch (err) {
-      set({ error: err instanceof Error ? err.message : "Action failed" });
-    } finally {
-      set({ activeAction: null });
+      const jobs = await api.listJobs(cluster);
+      set({ jobs: sortJobs(jobs), jobsLoading: false });
+    } catch (error) {
+      set({ jobsLoading: false, error: errorMessage(error, "Could not load Ray jobs") });
     }
   },
 }));
+
+export function normalizeDashboardUrl(raw: string) {
+  const value = raw.trim();
+  const withProtocol = /^https?:\/\//i.test(value) ? value : `http://${value}`;
+  const parsed = new URL(withProtocol);
+  if (!/^https?:$/.test(parsed.protocol)) throw new Error("Dashboard URL must use http:// or https://");
+  if (parsed.username || parsed.password) throw new Error("Store credentials separately; do not include them in the Dashboard URL");
+  parsed.pathname = "/";
+  parsed.search = "";
+  parsed.hash = "";
+  return parsed.toString().replace(/\/$/, "");
+}
+
+export function normalizePreferences(value: Partial<Preferences> | undefined): Preferences {
+  const interval = Number(value?.poll_interval_ms);
+  return {
+    auto_refresh: value?.auto_refresh !== false,
+    poll_interval_ms: Number.isFinite(interval) ? Math.min(60000, Math.max(2000, Math.round(interval))) : 5000,
+  };
+}
+
+export function normalizeDesktopState(value: Partial<DesktopState> | null | undefined): DesktopState {
+  const saved_clusters = Array.isArray(value?.saved_clusters) ? value.saved_clusters : [];
+  const selected = saved_clusters.some((cluster) => cluster.id === value?.selected_cluster_id)
+    ? value?.selected_cluster_id ?? null
+    : saved_clusters[0]?.id ?? null;
+  const validViews: AppView[] = ["overview", "jobs", "nodes", "settings"];
+  return {
+    ...defaultDesktopState,
+    ...value,
+    active_view: validViews.includes(value?.active_view as AppView) ? value?.active_view as AppView : "overview",
+    saved_clusters,
+    selected_cluster_id: selected,
+    preferences: normalizePreferences(value?.preferences),
+  };
+}
+
+function selectedCluster(state: Pick<AppStore, "saved_clusters" | "selected_cluster_id">) {
+  return state.saved_clusters.find((cluster) => cluster.id === state.selected_cluster_id) ?? null;
+}
+
+function desktopSnapshot(state: AppStore): DesktopState {
+  return {
+    active_view: state.active_view,
+    selected_cluster_id: state.selected_cluster_id,
+    selected_job_id: state.selected_job_id,
+    saved_clusters: state.saved_clusters,
+    preferences: state.preferences,
+  };
+}
+
+function persist(get: () => AppStore) {
+  const snapshot = desktopSnapshot(get());
+  persistChain = persistChain
+    .catch(() => undefined)
+    .then(() => api.saveAppState(snapshot))
+    .catch((error) => {
+      useStore.setState({ error: errorMessage(error, "Could not save RayLab settings") });
+    });
+}
+
+function sortJobs(jobs: RayJob[]) {
+  return [...jobs].sort((left, right) => (right.start_time ?? 0) - (left.start_time ?? 0));
+}

@@ -1,77 +1,62 @@
-# RayLab Rollout
+# RayLab rollout and acceptance
 
-This app is intentionally conservative: it refuses safe-looking shortcuts that would weaken node-owner privacy. Configure the OS and network first, then start Ray through the app.
+## 1. Prepare the Ray cluster
 
-## Required Baseline
+RayLab expects a running Ray Dashboard with the Jobs API enabled. Cluster creation and worker lifecycle are managed outside RayLab.
 
-- Ray 2.52+ installed in RayLab's managed runtime. If Ray is missing, use the app's Diagnostics panel to run the built-in Ray installer.
-- A fixed server-room Coordinator address on a private lab VLAN.
-- No public exposure of RayLab/Ray ports `6379`, `8265`, `10001`, `18075`, `18076`, `18077`, or `20000-29999`.
-- A dedicated local `raylab-worker` account on every participating machine.
-- Docker with GPU runtime support.
-- S3-compatible lab object storage for datasets and model weights.
+- Keep the Dashboard on a private VLAN, VPN, loopback tunnel, or authenticated internal proxy.
+- Confirm the intended desktop can reach `GET http://<head>:8265/api/version`.
+- Confirm `GET /api/jobs/` is available.
+- Enable the State API if operators need the Nodes view.
+- Do not expose an unauthenticated Dashboard directly to the public internet.
 
-## Linux Worker Account
+## 2. Build RayLab
 
 ```bash
-sudo useradd --system --create-home --shell /usr/sbin/nologin raylab-worker
-sudo mkdir -p /var/lib/raylab-worker/jobs
-sudo chown -R raylab-worker:raylab-worker /var/lib/raylab-worker
+corepack pnpm install
+corepack pnpm test
+corepack pnpm check
+corepack pnpm build
 ```
 
-The app launches Node-mode Ray commands as this account with `sudo -u raylab-worker -- ...`. Configure sudoers or a service wrapper according to lab policy so the desktop user can start/stop only the approved Ray commands.
+On macOS, bundles are written under:
 
-## macOS Worker Account
-
-In Node mode, RayLab setup asks for administrator permission with the standard macOS authorization dialog. If approved, it creates a hidden local `raylab-worker` account, creates `/var/lib/raylab-worker/jobs`, and installs a sudoers entry allowing the current desktop user to launch worker processes as `raylab-worker` without a terminal password prompt.
-
-This keeps cluster jobs out of the owner user's home directory while keeping setup inside the app flow.
-
-## Windows Worker Account
-
-```powershell
-net user raylab-worker * /add
-mkdir C:\RayLab\jobs
+```text
+src-tauri/target/release/bundle/macos/RayLab.app
+src-tauri/target/release/bundle/dmg/RayLab_<version>_<arch>.dmg
 ```
 
-Windows Node mode requires a service or scheduled-task wrapper that runs Ray as `raylab-worker`. The app refuses direct owner-user Node launch on Windows until that wrapper exists because otherwise jobs could read owner files.
+Production distribution still requires the appropriate platform signing and notarization credentials.
 
-## Network
+## 3. First launch
 
-Coordinator mode must use a private IP or DNS name. The local backend rejects non-private head addresses when `Private VLAN only` is enabled.
+1. Open RayLab.
+2. Enter a recognizable cluster name.
+3. Enter the Ray Dashboard origin, normally `http://<head>:8265`.
+4. Confirm the Overview reports Connected and shows the Ray version.
+5. Open Dashboard and confirm it launches in the system browser.
 
-Recommended firewall stance:
+## 4. Job acceptance checks
 
-- Allow Ray ports only from the lab VLAN.
-- Block inbound Ray ports from campus-wide networks and the internet.
-- Keep dashboard access behind the same VLAN boundary.
+Use a harmless job such as `python -c "print('raylab-ok')"` with a runtime environment appropriate for the cluster.
 
-RayLab uses a free pre-flight network diagnostic before a worker joins. The worker opens temporary TCP listeners on the Ray callback ports, then asks the coordinator's local preflight endpoint to dial back to the worker. If this fails, RayLab blocks startup before Ray reports a disappearing node.
+- Submission returns a Ray submission ID.
+- The job appears in the list without changing views or restarting the app.
+- Status reaches a terminal state.
+- Logs contain the expected output.
+- A long-running test job accepts a stop request and reaches `STOPPED`.
+- A terminal test job can be deleted only after confirmation.
+- Invalid runtime-environment JSON is rejected before a request is sent.
+- A Ray 4xx/5xx response is shown as an actionable UI error.
 
-Port map:
+## 5. State and recovery checks
 
-- Worker to coordinator TCP `6379`: Ray GCS/head connection.
-- Worker to coordinator TCP `18075`: RayLab preflight endpoint.
-- Coordinator to worker TCP `18076`: Ray node manager callback.
-- Coordinator to worker TCP `18077`: Ray object manager callback.
-- Coordinator to worker TCP `20000-29999`: Ray worker task ports.
+- Add two clusters and switch between them.
+- Restart RayLab and confirm the selected cluster, active view, selected job, and refresh preference are restored.
+- Stop the Dashboard and confirm RayLab reports Unavailable without crashing.
+- Restore the Dashboard and confirm Refresh reconnects.
+- Navigate between Overview, Jobs, Nodes, and Settings while a job runs; the job must continue independently.
 
-If the preflight fails, check Windows Defender Firewall/ufw, the machine's network profile, and router AP/client isolation. The app does not automate Tailscale or WireGuard because that would add external account and VPN setup requirements.
+## 6. Network policy
 
-## Object Store
-
-Jobs should read datasets and model weights from the lab object store rather than node home directories. Store the endpoint, bucket, and region in Settings. Store credentials through the OS secret store when available.
-
-## Container Runtime
-
-Install Docker and NVIDIA GPU runtime support. The diagnostics panel checks for the Docker binary and a GPU-capable runtime signal.
-
-## Acceptance Checklist
-
-- Coordinator starts Ray with token auth on the private head address.
-- Node sharing is refused until `raylab-worker` exists.
-- Node joins and leaves cleanly.
-- Panic stop runs `ray stop --force` and locks the session in panic mode.
-- Job submission requires a working directory and records submitter identity.
-- Audit log shows configuration, cluster, submitter, job, and panic events.
-- Dashboard opens in the system browser rather than inside the webview.
+Ray Jobs execute arbitrary code by design. Treat access to the Dashboard endpoint as privileged cluster access. RayLab does not weaken or replace the cluster's network and authentication controls; it is a typed client for them.

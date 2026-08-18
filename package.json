@@ -1,23 +1,27 @@
 {
   "name": "raylab-cluster-manager",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"pnpm --filter @raylab/frontend dev\" \"sleep 3 && pnpm --filter @raylab/electron dev\"",
-    "electron:dev": "pnpm --filter @raylab/electron dev",
-    "frontend:dev": "pnpm --filter @raylab/frontend dev",
-    "build": "pnpm --filter @raylab/frontend build && pnpm --filter @raylab/electron build",
-    "frontend:build": "pnpm --filter @raylab/frontend build",
-    "electron:build": "pnpm --filter @raylab/electron build",
-    "test": "pnpm --filter @raylab/frontend test"
+    "dev": "tauri dev",
+    "tauri": "tauri",
+    "frontend:dev": "corepack pnpm --filter @raylab/frontend dev",
+    "build": "tauri build",
+    "frontend:build": "corepack pnpm --filter @raylab/frontend build",
+    "test": "corepack pnpm --filter @raylab/frontend test && cargo test --manifest-path src-tauri/Cargo.toml",
+    "check": "corepack pnpm --filter @raylab/frontend build && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "@tauri-apps/cli": "^2.11.4"
   },
   "packageManager": "pnpm@9.12.1",
+  "pnpm": {
+    "overrides": {
+      "nanoid@<3.3.18": "3.3.18"
+    }
+  },
   "workspaces": [
-    "frontend",
-    "electron"
+    "frontend"
   ]
 }
