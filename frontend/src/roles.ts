@@ -55,6 +55,16 @@ export function managedCluster(mode: Exclude<AppMode, "unconfigured">, config: L
   };
 }
 
+export function prefillCoordinatorNodeIp(
+  mode: Exclude<AppMode, "unconfigured">,
+  config: LifecycleConfig,
+  detectedNodeIp: string,
+): LifecycleConfig {
+  const detected = detectedNodeIp.trim();
+  if (mode !== "coordinator" || config.node_ip_address.trim() || !isUsableIpv4(detected)) return config;
+  return { ...config, node_ip_address: detected };
+}
+
 function validPort(value: unknown, fallback: number) {
   const number = Number(value);
   return Number.isInteger(number) && number > 0 && number <= 65535 ? number : fallback;
@@ -63,4 +73,12 @@ function validPort(value: unknown, fallback: number) {
 function nonNegative(value: unknown, fallback: number) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : fallback;
+}
+
+function isUsableIpv4(value: string) {
+  const parts = value.split(".");
+  return parts.length === 4
+    && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255)
+    && parts[0] !== "127"
+    && value !== "0.0.0.0";
 }

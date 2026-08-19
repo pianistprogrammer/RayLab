@@ -1,5 +1,5 @@
-use std::env;
 use std::collections::HashSet;
+use std::env;
 use std::fs;
 use std::net::{IpAddr, Ipv4Addr, TcpListener, UdpSocket};
 use std::path::{Path, PathBuf};
@@ -8,6 +8,7 @@ use std::time::Duration;
 use base64::Engine;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
+use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager};
 use tokio::process::Command;
 use tokio::sync::Mutex;
@@ -75,7 +76,18 @@ struct ProcessResult {
 }
 
 pub async fn runtime_status(app: &AppHandle) -> RuntimeStatus {
-    runtime_status_at(&runtime_root(app)).await
+    let mut status = runtime_status_at(&runtime_root(app)).await;
+    if bundled_uv(app).is_some() {
+        status.installing_supported = true;
+    }
+    status
+}
+
+pub fn local_node_ip() -> Result<String, String> {
+    detect_lan_ip().ok_or_else(|| {
+        "RayLab could not detect a LAN IPv4 address. Enter this machine's private IPv4 address manually."
+            .into()
+    })
 }
 
 pub async fn install_runtime(
@@ -94,7 +106,7 @@ pub async fn install_runtime(
     let venv = managed_venv(&root);
     let python = managed_python(&root);
 
-    if let Some(uv) = resolve_tool("uv") {
+    if let Some(uv) = bundled_uv(app).or_else(|| resolve_tool("uv")) {
         let create = run_process(
             &uv,
             &[
@@ -135,7 +147,7 @@ pub async fn install_runtime(
         let system_python = resolve_tool("python3").or_else(|| resolve_tool("python"));
         let Some(system_python) = system_python else {
             return Err(
-                "RayLab needs uv or Python 3.10+ to create its managed Ray runtime. Install uv, then retry setup."
+                "This RayLab package does not contain a compatible runtime installer, and Python 3.10+ was not found. Install a package built for this platform or install uv, then retry setup."
                     .into(),
             );
         };
@@ -335,7 +347,8 @@ pub async fn start(
 
     check_local_ports(&config, mode)?;
     let node_ip = effective_node_ip(&config, mode);
-    if mode == AppMode::Coordinator && node_ip.parse::<Ipv4Addr>().is_ok_and(|ip| ip.is_loopback()) {
+    if mode == AppMode::Coordinator && node_ip.parse::<Ipv4Addr>().is_ok_and(|ip| ip.is_loopback())
+    {
         return Err("RayLab could not detect a LAN address for workers. Enter this machine's private IPv4 address in Node IP override, then retry.".into());
     }
     let head_host = effective_head_host(&config, mode, &node_ip);
@@ -538,8 +551,13 @@ fn validate_config(config: &LifecycleConfig, mode: AppMode) -> Result<(), String
             DASHBOARD_AGENT_GRPC_PORT,
             RUNTIME_ENV_AGENT_PORT,
         ];
-        if configured.iter().any(|port| reserved.contains(port) || (WORKER_PORT_MIN..=WORKER_PORT_MAX).contains(port)) {
-            return Err("Configured coordinator ports overlap RayLab's fixed node, agent, or worker ports".into());
+        if configured.iter().any(|port| {
+            reserved.contains(port) || (WORKER_PORT_MIN..=WORKER_PORT_MAX).contains(port)
+        }) {
+            return Err(
+                "Configured coordinator ports overlap RayLab's fixed node, agent, or worker ports"
+                    .into(),
+            );
         }
     }
     Ok(())
@@ -794,6 +812,18 @@ fn resolve_tool(name: &str) -> Option<PathBuf> {
         }
     }
     None
+}
+
+fn bundled_uv(app: &AppHandle) -> Option<PathBuf> {
+    let resource = if cfg!(windows) {
+        "bin/uv.exe"
+    } else {
+        "bin/uv"
+    };
+    app.path()
+        .resolve(resource, BaseDirectory::Resource)
+        .ok()
+        .filter(|path| path.is_file())
 }
 
 fn runtime_root(app: &AppHandle) -> PathBuf {

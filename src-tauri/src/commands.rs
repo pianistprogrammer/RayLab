@@ -93,6 +93,11 @@ pub async fn ray_runtime_status(app: AppHandle) -> RuntimeStatus {
 }
 
 #[tauri::command]
+pub fn detect_local_node_ip() -> Result<String, String> {
+    lifecycle::local_node_ip()
+}
+
+#[tauri::command]
 pub async fn install_ray_runtime(
     app: AppHandle,
     manager: State<'_, LifecycleManager>,

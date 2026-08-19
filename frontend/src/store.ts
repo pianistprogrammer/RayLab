@@ -37,6 +37,7 @@ interface AppStore extends DesktopState {
   notice: string | null;
   lifecycleStatus: LifecycleStatus | null;
   lifecycleLoading: boolean;
+  lifecycleRefreshing: boolean;
   runtimeInstalling: boolean;
 
   hydrate: () => Promise<void>;
@@ -74,6 +75,7 @@ export const useStore = create<AppStore>((set, get) => ({
   notice: null,
   lifecycleStatus: null,
   lifecycleLoading: false,
+  lifecycleRefreshing: false,
   runtimeInstalling: false,
 
   hydrate: async () => {
@@ -254,13 +256,21 @@ export const useStore = create<AppStore>((set, get) => ({
 
   refreshLifecycle: async () => {
     const mode = get().app_mode;
-    if (mode === "unconfigured" || get().lifecycleLoading) return;
-    set({ lifecycleLoading: true });
+    if (mode === "unconfigured" || get().lifecycleLoading || get().lifecycleRefreshing || get().runtimeInstalling) return;
+    set({ lifecycleRefreshing: true });
     try {
       const lifecycleStatus = await api.lifecycleStatus(get().lifecycle, mode);
-      set({ lifecycleStatus, lifecycleLoading: false });
+      if (get().lifecycleLoading || get().runtimeInstalling) {
+        set({ lifecycleRefreshing: false });
+        return;
+      }
+      set({ lifecycleStatus, lifecycleRefreshing: false });
     } catch (error) {
-      set({ lifecycleLoading: false, error: errorMessage(error, "Could not inspect the local Ray lifecycle") });
+      if (get().lifecycleLoading || get().runtimeInstalling) {
+        set({ lifecycleRefreshing: false });
+        return;
+      }
+      set({ lifecycleRefreshing: false, error: errorMessage(error, "Could not inspect the local Ray lifecycle") });
     }
   },
 
@@ -268,8 +278,12 @@ export const useStore = create<AppStore>((set, get) => ({
     if (get().runtimeInstalling) return;
     set({ runtimeInstalling: true, error: null });
     try {
-      await api.installRuntime();
-      set({ runtimeInstalling: false, notice: "Managed Ray runtime installed" });
+      const runtime = await api.installRuntime();
+      set((state) => ({
+        runtimeInstalling: false,
+        lifecycleStatus: state.lifecycleStatus ? { ...state.lifecycleStatus, runtime } : null,
+        notice: "Managed Ray runtime installed",
+      }));
       await get().refreshLifecycle();
     } catch (error) {
       set({ runtimeInstalling: false, error: errorMessage(error, "Could not install the managed Ray runtime") });

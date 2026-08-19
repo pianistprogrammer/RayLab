@@ -95,7 +95,9 @@ All job lifecycle, logs, health, and node confirmation use Ray's structured Jobs
 ### 5.2 Managed runtime
 
 - RayLab pins Python 3.11 and Ray 2.57.0 for every participant.
-- Setup creates an application-owned virtual environment using `uv` when available, with a Python `venv`/`pip` fallback.
+- The macOS Apple Silicon and Windows x64 release configurations bundle a platform-matching `uv`; setup creates an application-owned virtual environment without requiring a preinstalled Python or Ray.
+- First-time managed-runtime setup requires internet access to obtain the pinned Python and Ray packages.
+- Other build targets must supply a matching bundled `uv`, with local `uv` or Python 3.10+ retained as a development fallback.
 - Coordinator and Worker must run the same Ray version.
 - Runtime setup is explicit and reports actionable failures; it never silently uses an incompatible version.
 
@@ -120,7 +122,7 @@ All job lifecycle, logs, health, and node confirmation use Ray's structured Jobs
 
 ### 6.2 Coordinator mode
 
-- Detect a routable LAN IPv4 address, with an optional explicit override.
+- Detect a routable LAN IPv4 address and prefill it into the editable Coordinator Node IP field, while preserving a manual value entered by the user.
 - Start Ray with head, Dashboard, Ray Client, State API, fixed agent ports, and a bounded worker-port range.
 - Bind the Dashboard for private-network access so Worker-mode installations can use Jobs and State APIs.
 - Display the join address and Dashboard address.
@@ -145,8 +147,11 @@ All job lifecycle, logs, health, and node confirmation use Ray's structured Jobs
 - Add a `raylab_max_jobs: 1` entrypoint resource to jobs submitted to the role-managed cluster so the advertised RayLab job slots are consumed.
 - Continue to list, inspect, stop, delete, and read logs through the Jobs API.
 - Continue to list nodes through the State API.
+- Visualize State API nodes as an interactive topology with the Coordinator centered, Worker relationships, status colors, resource summaries, pan, zoom, and draggable node positions; retain the detailed node inventory below it.
 - Send `Authorization: Bearer <token>` for authenticated role-managed API requests.
 - Treat State API failure as an observability limitation without corrupting desktop state.
+
+Background lifecycle polling must not reuse the Start/Stop action state or repeatedly disable an otherwise available lifecycle button.
 
 ### 6.5 Desktop state
 
@@ -187,7 +192,7 @@ The application diagnoses a local port conflict before startup. Network firewall
 ### Automated
 
 - Rust tests cover Coordinator and Worker argument construction, unsafe host rejection, secret path traversal, token persistence, bearer headers, state migration, Jobs API routes, response normalization, and structured errors.
-- Frontend tests cover role migration, managed Coordinator/Worker connections, token validation, job payloads, URL normalization, and polling bounds.
+- Frontend tests cover role migration, managed Coordinator/Worker connections, topology construction, lifecycle refresh/action separation, token validation, job payloads, URL normalization, and polling bounds.
 - TypeScript compilation, Vite production build, Rust tests, Clippy with warnings denied, dependency audit, and Tauri release bundling pass.
 - No Electron package, generic shell IPC, `ray status` parser, job CLI parser, or Python UI-state sidecar is shipped.
 
@@ -208,5 +213,5 @@ The application diagnoses a local port conflict before startup. Network firewall
 
 - Ray documents multi-node clusters on macOS and Windows as development-oriented. Linux remains the preferred production worker platform.
 - A trusted Ray cluster can execute arbitrary code on its workers. Add dedicated unprivileged service accounts and container isolation before accepting mutually untrusted workloads.
-- Signing/notarization and a bundled `uv` binary are required for a zero-prerequisite production installer on each target OS.
+- The current macOS Apple Silicon and Windows x64 package configurations bundle `uv`; every target package must verify its matching artifact during release. Signing/notarization remains required for production distribution.
 - Future versions should add firewall diagnostics, coordinator discovery, token rotation/revocation, schedules, idle-only participation, tray controls, and per-node audit logs without weakening the role-exclusivity invariant.

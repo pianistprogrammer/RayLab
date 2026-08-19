@@ -31,8 +31,9 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api";
+import { ClusterGraph } from "./ClusterGraph";
 import { buildJobSubmission, canStopJob, defaultJobDraft, formatRayTime, isTerminalJob, type JobDraft } from "./jobs";
-import { defaultLifecycleConfig, MANAGED_CLUSTER_ID } from "./roles";
+import { defaultLifecycleConfig, MANAGED_CLUSTER_ID, prefillCoordinatorNodeIp } from "./roles";
 import { normalizeDashboardUrl, useStore } from "./store";
 import type { AppMode, AppView, LifecycleConfig, RayJob, SavedCluster } from "./types";
 
@@ -486,7 +487,22 @@ function JobTable({ jobs, onSelect }: { jobs: RayJob[]; onSelect: (id: string) =
 
 function NodesView() {
   const nodes = useStore((state) => state.nodes);
-  return <div className="page-stack"><div className="page-heading"><div><p className="eyebrow">State API</p><h2>Cluster nodes</h2><p>Read-only node inventory reported by the Ray Dashboard.</p></div></div><section className="panel"><div className="table-wrap"><table><thead><tr><th>Node</th><th>Role</th><th>Status</th><th>CPU</th><th>GPU</th><th>Memory</th><th>Address</th></tr></thead><tbody>{nodes.map((node) => <tr key={node.id}><td><strong>{node.name}</strong></td><td>{node.is_head ? "Head" : "Worker"}</td><td><StatusBadge status={node.status} /></td><td>{node.cpus.toFixed(1)}</td><td>{node.gpus.toFixed(1)}</td><td>{node.memory_gb.toFixed(1)} GB</td><td><code>{node.address || "—"}</code></td></tr>)}</tbody></table></div>{nodes.length === 0 && <EmptyState icon={Boxes} title="No nodes reported" detail="Connect to a running Ray Dashboard with the State API enabled." />}</section></div>;
+  const lifecycleStatus = useStore((state) => state.lifecycleStatus);
+  const alive = nodes.filter((node) => ["ALIVE", "RUNNING"].includes(node.status)).length;
+  return (
+    <div className="page-stack nodes-page">
+      <div className="page-heading"><div><p className="eyebrow">State API</p><h2>Cluster topology</h2><p>Explore Coordinator and Worker relationships reported by the Ray Dashboard.</p></div><div className="topology-count"><strong>{alive}</strong><span>of {nodes.length} nodes alive</span></div></div>
+      <section className="panel topology-panel">
+        <div className="panel-heading compact"><div><p className="eyebrow">Interactive graph</p><h2>Node network</h2></div><span className="graph-help">Drag nodes · pan canvas · scroll to zoom</span></div>
+        <ClusterGraph nodes={nodes} fallbackCoordinatorAddress={lifecycleStatus?.join_address || "Coordinator"} coordinatorRunning={lifecycleStatus?.state === "running"} />
+      </section>
+      <section className="panel">
+        <div className="panel-heading compact"><div><p className="eyebrow">Inventory</p><h2>Node details</h2></div></div>
+        <div className="table-wrap"><table><thead><tr><th>Node</th><th>Role</th><th>Status</th><th>CPU</th><th>GPU</th><th>Memory</th><th>Address</th></tr></thead><tbody>{nodes.map((node) => <tr key={node.id}><td><strong>{node.name}</strong></td><td>{node.is_head ? "Coordinator" : "Worker"}</td><td><StatusBadge status={node.status} /></td><td>{node.cpus.toFixed(1)}</td><td>{node.gpus.toFixed(1)}</td><td>{node.memory_gb.toFixed(1)} GB</td><td><code>{node.address || "—"}</code></td></tr>)}</tbody></table></div>
+        {nodes.length === 0 && <EmptyState icon={Boxes} title="No nodes reported" detail="Start or connect to a running Ray cluster to populate the topology." />}
+      </section>
+    </div>
+  );
 }
 
 function SettingsView() {
@@ -542,13 +558,17 @@ function LifecycleSettings() {
   const update = useStore((state) => state.updateLifecycleConfig);
   const [draft, setDraft] = useState(config);
   useEffect(() => setDraft(config), [config]);
+  useEffect(() => {
+    if (mode !== "coordinator" || !status?.local_node_ip) return;
+    setDraft((current) => prefillCoordinatorNodeIp(mode, current, status.local_node_ip));
+  }, [mode, status?.local_node_ip]);
   const locked = status?.state !== "stopped";
   return (
     <section className="panel lifecycle-settings">
       <div className="panel-heading"><div><p className="eyebrow">Local node</p><h2>Lifecycle and resource settings</h2><p>These values become validated arguments to Ray’s local node startup adapter.</p></div></div>
       <fieldset disabled={locked}>
         {mode === "worker" && <label>Coordinator host<input value={draft.head_host} onChange={(event) => setDraft({ ...draft, head_host: event.target.value })} placeholder="10.0.0.20" /></label>}
-        <label>Node IP override <span className="optional">blank = automatic</span><input value={draft.node_ip_address} onChange={(event) => setDraft({ ...draft, node_ip_address: event.target.value })} placeholder="10.0.0.21" /></label>
+        <label>Node IP <span className="optional">{mode === "coordinator" ? "detected automatically; editable" : "blank = automatic"}</span><input value={draft.node_ip_address} onChange={(event) => setDraft({ ...draft, node_ip_address: event.target.value })} placeholder="Enter this machine’s LAN IPv4" /></label>
         <div className="field-row three"><NumberField label="Shared CPUs" value={draft.cpus} min={0} step={1} onChange={(cpus) => setDraft({ ...draft, cpus })} /><NumberField label="Shared GPUs" value={draft.gpus} min={0} step={1} onChange={(gpus) => setDraft({ ...draft, gpus })} /><NumberField label="Concurrent jobs" value={draft.max_concurrent_jobs} min={1} step={1} onChange={(max_concurrent_jobs) => setDraft({ ...draft, max_concurrent_jobs })} /></div>
         <details><summary>Network ports</summary><div className="field-row three ports"><NumberField label="Ray head" value={draft.ray_port} min={1} step={1} onChange={(ray_port) => setDraft({ ...draft, ray_port })} /><NumberField label="Dashboard" value={draft.dashboard_port} min={1} step={1} onChange={(dashboard_port) => setDraft({ ...draft, dashboard_port })} /><NumberField label="Ray Client" value={draft.client_port} min={1} step={1} onChange={(client_port) => setDraft({ ...draft, client_port })} /></div><p className="setting-hint">Workers also use fixed local ports 8076–8077, 52365–52367, and 20000–20100.</p></details>
         <button onClick={() => void update(draft)}>Save lifecycle settings</button>
@@ -578,6 +598,29 @@ function RoleConfiguration({ mode, onBack, compact = false }: { mode: Exclude<Ap
   const [draft, setDraft] = useState<LifecycleConfig>(compact ? existing : defaultLifecycleConfig);
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
+  const [detectingNodeIp, setDetectingNodeIp] = useState(mode === "coordinator" && !draft.node_ip_address);
+
+  useEffect(() => {
+    if (mode !== "coordinator" || draft.node_ip_address.trim()) {
+      setDetectingNodeIp(false);
+      return;
+    }
+    let active = true;
+    setDetectingNodeIp(true);
+    void api.detectLocalNodeIp()
+      .then((detected) => {
+        if (active) setDraft((current) => prefillCoordinatorNodeIp(mode, current, detected));
+      })
+      .catch((error) => {
+        if (active) setError(errorMessage(error, "Could not detect this machine’s LAN IP address"));
+      })
+      .finally(() => {
+        if (active) setDetectingNodeIp(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [mode, setError]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -599,7 +642,7 @@ function RoleConfiguration({ mode, onBack, compact = false }: { mode: Exclude<Ap
       <h2>{mode === "coordinator" ? "Host this cluster" : "Join a coordinator"}</h2>
       <p>{mode === "coordinator" ? "RayLab will generate a shared token and show the address workers need." : "Use the address and token shown by the coordinator’s RayLab app."}</p>
       {mode === "worker" && <><label>Coordinator host<input autoFocus value={draft.head_host} onChange={(event) => setDraft({ ...draft, head_host: event.target.value })} placeholder="10.0.0.20" required /></label><label>Shared cluster token<input type="password" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Paste token from coordinator" minLength={16} required /></label></>}
-      {mode === "coordinator" && <label>Node IP override <span className="optional">blank = automatic LAN address</span><input autoFocus value={draft.node_ip_address} onChange={(event) => setDraft({ ...draft, node_ip_address: event.target.value })} placeholder="10.0.0.20" /></label>}
+      {mode === "coordinator" && <label>Node IP <span className="optional">{detectingNodeIp ? "detecting…" : "detected automatically; editable"}</span><input autoFocus value={draft.node_ip_address} onChange={(event) => setDraft({ ...draft, node_ip_address: event.target.value })} placeholder={detectingNodeIp ? "Detecting…" : "Enter this machine’s LAN IPv4"} /></label>}
       <div className="field-row three"><NumberField label="Shared CPUs" value={draft.cpus} min={0} step={1} onChange={(cpus) => setDraft({ ...draft, cpus })} /><NumberField label="Shared GPUs" value={draft.gpus} min={0} step={1} onChange={(gpus) => setDraft({ ...draft, gpus })} /><NumberField label="Concurrent jobs" value={draft.max_concurrent_jobs} min={1} step={1} onChange={(max_concurrent_jobs) => setDraft({ ...draft, max_concurrent_jobs })} /></div>
       <details><summary>Advanced network settings</summary><div className="field-row three ports"><NumberField label="Ray head" value={draft.ray_port} min={1} step={1} onChange={(ray_port) => setDraft({ ...draft, ray_port })} /><NumberField label="Dashboard" value={draft.dashboard_port} min={1} step={1} onChange={(dashboard_port) => setDraft({ ...draft, dashboard_port })} /><NumberField label="Ray Client" value={draft.client_port} min={1} step={1} onChange={(client_port) => setDraft({ ...draft, client_port })} /></div></details>
       <div className="security-note"><ShieldCheck size={17} /><span><strong>Token authentication is enabled</strong><small>All machines must use Ray 2.57.0 and remain on a trusted private network.</small></span></div>

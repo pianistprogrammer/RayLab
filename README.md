@@ -5,7 +5,7 @@ RayLab is a Tauri desktop control plane that can run in exactly one of two roles
 - **Coordinator:** starts a Ray head node and provides the address/token other RayLab installations use to join.
 - **Worker:** joins a coordinator and offers a configurable amount of the local machine's CPU and GPU capacity.
 
-The same app also submits durable jobs, reads logs, stops/deletes jobs, and shows cluster nodes through Ray's Jobs and State HTTP APIs.
+The same app also submits durable jobs, reads logs, stops/deletes jobs, and shows an interactive Coordinator/Worker topology plus node inventory through Ray's Jobs and State HTTP APIs.
 
 ## Architecture
 
@@ -70,13 +70,15 @@ Ray token authentication is enabled for role-managed clusters. Tokens are stored
 
 Ray workers currently run as the signed-in OS user, so v0.3 is for trusted cluster participants and trusted workloads. Dedicated service accounts/container isolation remain future hardening.
 
+The macOS Apple Silicon and Windows x64 release configurations bundle `uv`, so end users do not need to install Python or Ray separately. **Install managed runtime** uses an internet connection on first setup to create RayLab's private Python 3.11 environment and install the pinned Ray version. Other build targets need a matching bundled `uv` executable or a local `uv`/Python 3.10+ fallback.
+
 ## Development
 
 Requirements:
 
 - Node.js 20+ with Corepack
 - Rust 1.88 (pinned by `rust-toolchain.toml`)
-- `uv` or Python 3.10+ for in-app Ray runtime installation
+- The repository's platform-matching `vendor/bin/uv` binary, or `uv`/Python 3.10+ as a development fallback
 
 ```bash
 corepack pnpm install

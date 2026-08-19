@@ -19,6 +19,7 @@ pub fn run() {
             commands::stop_job,
             commands::delete_job,
             commands::list_nodes,
+            commands::detect_local_node_ip,
             commands::ray_runtime_status,
             commands::install_ray_runtime,
             commands::lifecycle_status,

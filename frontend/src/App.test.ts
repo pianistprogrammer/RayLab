@@ -1,7 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { api } from "./api";
+import { buildGraphNodes } from "./ClusterGraph";
 import { buildJobSubmission, formatRayTime, isTerminalJob, parseObjectJson } from "./jobs";
-import { defaultLifecycleConfig, managedCluster, normalizeLifecycleConfig, validateRoleSetup } from "./roles";
-import { normalizeDashboardUrl, normalizeDesktopState, normalizePreferences } from "./store";
+import { defaultLifecycleConfig, managedCluster, normalizeLifecycleConfig, prefillCoordinatorNodeIp, validateRoleSetup } from "./roles";
+import { normalizeDashboardUrl, normalizeDesktopState, normalizePreferences, useStore } from "./store";
+import type { LifecycleStatus, RayNode } from "./types";
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("Ray Jobs submission", () => {
   it("builds a structured payload without invoking a CLI", () => {
@@ -100,5 +105,62 @@ describe("exclusive coordinator and worker setup", () => {
     const config = { ...defaultLifecycleConfig, head_host: "10.0.0.20" };
     expect(() => validateRoleSetup("worker", config, "short")).toThrow("shared token");
     expect(() => validateRoleSetup("worker", config, "0123456789abcdef")).not.toThrow();
+  });
+
+  it("prefills a coordinator node IP with the detected LAN address", () => {
+    expect(prefillCoordinatorNodeIp("coordinator", defaultLifecycleConfig, "192.168.1.24").node_ip_address).toBe("192.168.1.24");
+  });
+
+  it("does not overwrite a manually entered node IP or prefill loopback", () => {
+    const manual = { ...defaultLifecycleConfig, node_ip_address: "10.10.0.8" };
+    expect(prefillCoordinatorNodeIp("coordinator", manual, "192.168.1.24")).toBe(manual);
+    expect(prefillCoordinatorNodeIp("coordinator", defaultLifecycleConfig, "127.0.0.1")).toBe(defaultLifecycleConfig);
+  });
+});
+
+describe("cluster topology", () => {
+  const head: RayNode = { id: "head-1", name: "head.local", address: "10.0.0.10", status: "ALIVE", is_head: true, cpus: 8, gpus: 1, memory_gb: 32 };
+  const worker: RayNode = { id: "worker-1", name: "worker.local", address: "10.0.0.11", status: "ALIVE", is_head: false, cpus: 4, gpus: 0, memory_gb: 16 };
+
+  it("centers the State API head and connects workers without duplicating it", () => {
+    const graph = buildGraphNodes([head, worker], "10.0.0.10:6379", true);
+    expect(graph).toHaveLength(2);
+    expect(graph[0]).toMatchObject({ kind: "coordinator", label: "head.local", statusClass: "alive" });
+    expect(graph[1]).toMatchObject({ kind: "worker", label: "worker.local", statusClass: "alive" });
+  });
+
+  it("shows a fallback coordinator while the State API is empty", () => {
+    expect(buildGraphNodes([], "10.0.0.10:6379", false)[0]).toMatchObject({
+      kind: "coordinator",
+      detail: "10.0.0.10:6379",
+      statusClass: "warning",
+    });
+  });
+});
+
+describe("lifecycle refresh state", () => {
+  it("does not disable lifecycle actions during background status polling", async () => {
+    let complete: (status: LifecycleStatus) => void = () => undefined;
+    const response = new Promise<LifecycleStatus>((resolve) => { complete = resolve; });
+    vi.spyOn(api, "lifecycleStatus").mockReturnValue(response);
+    useStore.setState({ app_mode: "coordinator", lifecycleLoading: false, lifecycleRefreshing: false, runtimeInstalling: false });
+
+    const refresh = useStore.getState().refreshLifecycle();
+    expect(useStore.getState().lifecycleLoading).toBe(false);
+    expect(useStore.getState().lifecycleRefreshing).toBe(true);
+
+    complete({
+      state: "stopped",
+      mode: "coordinator",
+      message: "Coordinator is stopped",
+      local_node_ip: "10.0.0.10",
+      join_address: "10.0.0.10:6379",
+      dashboard_url: "http://10.0.0.10:8265",
+      runtime: { ready: true, installing_supported: true, ray_version: "2.57.0", ray_path: "/managed/ray", message: "ready" },
+    });
+    await refresh;
+
+    expect(useStore.getState().lifecycleRefreshing).toBe(false);
+    expect(useStore.getState().lifecycleLoading).toBe(false);
   });
 });

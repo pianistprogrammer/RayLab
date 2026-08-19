@@ -32,7 +32,7 @@ src-tauri/target/release/bundle/macos/RayLab.app
 src-tauri/target/release/bundle/dmg/RayLab_<version>_<arch>.dmg
 ```
 
-Install the same RayLab build on both machines. Production distribution still requires platform signing/notarization. In-app runtime setup requires `uv` or Python 3.10+ until `uv` is bundled with each platform installer.
+Install the same RayLab build on both machines. The macOS Apple Silicon and Windows x64 release configurations include the matching `uv` installer, so Python and Ray do not need to be installed separately. First-time managed-runtime setup needs internet access. Verify the bundled executable on each target architecture before distribution. Production distribution still requires platform signing/notarization.
 
 ## 3. Coordinator acceptance
 

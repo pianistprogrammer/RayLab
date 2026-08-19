@@ -32,6 +32,7 @@ export const api = {
   deleteJob: (cluster: SavedCluster, id: string) => invoke<JobAction>("delete_job", { cluster: clusterInput(cluster), id }),
   listNodes: (cluster: SavedCluster) => invoke<RayNode[]>("list_nodes", { cluster: clusterInput(cluster) }),
   openDashboard: (cluster: SavedCluster) => openUrl(cluster.dashboard_url),
+  detectLocalNodeIp: () => invoke<string>("detect_local_node_ip"),
   runtimeStatus: () => invoke<RuntimeStatus>("ray_runtime_status"),
   installRuntime: () => invoke<RuntimeStatus>("install_ray_runtime"),
   lifecycleStatus: (config: LifecycleConfig, mode: AppMode) => invoke<LifecycleStatus>("lifecycle_status", { config, mode }),
