@@ -14,6 +14,7 @@ pub struct DesktopState {
     pub preferences: Preferences,
     pub app_mode: AppMode,
     pub lifecycle: LifecycleConfig,
+    pub recent_coordinators: Vec<RecentCoordinator>,
 }
 
 impl Default for DesktopState {
@@ -26,8 +27,16 @@ impl Default for DesktopState {
             preferences: Preferences::default(),
             app_mode: AppMode::Unconfigured,
             lifecycle: LifecycleConfig::default(),
+            recent_coordinators: Vec::new(),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RecentCoordinator {
+    pub host: String,
+    pub ray_port: u16,
+    pub dashboard_port: u16,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]

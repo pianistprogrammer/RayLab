@@ -12,6 +12,7 @@ import type {
   RayApiVersion,
   RayJob,
   RayNode,
+  RecentCoordinator,
   SavedCluster,
 } from "./types";
 
@@ -23,6 +24,7 @@ export const defaultDesktopState: DesktopState = {
   preferences: { auto_refresh: true, poll_interval_ms: 5000 },
   app_mode: "unconfigured",
   lifecycle: defaultLifecycleConfig,
+  recent_coordinators: [],
 };
 
 interface AppStore extends DesktopState {
@@ -39,6 +41,7 @@ interface AppStore extends DesktopState {
   lifecycleLoading: boolean;
   lifecycleRefreshing: boolean;
   runtimeInstalling: boolean;
+  lifecycleProgress: string[];
 
   hydrate: () => Promise<void>;
   setActiveView: (view: AppView) => void;
@@ -58,6 +61,8 @@ interface AppStore extends DesktopState {
   stopLifecycle: () => Promise<void>;
   refreshCluster: () => Promise<void>;
   refreshJobs: () => Promise<void>;
+  rememberCoordinator: (entry: RecentCoordinator) => void;
+  pushLifecycleStage: (stage: string) => void;
 }
 
 let persistChain = Promise.resolve<unknown>(undefined);
@@ -77,6 +82,7 @@ export const useStore = create<AppStore>((set, get) => ({
   lifecycleLoading: false,
   lifecycleRefreshing: false,
   runtimeInstalling: false,
+  lifecycleProgress: [],
 
   hydrate: async () => {
     try {
@@ -182,10 +188,18 @@ export const useStore = create<AppStore>((set, get) => ({
       }
       const cluster = managedCluster(mode, config, preview.local_node_ip);
       const saved_clusters = [cluster, ...get().saved_clusters.filter((item) => item.id !== MANAGED_CLUSTER_ID)];
+      const recent_coordinators = mode === "worker"
+        ? rememberCoordinatorEntry(get().recent_coordinators, {
+            host: config.head_host.trim(),
+            ray_port: config.ray_port,
+            dashboard_port: config.dashboard_port,
+          })
+        : get().recent_coordinators;
       set({
         app_mode: mode,
         lifecycle: config,
         saved_clusters,
+        recent_coordinators,
         selected_cluster_id: cluster.id,
         selected_job_id: null,
         active_view: "overview",
@@ -293,13 +307,13 @@ export const useStore = create<AppStore>((set, get) => ({
   startLifecycle: async () => {
     const mode = get().app_mode;
     if (mode === "unconfigured" || get().lifecycleLoading) return;
-    set({ lifecycleLoading: true, error: null });
+    set({ lifecycleLoading: true, error: null, lifecycleProgress: [] });
     try {
       const lifecycleStatus = await api.startLifecycle(get().lifecycle, mode);
-      set({ lifecycleStatus, lifecycleLoading: false, notice: mode === "coordinator" ? "Coordinator started" : "Worker joined the cluster" });
+      set({ lifecycleStatus, lifecycleLoading: false, lifecycleProgress: [], notice: mode === "coordinator" ? "Coordinator started" : "Worker joined the cluster" });
       await get().refreshCluster();
     } catch (error) {
-      set({ lifecycleLoading: false, error: errorMessage(error, "Could not start Ray") });
+      set({ lifecycleLoading: false, lifecycleProgress: [], error: errorMessage(error, "Could not start Ray") });
       await get().refreshLifecycle();
     }
   },
@@ -334,6 +348,7 @@ export const useStore = create<AppStore>((set, get) => ({
       return;
     }
     set({ loading: true, connection: "connecting", error: null });
+    const previousNodes = get().nodes;
     const [versionResult, jobsResult, nodesResult] = await Promise.allSettled([
       api.version(cluster),
       api.listJobs(cluster),
@@ -349,6 +364,8 @@ export const useStore = create<AppStore>((set, get) => ({
       return;
     }
 
+    const nextNodes = nodesResult.status === "fulfilled" ? nodesResult.value : get().nodes;
+    const activity = nodeActivityNotice(previousNodes, nextNodes);
     set((state) => ({
       loading: false,
       connection: "connected",
@@ -358,6 +375,7 @@ export const useStore = create<AppStore>((set, get) => ({
       error: jobsResult.status === "rejected"
         ? errorMessage(jobsResult.reason, "Connected, but jobs could not be loaded")
         : null,
+      ...(activity ? { notice: activity } : {}),
     }));
   },
 
@@ -372,6 +390,19 @@ export const useStore = create<AppStore>((set, get) => ({
     } catch (error) {
       set({ jobsLoading: false, error: errorMessage(error, "Could not load Ray jobs") });
     }
+  },
+
+  rememberCoordinator: (entry) => {
+    set((state) => ({ recent_coordinators: rememberCoordinatorEntry(state.recent_coordinators, entry) }));
+    persist(get);
+  },
+
+  pushLifecycleStage: (stage) => {
+    set((state) => (
+      state.lifecycleProgress[state.lifecycleProgress.length - 1] === stage
+        ? state
+        : { lifecycleProgress: [...state.lifecycleProgress, stage] }
+    ));
   },
 }));
 
@@ -413,6 +444,7 @@ export function normalizeDesktopState(value: Partial<DesktopState> | null | unde
     preferences: normalizePreferences(value?.preferences),
     app_mode: validModes.includes(value?.app_mode as AppMode) ? value?.app_mode as AppMode : "unconfigured",
     lifecycle: normalizeLifecycleConfig(value?.lifecycle),
+    recent_coordinators: normalizeRecentCoordinators(value?.recent_coordinators),
   };
 }
 
@@ -429,6 +461,7 @@ function desktopSnapshot(state: AppStore): DesktopState {
     preferences: state.preferences,
     app_mode: state.app_mode,
     lifecycle: state.lifecycle,
+    recent_coordinators: state.recent_coordinators,
   };
 }
 
@@ -453,4 +486,46 @@ function enqueuePersist(snapshot: DesktopState) {
 
 function sortJobs(jobs: RayJob[]) {
   return [...jobs].sort((left, right) => (right.start_time ?? 0) - (left.start_time ?? 0));
+}
+
+export function nodeActivityNotice(previous: RayNode[], next: RayNode[]): string | null {
+  if (previous.length === 0) return null;
+  const previousIds = new Set(previous.map((node) => node.id));
+  const nextIds = new Set(next.map((node) => node.id));
+  const label = (node: RayNode) => node.name || node.address || node.id;
+  const joined = next.filter((node) => !previousIds.has(node.id)).map(label);
+  const left = previous.filter((node) => !nextIds.has(node.id)).map(label);
+  const parts = [
+    joined.length ? `${joined.slice(0, 3).join(", ")}${joined.length > 3 ? ` +${joined.length - 3}` : ""} joined` : "",
+    left.length ? `${left.slice(0, 3).join(", ")}${left.length > 3 ? ` +${left.length - 3}` : ""} left the cluster` : "",
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
+
+function rememberCoordinatorEntry(existing: RecentCoordinator[], entry: RecentCoordinator): RecentCoordinator[] {
+  const deduped = existing.filter(
+    (item) => !(item.host === entry.host && item.ray_port === entry.ray_port && item.dashboard_port === entry.dashboard_port),
+  );
+  return [entry, ...deduped].slice(0, 5);
+}
+
+export function normalizeRecentCoordinators(value: unknown): RecentCoordinator[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const result: RecentCoordinator[] = [];
+  for (const item of value) {
+    const candidate = item as Partial<RecentCoordinator> | null;
+    const host = typeof candidate?.host === "string" ? candidate.host.trim() : "";
+    const rayPort = Number(candidate?.ray_port);
+    const dashboardPort = Number(candidate?.dashboard_port);
+    if (!host || host.includes("/") || host.includes(":") || /\s/.test(host)) continue;
+    if (!Number.isInteger(rayPort) || rayPort <= 0 || rayPort > 65535) continue;
+    if (!Number.isInteger(dashboardPort) || dashboardPort <= 0 || dashboardPort > 65535) continue;
+    const key = `${host}|${rayPort}|${dashboardPort}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push({ host, ray_port: rayPort, dashboard_port: dashboardPort });
+    if (result.length >= 5) break;
+  }
+  return result;
 }

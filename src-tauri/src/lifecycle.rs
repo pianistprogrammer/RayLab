@@ -9,7 +9,7 @@ use base64::Engine;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use tauri::path::BaseDirectory;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::process::Command;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, timeout};
@@ -282,18 +282,27 @@ pub async fn status(app: &AppHandle, config: &LifecycleConfig, mode: AppMode) ->
         token.as_deref(),
     )
     .await;
+    let mut message = if running {
+        match mode {
+            AppMode::Coordinator => "Coordinator is accepting workers".to_string(),
+            AppMode::Worker => "This machine is sharing resources".to_string(),
+            AppMode::Unconfigured => unreachable!(),
+        }
+    } else {
+        "RayLab previously started this node, but it is no longer visible to the cluster. Stop it to clean up, then start again.".to_string()
+    };
+    if running && mode == AppMode::Coordinator {
+        let advertised = format!("{}:{}", marker.node_ip, config.dashboard_port);
+        if !port_reachable(&marker.node_ip, config.dashboard_port, Duration::from_millis(900)).await {
+            message.push_str(&format!(
+                " Warning: this machine cannot reach its own advertised address {advertised}, so workers likely cannot either. Check the network interface or override the Node IP."
+            ));
+        }
+    }
     LifecycleStatus {
         state: if running { "running" } else { "error" }.into(),
         mode,
-        message: if running {
-            match mode {
-                AppMode::Coordinator => "Coordinator is accepting workers".into(),
-                AppMode::Worker => "This machine is sharing resources".into(),
-                AppMode::Unconfigured => unreachable!(),
-            }
-        } else {
-            "RayLab previously started this node, but it is no longer visible to the cluster. Stop it to clean up, then start again.".into()
-        },
+        message,
         local_node_ip: marker.node_ip,
         join_address,
         dashboard_url: marker.dashboard_url,
@@ -345,6 +354,7 @@ pub async fn start(
         None
     };
 
+    emit_progress(app, "ports");
     check_local_ports(&config, mode)?;
     let node_ip = effective_node_ip(&config, mode);
     if mode == AppMode::Coordinator && node_ip.parse::<Ipv4Addr>().is_ok_and(|ip| ip.is_loopback())
@@ -358,6 +368,7 @@ pub async fn start(
         .map_err(|error| format!("Could not create Ray data directory: {error}"))?;
     let args = build_start_args(&config, mode, &node_ip, &data_root);
     let environment = ray_environment(token_path.as_deref(), config.auth_enabled);
+    emit_progress(app, "starting");
     let result = run_process(&ray_path, &args, &environment, PROCESS_TIMEOUT).await?;
     if !result.success {
         return Err(format!("Ray could not start: {}", result.output));
@@ -383,6 +394,7 @@ pub async fn start(
     }
 
     let token = load_cluster_token(app, MANAGED_CLUSTER_ID)?;
+    emit_progress(app, "verifying");
     let deadline = tokio::time::Instant::now() + VERIFY_TIMEOUT;
     while tokio::time::Instant::now() < deadline {
         if verify_running(mode, &dashboard_url, &node_ip, token.as_deref()).await {
@@ -480,10 +492,21 @@ pub fn ensure_cluster_token(
             token: Some(token),
         });
     }
+    save_cluster_token(app, cluster_id, &generate_cluster_token())
+}
+
+pub fn rotate_cluster_token(
+    app: &AppHandle,
+    cluster_id: &str,
+) -> Result<ClusterTokenStatus, String> {
+    validate_cluster_id(cluster_id)?;
+    save_cluster_token(app, cluster_id, &generate_cluster_token())
+}
+
+fn generate_cluster_token() -> String {
     let mut bytes = [0_u8; 32];
     rand::rng().fill_bytes(&mut bytes);
-    let token = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes);
-    save_cluster_token(app, cluster_id, &token)
+    base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
 }
 
 pub fn save_cluster_token(
@@ -656,6 +679,21 @@ fn ray_environment(token_path: Option<&Path>, auth_enabled: bool) -> Vec<(String
 }
 
 fn check_local_ports(config: &LifecycleConfig, mode: AppMode) -> Result<(), String> {
+    let busy = find_busy_ports(config, mode);
+    if busy.is_empty() {
+        return Ok(());
+    }
+    let list = busy
+        .iter()
+        .map(u16::to_string)
+        .collect::<Vec<_>>()
+        .join(", ");
+    Err(format!(
+        "Ports {list} are unavailable on this machine. Stop the conflicting services, then retry."
+    ))
+}
+
+pub fn find_busy_ports(config: &LifecycleConfig, mode: AppMode) -> Vec<u16> {
     let mut ports = vec![
         NODE_MANAGER_PORT,
         OBJECT_MANAGER_PORT,
@@ -666,12 +704,119 @@ fn check_local_ports(config: &LifecycleConfig, mode: AppMode) -> Result<(), Stri
     if mode == AppMode::Coordinator {
         ports.extend([config.ray_port, config.dashboard_port, config.client_port]);
     }
-    for port in ports {
-        TcpListener::bind((Ipv4Addr::UNSPECIFIED, port)).map_err(|error| {
-            format!("Port {port} is unavailable on this machine: {error}. Stop the conflicting service, then retry.")
-        })?;
+    ports
+        .into_iter()
+        .filter(|port| TcpListener::bind((Ipv4Addr::UNSPECIFIED, *port)).is_err())
+        .collect()
+}
+
+fn emit_progress(app: &AppHandle, stage: &str) {
+    let _ = app.emit("lifecycle-progress", serde_json::json!({ "stage": stage }));
+}
+
+async fn port_reachable(host: &str, port: u16, wait: Duration) -> bool {
+    timeout(
+        wait,
+        tokio::net::TcpStream::connect((host, port)),
+    )
+    .await
+    .map(|result| result.is_ok())
+    .unwrap_or(false)
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct ConnectionCheck {
+    pub status: String,
+    pub message: String,
+    pub coordinator_ray_version: Option<String>,
+    pub compatible: Option<bool>,
+}
+
+pub async fn check_worker_connection(
+    host: &str,
+    ray_port: u16,
+    dashboard_port: u16,
+    token: &str,
+) -> Result<ConnectionCheck, String> {
+    validate_host(host)?;
+    if !port_reachable(host, ray_port, Duration::from_secs(3)).await {
+        return Ok(ConnectionCheck {
+            status: "unreachable".into(),
+            message: format!(
+                "Could not reach {host}:{ray_port}. Check the address and that the coordinator is running."
+            ),
+            coordinator_ray_version: None,
+            compatible: None,
+        });
     }
-    Ok(())
+    if !port_reachable(host, dashboard_port, Duration::from_secs(3)).await {
+        return Ok(ConnectionCheck {
+            status: "unreachable".into(),
+            message: format!(
+                "The Ray head answered on port {ray_port}, but the Dashboard port {dashboard_port} is not reachable. Ask the coordinator to check their firewall."
+            ),
+            coordinator_ray_version: None,
+            compatible: None,
+        });
+    }
+    let url = format!("http://{host}:{dashboard_port}/api/version");
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(6))
+        .build()
+        .map_err(|error| format!("Could not create the connection checker: {error}"))?;
+    let mut request = client.get(&url);
+    let trimmed_token = token.trim();
+    if !trimmed_token.is_empty() {
+        request = request.bearer_auth(trimmed_token);
+    }
+    use reqwest::StatusCode;
+    let response = match request.send().await {
+        Ok(response) => response,
+        Err(error) => {
+            return Ok(ConnectionCheck {
+                status: "dashboard_error".into(),
+                message: format!("The Dashboard API at {host}:{dashboard_port} did not respond: {error}"),
+                coordinator_ray_version: None,
+                compatible: None,
+            });
+        }
+    };
+    let http_status = response.status();
+    if matches!(http_status, StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN) {
+        return Ok(ConnectionCheck {
+            status: "auth_failed".into(),
+            message: "The coordinator rejected this token. Reveal the shared token on the coordinator's RayLab app and paste it exactly.".into(),
+            coordinator_ray_version: None,
+            compatible: None,
+        });
+    }
+    if !http_status.is_success() {
+        return Ok(ConnectionCheck {
+            status: "dashboard_error".into(),
+            message: format!("The Dashboard API responded with HTTP {}.", http_status.as_u16()),
+            coordinator_ray_version: None,
+            compatible: None,
+        });
+    }
+    let value: serde_json::Value = response.json().await.unwrap_or(serde_json::Value::Null);
+    let version = value
+        .get("ray_version")
+        .and_then(serde_json::Value::as_str)
+        .map(str::to_string);
+    let compatible = version.as_deref().map(|candidate| candidate == RAY_VERSION);
+    let message = match (&version, compatible) {
+        (Some(candidate), Some(true)) => format!("Coordinator is reachable and runs the pinned Ray {candidate}."),
+        (Some(candidate), Some(false)) => format!(
+            "Coordinator is reachable but reports Ray {candidate}; RayLab requires {RAY_VERSION} on every machine."
+        ),
+        _ => "Coordinator is reachable, but its Ray version could not be read.".into(),
+    };
+    Ok(ConnectionCheck {
+        status: "ok".into(),
+        message,
+        coordinator_ray_version: version,
+        compatible,
+    })
 }
 
 async fn verify_running(
@@ -1079,6 +1224,27 @@ mod tests {
     }
 
     #[test]
+    fn generated_tokens_are_random_and_long_enough() {
+        let first = generate_cluster_token();
+        let second = generate_cluster_token();
+        assert_ne!(first, second);
+        assert!(first.len() >= 16);
+        assert!(second.len() >= 16);
+    }
+
+    #[test]
+    fn busy_port_detection_reports_bound_configured_ports() {
+        let listener = std::net::TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0)).expect("bind probe");
+        let port = listener.local_addr().expect("probe port").port();
+        let config = LifecycleConfig {
+            ray_port: port,
+            ..LifecycleConfig::default()
+        };
+        assert!(find_busy_ports(&config, AppMode::Coordinator).contains(&port));
+        drop(listener);
+    }
+
+    #[test]
     fn token_files_round_trip_without_whitespace() {
         let path = env::temp_dir().join(format!("raylab-token-test-{}", std::process::id()));
         write_private(&path, b"abcdefghijklmnop\n").expect("write token");
@@ -1125,5 +1291,97 @@ mod tests {
         assert!(result.success);
         assert_eq!(result.output, literal);
         assert!(!side_effect.exists());
+    }
+
+    fn serve_version_responses(listener: std::net::TcpListener, pinned: &'static str) -> u16 {
+        let port = listener.local_addr().expect("dashboard port").port();
+        std::thread::spawn(move || {
+            for stream in listener.incoming() {
+                let Ok(mut stream) = stream else { break };
+                use std::io::{Read, Write};
+                let mut buffer = [0u8; 4096];
+                let Ok(read) = stream.read(&mut buffer) else { continue };
+                let request = String::from_utf8_lossy(&buffer[..read]).to_string();
+                let authorized = request
+                    .to_ascii_lowercase()
+                    .contains("authorization: bearer goodtoken");
+                if !authorized {
+                    let response = "HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+                    let _ = stream.write_all(response.as_bytes());
+                    continue;
+                }
+                let body = format!(r#"{{"ray_version":"{pinned}"}}"#);
+                let response = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len(),
+                );
+                let _ = stream.write_all(response.as_bytes());
+            }
+        });
+        port
+    }
+
+    #[tokio::test]
+    async fn connection_check_reports_ok_with_pinned_coordinator_version() {
+        let _ray_listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind ray port");
+        let ray_port = _ray_listener.local_addr().expect("ray port").port();
+        let dashboard_port = serve_version_responses(
+            std::net::TcpListener::bind("127.0.0.1:0").expect("bind dashboard"),
+            RAY_VERSION,
+        );
+        let check = check_worker_connection("127.0.0.1", ray_port, dashboard_port, "goodtoken")
+            .await
+            .expect("connection check");
+        assert_eq!(check.status, "ok");
+        assert_eq!(check.coordinator_ray_version.as_deref(), Some(RAY_VERSION));
+        assert_eq!(check.compatible, Some(true));
+    }
+
+    #[tokio::test]
+    async fn connection_check_flags_incompatible_coordinator_versions() {
+        let _ray_listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind ray port");
+        let ray_port = _ray_listener.local_addr().expect("ray port").port();
+        let dashboard_port = serve_version_responses(
+            std::net::TcpListener::bind("127.0.0.1:0").expect("bind dashboard"),
+            "2.40.0",
+        );
+        let check = check_worker_connection("127.0.0.1", ray_port, dashboard_port, "goodtoken")
+            .await
+            .expect("connection check");
+        assert_eq!(check.status, "ok");
+        assert_eq!(check.compatible, Some(false));
+    }
+
+    #[tokio::test]
+    async fn connection_check_distinguishes_wrong_tokens_from_unreachable_hosts() {
+        let _ray_listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind ray port");
+        let ray_port = _ray_listener.local_addr().expect("ray port").port();
+        let dashboard_port = serve_version_responses(
+            std::net::TcpListener::bind("127.0.0.1:0").expect("bind dashboard"),
+            RAY_VERSION,
+        );
+        let rejected = check_worker_connection("127.0.0.1", ray_port, dashboard_port, "wrongtoken")
+            .await
+            .expect("connection check");
+        assert_eq!(rejected.status, "auth_failed");
+
+        let closed = std::net::TcpListener::bind("127.0.0.1:0").expect("bind closed probe");
+        let closed_port = closed.local_addr().expect("closed port").port();
+        drop(closed);
+        let unreachable =
+            check_worker_connection("127.0.0.1", closed_port, closed_port, "goodtoken")
+                .await
+                .expect("connection check");
+        assert_eq!(unreachable.status, "unreachable");
+    }
+
+    #[tokio::test]
+    async fn connection_check_rejects_unsafe_hosts_without_network_calls() {
+        for host in ["http://10.0.0.8", "10.0.0.8:6379", "$(touch bad)", ""] {
+            let error = check_worker_connection(host, 6379, 8265, "token")
+                .await
+                .expect_err("invalid host must fail");
+            assert!(error.contains("without a scheme or port"));
+        }
     }
 }

@@ -12,6 +12,7 @@ import {
   Gauge,
   HardDriveDownload,
   LayoutDashboard,
+  Link2,
   ListRestart,
   Network,
   Play,
@@ -30,12 +31,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { api, errorMessage } from "./api";
 import { ClusterGraph } from "./ClusterGraph";
 import { buildJobSubmission, canStopJob, defaultJobDraft, formatRayTime, isTerminalJob, type JobDraft } from "./jobs";
-import { defaultLifecycleConfig, MANAGED_CLUSTER_ID, prefillCoordinatorNodeIp } from "./roles";
+import { defaultLifecycleConfig, MANAGED_CLUSTER_ID, buildJoinLink, parseCoordinatorInput, prefillCoordinatorNodeIp, validateRoleSetup } from "./roles";
 import { normalizeDashboardUrl, useStore } from "./store";
-import type { AppMode, AppView, LifecycleConfig, RayJob, SavedCluster } from "./types";
+import type { AppMode, AppView, ConnectionCheck, LifecycleConfig, RayJob, SavedCluster } from "./types";
 
 function cls(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
@@ -93,6 +95,19 @@ export function App() {
     const timer = window.setTimeout(() => setNotice(null), 3200);
     return () => window.clearTimeout(timer);
   }, [notice, setNotice]);
+
+  useEffect(() => {
+    const unlisten = listen<{ stage?: string; message?: string }>("lifecycle-progress", (event) => {
+      const { stage, message } = event.payload;
+      if (!stage) return;
+      if (stage === "error") useStore.getState().setError(message || "Lifecycle action failed");
+      else if (stage === "notice") useStore.getState().setNotice(message || null);
+      else useStore.getState().pushLifecycleStage(stage);
+    });
+    return () => {
+      void unlisten.then((dispose) => dispose());
+    };
+  }, []);
 
   if (!hydrated) {
     return <div className="loading-screen"><div className="brand-mark"><Server size={24} /></div><Spinner size={24} /><p>Loading RayLab…</p></div>;
@@ -228,7 +243,9 @@ function Metric({ icon: Icon, label, value, detail, tone }: { icon: typeof Gauge
 function LifecyclePanel() {
   const mode = useStore((state) => state.app_mode);
   const status = useStore((state) => state.lifecycleStatus);
+  const config = useStore((state) => state.lifecycle);
   const busy = useStore((state) => state.lifecycleLoading);
+  const progressStages = useStore((state) => state.lifecycleProgress);
   const installing = useStore((state) => state.runtimeInstalling);
   const start = useStore((state) => state.startLifecycle);
   const stop = useStore((state) => state.stopLifecycle);
@@ -238,6 +255,8 @@ function LifecyclePanel() {
   const [token, setToken] = useState<string | null>(null);
   const isRunning = status?.state === "running";
   const runtimeReady = status?.runtime.ready === true;
+  const joinAddress = status?.join_address || "";
+  const inviteLink = mode === "coordinator" && token && joinAddress ? buildJoinLink(joinAddress, token, config) : "";
 
   async function revealToken() {
     try {
@@ -248,14 +267,26 @@ function LifecyclePanel() {
     }
   }
 
-  async function copyToken() {
-    if (!token) return;
+  async function copyText(value: string, notice: string) {
     try {
-      await navigator.clipboard.writeText(token);
-      setNotice("Cluster token copied");
+      await navigator.clipboard.writeText(value);
+      setNotice(notice);
     } catch {
-      setError("Clipboard access was unavailable. Select and copy the displayed token manually.");
+      setError("Clipboard access was unavailable. Select and copy the value manually.");
     }
+  }
+
+  function copyInstructions() {
+    if (!inviteLink) return;
+    const instructions = [
+      "Join my RayLab Ray cluster:",
+      "1. Open RayLab and choose “Join a cluster”.",
+      `2. Paste this invite link into the Coordinator host field:`,
+      inviteLink,
+      "",
+      "The link contains the coordinator address and shared token — share it only with trusted workers on your private network.",
+    ].join("\n");
+    void copyText(instructions, "Join instructions copied");
   }
 
   return (
@@ -275,14 +306,48 @@ function LifecyclePanel() {
         <div><small>Runtime</small><strong>{status?.runtime.ray_version ? `Ray ${status.runtime.ray_version}` : "Not installed"}</strong></div>
       </div>
 
+      {busy && (
+        <ol className="lifecycle-timeline" aria-label="Join progress">
+          {(mode === "coordinator"
+            ? [["ports", "Checking local ports"], ["starting", "Starting the Ray head node"], ["verifying", "Waiting for Dashboard health"]]
+            : [["ports", "Checking local ports"], ["starting", "Starting this worker"], ["verifying", "Confirming membership with the coordinator"]]
+          ).map(([stage, label], index) => {
+            const reached = Math.max(progressStages.length - 1, 0);
+            const state = index < reached ? "done" : index === reached ? "active" : "pending";
+            return (
+              <li key={stage} className={cls("timeline-step", state)}>
+                {state === "done" ? <CheckCircle2 size={14} /> : state === "active" ? <Spinner size={13} /> : <span className="timeline-dot" />}
+                {label}
+              </li>
+            );
+          })}
+        </ol>
+      )}
+
       {mode === "coordinator" && (
         <div className="join-secret">
           <div><ShieldCheck size={16} /><span><strong>Shared cluster token</strong><small>Give this and the join address only to trusted workers.</small></span></div>
           <div className="secret-actions">
             {token && <input aria-label="Shared cluster token" readOnly value={token} onFocus={(event) => event.currentTarget.select()} />}
             {!token && <button className="secondary" onClick={() => void revealToken()}>Reveal token</button>}
-            {token && <button className="secondary" onClick={() => void copyToken()}><Copy size={15} />Copy</button>}
+            {token && <button className="secondary" onClick={() => void copyText(token, "Cluster token copied")}><Copy size={15} />Copy</button>}
           </div>
+        </div>
+      )}
+
+      {mode === "coordinator" && (
+        <div className="invite-panel">
+          <div className="invite-heading"><Link2 size={15} /><span><strong>Invite a worker</strong><small>{inviteLink ? "Send one link — it carries the address and token." : "Reveal the token above to build a one-paste invite link."}</small></span></div>
+          {inviteLink && (
+            <>
+              <code className="invite-link">{inviteLink}</code>
+              <div className="invite-actions">
+                <button className="secondary" onClick={() => void copyText(inviteLink, "Invite link copied")}><Copy size={15} />Copy invite link</button>
+                {joinAddress && <button className="secondary" onClick={() => void copyText(joinAddress, "Join address copied")}><Copy size={15} />Copy address</button>}
+                <button className="secondary" onClick={copyInstructions}><FileText size={15} />Copy instructions</button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -536,7 +601,24 @@ function SettingsView() {
 function RoleSettings() {
   const mode = useStore((state) => state.app_mode);
   const lifecycle = useStore((state) => state.lifecycleStatus);
+  const setNotice = useStore((state) => state.setNotice);
+  const setError = useStore((state) => state.setError);
+  const [rotating, setRotating] = useState(false);
   const [target, setTarget] = useState<Exclude<AppMode, "unconfigured"> | null>(null);
+
+  async function rotateToken() {
+    if (!window.confirm("Generate a new shared cluster token? Previously shared tokens stop working for new workers once the coordinator restarts.")) return;
+    setRotating(true);
+    try {
+      await api.rotateClusterToken(MANAGED_CLUSTER_ID);
+      setNotice("New cluster token generated. Reveal it again to share — the old token stops working after the coordinator restarts.");
+    } catch (error) {
+      setError(errorMessage(error, "Could not rotate the cluster token"));
+    } finally {
+      setRotating(false);
+    }
+  }
+
   if (target) {
     return <section className="panel role-settings"><RoleConfiguration mode={target} onBack={() => setTarget(null)} compact /></section>;
   }
@@ -547,6 +629,12 @@ function RoleSettings() {
       <div className="panel-heading"><div><p className="eyebrow">Exclusive machine role</p><h2>{mode === "coordinator" ? "Coordinator" : "Worker"} mode</h2><p>One role is active at a time. Stop Ray before changing it.</p></div><div className={cls("role-badge", mode)}>{mode === "coordinator" ? <Server size={16} /> : <Cpu size={16} />}{mode}</div></div>
       <button className="secondary" disabled={!stopped} onClick={() => setTarget(otherMode)}>{mode === "coordinator" ? <Cpu size={16} /> : <Server size={16} />}Switch to {otherMode}</button>
       {!stopped && <small className="setting-hint">Use {mode === "coordinator" ? "Stop coordinator" : "Leave cluster"} on Overview before switching.</small>}
+      {mode === "coordinator" && (
+        <div className="token-rotation">
+          <button className="secondary" onClick={() => void rotateToken()} disabled={rotating}>{rotating ? <Spinner /> : <ShieldCheck size={15} />}{rotating ? "Generating…" : "Regenerate shared token"}</button>
+          <small className="setting-hint">Invalidates the previously shared token for future joins. Running Ray processes keep using the token they started with until restarted.</small>
+        </div>
+      )}
     </section>
   );
 }
@@ -593,11 +681,16 @@ function RoleOnboarding() {
 
 function RoleConfiguration({ mode, onBack, compact = false }: { mode: Exclude<AppMode, "unconfigured">; onBack: () => void; compact?: boolean }) {
   const existing = useStore((state) => state.lifecycle);
+  const recentCoordinators = useStore((state) => state.recent_coordinators);
   const configure = useStore((state) => state.configureMode);
   const setError = useStore((state) => state.setError);
   const [draft, setDraft] = useState<LifecycleConfig>(compact ? existing : defaultLifecycleConfig);
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
+  const [check, setCheck] = useState<ConnectionCheck | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [busyPorts, setBusyPorts] = useState<number[] | null>(null);
+  const [portsChecking, setPortsChecking] = useState(false);
   const [detectingNodeIp, setDetectingNodeIp] = useState(mode === "coordinator" && !draft.node_ip_address);
 
   useEffect(() => {
@@ -622,6 +715,59 @@ function RoleConfiguration({ mode, onBack, compact = false }: { mode: Exclude<Ap
     };
   }, [mode, setError]);
 
+  function applyCoordinatorInput(raw: string) {
+    const parsed = parseCoordinatorInput(raw);
+    if (!parsed) {
+      setDraft((current) => ({ ...current, head_host: raw }));
+      return;
+    }
+    setDraft((current) => ({
+      ...current,
+      head_host: parsed.host,
+      ray_port: parsed.ray_port ?? current.ray_port,
+      dashboard_port: parsed.dashboard_port ?? current.dashboard_port,
+    }));
+    setToken((current) => (parsed.token && !current ? parsed.token : current));
+  }
+
+  async function testConnection() {
+    setChecking(true);
+    setError(null);
+    try {
+      validateRoleSetup("worker", { ...draft, auth_enabled: true }, token);
+    } catch (error) {
+      setError(errorMessage(error));
+      setCheck(null);
+      setChecking(false);
+      return;
+    }
+    try {
+      const result = await api.checkWorkerConnection(draft.head_host.trim(), draft.ray_port, draft.dashboard_port, token);
+      setCheck(result);
+    } catch (error) {
+      setError(errorMessage(error, "Could not run the connection check"));
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  async function runPortPrecheck() {
+    setPortsChecking(true);
+    setError(null);
+    try {
+      setBusyPorts(await api.checkLocalPorts(draft));
+    } catch (error) {
+      setError(errorMessage(error, "Could not check local ports"));
+    } finally {
+      setPortsChecking(false);
+    }
+  }
+
+  function applyRecentCoordinator(entry: (typeof recentCoordinators)[number]) {
+    setDraft((current) => ({ ...current, head_host: entry.host, ray_port: entry.ray_port, dashboard_port: entry.dashboard_port }));
+    setCheck(null);
+  }
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -641,10 +787,45 @@ function RoleConfiguration({ mode, onBack, compact = false }: { mode: Exclude<Ap
       <div className="role-form-heading"><button type="button" className="text-button" onClick={onBack}>← Back</button><div className={cls("role-badge", mode)}>{mode === "coordinator" ? <Server size={15} /> : <Cpu size={15} />}{mode}</div></div>
       <h2>{mode === "coordinator" ? "Host this cluster" : "Join a coordinator"}</h2>
       <p>{mode === "coordinator" ? "RayLab will generate a shared token and show the address workers need." : "Use the address and token shown by the coordinator’s RayLab app."}</p>
-      {mode === "worker" && <><label>Coordinator host<input autoFocus value={draft.head_host} onChange={(event) => setDraft({ ...draft, head_host: event.target.value })} placeholder="10.0.0.20" required /></label><label>Shared cluster token<input type="password" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Paste token from coordinator" minLength={16} required /></label></>}
+      {mode === "worker" && <><label>Coordinator host or invite link<input autoFocus value={draft.head_host} onChange={(event) => applyCoordinatorInput(event.target.value)} placeholder="10.0.0.20 · hostname · or paste invite link" required /><small className="field-hint">Invite links (<code>raylab://join?…</code>), URLs, and <code>host:port</code> values are cleaned up automatically.</small></label>
+        {recentCoordinators.length > 0 && (
+          <div className="recent-coordinators">
+            <small>Recent coordinators</small>
+            <div className="recent-chips">
+              {recentCoordinators.map((entry) => (
+                <button key={`${entry.host}:${entry.ray_port}`} type="button" onClick={() => applyRecentCoordinator(entry)}>{entry.host}</button>
+              ))}
+            </div>
+          </div>
+        )}
+        <label>Shared cluster token<input type="password" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Paste token from coordinator" minLength={16} required /></label>
+        <div className="connection-check">
+          <button type="button" className="secondary" onClick={() => void testConnection()} disabled={checking}>{checking ? <Spinner /> : <Wifi size={15} />}{checking ? "Testing…" : "Test connection"}</button>
+          {check && (
+            <p className={cls("check-result", check.status, check.compatible === false && "warn")}>
+              {check.status === "ok" && check.compatible !== false ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
+              <span>{check.message}</span>
+            </p>
+          )}
+        </div></>}
       {mode === "coordinator" && <label>Node IP <span className="optional">{detectingNodeIp ? "detecting…" : "detected automatically; editable"}</span><input autoFocus value={draft.node_ip_address} onChange={(event) => setDraft({ ...draft, node_ip_address: event.target.value })} placeholder={detectingNodeIp ? "Detecting…" : "Enter this machine’s LAN IPv4"} /></label>}
       <div className="field-row three"><NumberField label="Shared CPUs" value={draft.cpus} min={0} step={1} onChange={(cpus) => setDraft({ ...draft, cpus })} /><NumberField label="Shared GPUs" value={draft.gpus} min={0} step={1} onChange={(gpus) => setDraft({ ...draft, gpus })} /><NumberField label="Concurrent jobs" value={draft.max_concurrent_jobs} min={1} step={1} onChange={(max_concurrent_jobs) => setDraft({ ...draft, max_concurrent_jobs })} /></div>
-      <details><summary>Advanced network settings</summary><div className="field-row three ports"><NumberField label="Ray head" value={draft.ray_port} min={1} step={1} onChange={(ray_port) => setDraft({ ...draft, ray_port })} /><NumberField label="Dashboard" value={draft.dashboard_port} min={1} step={1} onChange={(dashboard_port) => setDraft({ ...draft, dashboard_port })} /><NumberField label="Ray Client" value={draft.client_port} min={1} step={1} onChange={(client_port) => setDraft({ ...draft, client_port })} /></div></details>
+      <details><summary>Advanced network settings</summary><div className="field-row three ports"><NumberField label="Ray head" value={draft.ray_port} min={1} step={1} onChange={(ray_port) => setDraft({ ...draft, ray_port })} /><NumberField label="Dashboard" value={draft.dashboard_port} min={1} step={1} onChange={(dashboard_port) => setDraft({ ...draft, dashboard_port })} /><NumberField label="Ray Client" value={draft.client_port} min={1} step={1} onChange={(client_port) => setDraft({ ...draft, client_port })} /></div>
+        {mode === "coordinator" && (
+          <div className="port-precheck">
+            <button type="button" className="secondary" onClick={() => void runPortPrecheck()} disabled={portsChecking}>{portsChecking ? <Spinner /> : <Gauge size={15} />}{portsChecking ? "Checking…" : "Check local ports"}</button>
+            {busyPorts !== null && (
+              <p className={cls("check-result", busyPorts.length ? "unreachable" : "ok")}>
+                {busyPorts.length ? <AlertTriangle size={15} /> : <CheckCircle2 size={15} />}
+                <span>{busyPorts.length
+                  ? `In use on this machine: ${busyPorts.join(", ")}. Stop the conflicting services before starting.`
+                  : "All required RayLab ports (6379, 8265, 10001, 8076–8077, 52365–52367, 20000–20100) are free."}</span>
+              </p>
+            )}
+            <small className="field-hint">Workers must be able to reach TCP 6379, 8265, 10001, 8076–8077, 52365–52367, and 20000–20100 on this machine over your private network.</small>
+          </div>
+        )}
+      </details>
       <div className="security-note"><ShieldCheck size={17} /><span><strong>Token authentication is enabled</strong><small>All machines must use Ray 2.57.0 and remain on a trusted private network.</small></span></div>
       <button className="wide-button" type="submit" disabled={busy}>{busy ? <Spinner /> : mode === "coordinator" ? <Network size={17} /> : <Wifi size={17} />}{busy ? "Saving…" : mode === "coordinator" ? "Configure coordinator" : "Configure worker"}</button>
     </form>

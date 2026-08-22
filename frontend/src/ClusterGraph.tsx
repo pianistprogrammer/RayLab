@@ -9,6 +9,17 @@ const GRAPH_CENTER = { x: GRAPH_WIDTH / 2, y: GRAPH_HEIGHT / 2 };
 const GRAPH_MIN_ZOOM = 0.45;
 const GRAPH_MAX_ZOOM = 2.4;
 
+const COORDINATOR_RADIUS = 32;
+const WORKER_RADIUS = 22;
+
+const SIM_REPULSION = 24000;
+const SIM_SPRING = 0.04;
+const SIM_LINK_DISTANCE = 185;
+const SIM_GRAVITY = 0.03;
+const SIM_DAMPING = 0.82;
+const SIM_ALPHA_DECAY = 0.981;
+const SIM_MIN_ALPHA = 0.008;
+
 type GraphPosition = { x: number; y: number };
 type GraphViewport = GraphPosition & { k: number };
 type GraphNodeKind = "coordinator" | "worker";
@@ -23,6 +34,7 @@ export type GraphNodeModel = GraphPosition & {
   statusClass: GraphStatusClass;
   radius: number;
 };
+type SimNodeState = { x: number; y: number; vx: number; vy: number };
 type GraphDragState =
   | { type: "pan"; pointerId: number; startX: number; startY: number; panX: number; panY: number }
   | { type: "node"; pointerId: number; id: string; offsetX: number; offsetY: number };
@@ -36,9 +48,13 @@ interface ClusterGraphProps {
 export function ClusterGraph({ nodes, fallbackCoordinatorAddress, coordinatorRunning }: ClusterGraphProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragState = useRef<GraphDragState | null>(null);
+  const simRef = useRef<Record<string, SimNodeState>>({});
+  const alphaRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
   const [positions, setPositions] = useState<Record<string, GraphPosition>>({});
   const [viewport, setViewport] = useState<GraphViewport>({ x: 0, y: 0, k: 1 });
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isPanning, setIsPanning] = useState(false);
 
   const layoutNodes = useMemo(
@@ -46,25 +62,46 @@ export function ClusterGraph({ nodes, fallbackCoordinatorAddress, coordinatorRun
     [coordinatorRunning, fallbackCoordinatorAddress, nodes],
   );
 
+  function reheat(amount: number) {
+    alphaRef.current = Math.max(alphaRef.current, amount);
+    if (rafRef.current === null) rafRef.current = requestAnimationFrame(tick);
+  }
+
+  function tick() {
+    simulate(layoutNodes, simRef.current, alphaRef.current, dragState.current?.type === "node" ? dragState.current.id : null);
+    setPositions(Object.fromEntries(Object.entries(simRef.current).map(([id, state]) => [id, { x: state.x, y: state.y }])));
+    alphaRef.current *= SIM_ALPHA_DECAY;
+    if (alphaRef.current <= SIM_MIN_ALPHA) {
+      alphaRef.current = 0;
+      rafRef.current = null;
+      return;
+    }
+    rafRef.current = requestAnimationFrame(tick);
+  }
+
   useEffect(() => {
-    setPositions((current) => {
-      const next = { ...current };
-      const activeIds = new Set(layoutNodes.map((node) => node.id));
-      let changed = false;
-      for (const node of layoutNodes) {
-        if (!next[node.id]) {
-          next[node.id] = { x: node.x, y: node.y };
-          changed = true;
-        }
+    const sim = simRef.current;
+    let changed = false;
+    for (const node of layoutNodes) {
+      if (!sim[node.id]) {
+        sim[node.id] = { x: node.x, y: node.y, vx: 0, vy: 0 };
+        changed = true;
       }
-      for (const id of Object.keys(next)) {
-        if (!activeIds.has(id)) {
-          delete next[id];
-          changed = true;
-        }
+    }
+    for (const id of Object.keys(sim)) {
+      if (!layoutNodes.some((node) => node.id === id)) {
+        delete sim[id];
+        changed = true;
       }
-      return changed ? next : current;
-    });
+    }
+    if (changed) setPositions(Object.fromEntries(Object.entries(sim).map(([id, state]) => [id, { x: state.x, y: state.y }])));
+    reheat(changed ? 0.7 : 0.3);
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
   }, [layoutNodes]);
 
   const graphNodes = layoutNodes.map((node) => ({ ...node, ...(positions[node.id] ?? { x: node.x, y: node.y }) }));
@@ -84,6 +121,8 @@ export function ClusterGraph({ nodes, fallbackCoordinatorAddress, coordinatorRun
   }
 
   function resetGraph() {
+    const next = Object.fromEntries(layoutNodes.map((node) => [node.id, { x: node.x, y: node.y, vx: 0, vy: 0 }]));
+    simRef.current = next;
     setPositions(Object.fromEntries(layoutNodes.map((node) => [node.id, { x: node.x, y: node.y }])));
     setViewport({ x: 0, y: 0, k: 1 });
   }
@@ -121,10 +160,18 @@ export function ClusterGraph({ nodes, fallbackCoordinatorAddress, coordinatorRun
       return;
     }
     const graphPoint = screenToGraph(point, viewport);
+    const sim = simRef.current[state.id];
+    if (sim) {
+      sim.x = graphPoint.x - state.offsetX;
+      sim.y = graphPoint.y - state.offsetY;
+      sim.vx = 0;
+      sim.vy = 0;
+    }
     setPositions((current) => ({
       ...current,
       [state.id]: { x: graphPoint.x - state.offsetX, y: graphPoint.y - state.offsetY },
     }));
+    reheat(0.25);
   }
 
   function stopDrag(event: ReactPointerEvent<SVGSVGElement>) {
@@ -133,6 +180,7 @@ export function ClusterGraph({ nodes, fallbackCoordinatorAddress, coordinatorRun
     dragState.current = null;
     setDraggingId(null);
     setIsPanning(false);
+    if (state.type === "node") reheat(0.4);
   }
 
   return (
@@ -140,7 +188,7 @@ export function ClusterGraph({ nodes, fallbackCoordinatorAddress, coordinatorRun
       <div className="graph-toolbar" aria-label="Graph controls">
         <button type="button" className="icon-button subtle" title="Zoom in" aria-label="Zoom in" onClick={() => zoomAt(GRAPH_CENTER, 1.18)}><ZoomIn size={17} /></button>
         <button type="button" className="icon-button subtle" title="Zoom out" aria-label="Zoom out" onClick={() => zoomAt(GRAPH_CENTER, 0.84)}><ZoomOut size={17} /></button>
-        <button type="button" className="icon-button subtle" title="Reset graph" aria-label="Reset graph" onClick={resetGraph}><Maximize2 size={17} /></button>
+        <button type="button" className="icon-button subtle" title="Reset layout" aria-label="Reset layout" onClick={resetGraph}><Maximize2 size={17} /></button>
       </div>
       <svg
         ref={svgRef}
@@ -169,45 +217,51 @@ export function ClusterGraph({ nodes, fallbackCoordinatorAddress, coordinatorRun
             <stop offset="64%" stopColor="#f5dfe2" />
             <stop offset="100%" stopColor="#db9aa3" />
           </radialGradient>
-          {(["alive", "warning", "down"] as const).map((statusClass) => (
-            <marker key={statusClass} id={`graphArrow-${statusClass}`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L8,4 L0,8 z" className={`graph-arrow ${statusClass}`} />
-            </marker>
-          ))}
         </defs>
         <rect className="graph-hit-zone" width={GRAPH_WIDTH} height={GRAPH_HEIGHT} onPointerDown={startPan} />
         <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.k})`}>
           <g className="graph-links">
             {workers.map((node) => {
-              const start = circleEdge(coordinator, node, coordinator.radius + 4);
-              const end = circleEdge(node, coordinator, node.radius + 8);
-              return <line className={`graph-link ${node.statusClass}`} key={`link-${node.id}`} x1={start.x} y1={start.y} x2={end.x} y2={end.y} markerEnd={`url(#graphArrow-${node.statusClass})`} />;
+              const start = circleEdge(coordinator, node, coordinator.radius + 2);
+              const end = circleEdge(node, coordinator, node.radius + 3);
+              return <line className={`graph-link ${node.statusClass}`} key={`link-${node.id}`} x1={start.x} y1={start.y} x2={end.x} y2={end.y} />;
             })}
           </g>
           <g className="graph-node-layer">
-            {graphNodes.map((node) => (
-              <g
-                className={`graph-node graph-node-${node.kind} ${node.statusClass}${draggingId === node.id ? " dragging" : ""}`}
-                key={node.id}
-                transform={`translate(${node.x} ${node.y})`}
-                onPointerDown={(event) => startNodeDrag(event, node)}
-                tabIndex={0}
-              >
-                <title>{node.tooltip}</title>
-                <circle className="graph-node-halo" r={node.radius + 11} />
-                <circle className="graph-node-body" r={node.radius} />
-                <circle className="graph-status-dot" cx={node.radius * 0.62} cy={-node.radius * 0.57} r="7" />
-                <text y="-13" textAnchor="middle" className="graph-node-role">{node.kind === "coordinator" ? "COORDINATOR" : "WORKER"}</text>
-                <text y="6" textAnchor="middle" className="graph-node-title">{truncateMiddle(node.label, node.kind === "coordinator" ? 22 : 18)}</text>
-                <text y="25" textAnchor="middle" className="graph-node-subtitle">{truncateMiddle(node.detail, 20)}</text>
-                <text y="42" textAnchor="middle" className="graph-node-metric">{node.metric}</text>
-              </g>
-            ))}
+            {graphNodes.map((node) => {
+              const isHovered = hoveredId === node.id || draggingId === node.id;
+              return (
+                <g
+                  className={`graph-node graph-node-${node.kind} ${node.statusClass}${isHovered ? " hovered" : ""}${draggingId === node.id ? " dragging" : ""}`}
+                  key={node.id}
+                  transform={`translate(${node.x} ${node.y})`}
+                  onPointerDown={(event) => startNodeDrag(event, node)}
+                  onPointerEnter={() => setHoveredId(node.id)}
+                  onPointerLeave={() => setHoveredId((current) => (current === node.id ? null : current))}
+                  onFocus={() => setHoveredId(node.id)}
+                  onBlur={() => setHoveredId((current) => (current === node.id ? null : current))}
+                  tabIndex={0}
+                >
+                  <title>{node.tooltip}</title>
+                  <circle className="graph-node-halo" r={node.radius + 9} />
+                  <circle className="graph-node-body" r={node.radius} />
+                  <circle className="graph-status-dot" cx={node.radius * 0.72} cy={-node.radius * 0.72} r="5" />
+                  {node.kind === "coordinator" && <text y="1" textAnchor="middle" className="graph-node-glyph">H</text>}
+                  <text y={node.radius + 14} textAnchor="middle" className="graph-node-caption">{truncateMiddle(node.label, 24)}</text>
+                  {isHovered && (
+                    <>
+                      <text y={node.radius + 27} textAnchor="middle" className="graph-node-caption-sub">{truncateMiddle(node.detail, 26)}</text>
+                      <text y={node.radius + 39} textAnchor="middle" className="graph-node-caption-metric">{node.metric}</text>
+                    </>
+                  )}
+                </g>
+              );
+            })}
           </g>
         </g>
       </svg>
       <div className="graph-scale"><Move size={14} />Drag to pan · scroll to zoom · {Math.round(viewport.k * 100)}%</div>
-      <div className="graph-legend"><span><i className="coordinator" />Coordinator</span><span><i className="alive" />Alive</span><span><i className="warning" />Unknown</span><span><i className="down" />Down</span></div>
+      <div className="graph-legend"><span><i className="coordinator" />Head</span><span><i className="alive" />Alive</span><span><i className="warning" />Unknown</span><span><i className="down" />Down</span></div>
       {nodes.length === 0 && <div className="graph-empty">No State API nodes reported yet. Start or connect to the cluster to populate the topology.</div>}
     </div>
   );
@@ -225,8 +279,8 @@ export function buildGraphNodes(nodes: RayNode[], fallbackCoordinatorAddress: st
     const positionInRing = index % ringSize;
     const workersInRing = Math.min(ringSize, workers.length - ring * ringSize);
     const angle = -Math.PI / 2 + (positionInRing / Math.max(1, workersInRing)) * Math.PI * 2 + ring * 0.34;
-    const radiusX = 265 + ring * 126;
-    const radiusY = 165 + ring * 88;
+    const radiusX = 230 + ring * 120;
+    const radiusY = 145 + ring * 82;
     const id = uniqueGraphId(`worker:${node.id || node.address || node.name || "unknown"}`, seenIds);
     result.push({
       id,
@@ -236,9 +290,9 @@ export function buildGraphNodes(nodes: RayNode[], fallbackCoordinatorAddress: st
       metric: `${node.cpus.toFixed(1)} CPU · ${node.gpus.toFixed(1)} GPU`,
       tooltip: nodeTooltip("Worker", node),
       statusClass: graphStatusClass(node.status),
-      radius: 58,
-      x: clamp(GRAPH_CENTER.x + Math.cos(angle) * radiusX, 86, GRAPH_WIDTH - 86),
-      y: clamp(GRAPH_CENTER.y + Math.sin(angle) * radiusY, 86, GRAPH_HEIGHT - 86),
+      radius: WORKER_RADIUS,
+      x: clamp(GRAPH_CENTER.x + Math.cos(angle) * radiusX, 60, GRAPH_WIDTH - 60),
+      y: clamp(GRAPH_CENTER.y + Math.sin(angle) * radiusY, 60, GRAPH_HEIGHT - 60),
     });
   });
 
@@ -255,9 +309,67 @@ function toCoordinatorNode(head: RayNode | undefined, fallbackAddress: string, c
     metric: head ? `${head.cpus.toFixed(1)} CPU · ${head.gpus.toFixed(1)} GPU` : "Head node",
     tooltip: head ? nodeTooltip("Coordinator", head) : `Coordinator\n${fallbackAddress || "Not connected"}\n${status}`,
     statusClass: graphStatusClass(status),
-    radius: 68,
+    radius: COORDINATOR_RADIUS,
     ...GRAPH_CENTER,
   };
+}
+
+function simulate(
+  layoutNodes: GraphNodeModel[],
+  sim: Record<string, SimNodeState>,
+  alpha: number,
+  pinnedId: string | null,
+) {
+  const ids = layoutNodes.filter((node) => sim[node.id]).map((node) => node.id);
+  for (let i = 0; i < ids.length; i++) {
+    const a = sim[ids[i]];
+    for (let j = i + 1; j < ids.length; j++) {
+      const b = sim[ids[j]];
+      let dx = a.x - b.x;
+      let dy = a.y - b.y;
+      let d2 = dx * dx + dy * dy;
+      if (d2 < 1) {
+        dx = Math.random() - 0.5;
+        dy = Math.random() - 0.5;
+        d2 = 1;
+      }
+      const force = (SIM_REPULSION / d2) * alpha;
+      const fx = (dx / Math.sqrt(d2)) * force;
+      const fy = (dy / Math.sqrt(d2)) * force;
+      a.vx += fx;
+      a.vy += fy;
+      b.vx -= fx;
+      b.vy -= fy;
+    }
+  }
+  const coordinator = layoutNodes.find((node) => node.kind === "coordinator");
+  for (const node of layoutNodes) {
+    if (!coordinator || node.kind === "coordinator" || !sim[node.id] || !sim[coordinator.id]) continue;
+    const a = sim[node.id];
+    const b = sim[coordinator.id];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    const force = (distance - SIM_LINK_DISTANCE) * SIM_SPRING * alpha;
+    a.vx += (dx / distance) * force;
+    a.vy += (dy / distance) * force;
+    b.vx -= (dx / distance) * force;
+    b.vy -= (dy / distance) * force;
+  }
+  for (const id of ids) {
+    const state = sim[id];
+    state.vx += (GRAPH_CENTER.x - state.x) * SIM_GRAVITY * alpha;
+    state.vy += (GRAPH_CENTER.y - state.y) * SIM_GRAVITY * alpha;
+    if (id === pinnedId) {
+      state.vx = 0;
+      state.vy = 0;
+      continue;
+    }
+    state.vx *= SIM_DAMPING;
+    state.vy *= SIM_DAMPING;
+    state.x = clamp(state.x + state.vx, 46, GRAPH_WIDTH - 46);
+    state.y = clamp(state.y + state.vy, 40, GRAPH_HEIGHT - 40);
+  }
 }
 
 function nodeTooltip(role: string, node: RayNode) {

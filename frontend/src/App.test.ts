@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "./api";
 import { buildGraphNodes } from "./ClusterGraph";
 import { buildJobSubmission, formatRayTime, isTerminalJob, parseObjectJson } from "./jobs";
-import { defaultLifecycleConfig, managedCluster, normalizeLifecycleConfig, prefillCoordinatorNodeIp, validateRoleSetup } from "./roles";
-import { normalizeDashboardUrl, normalizeDesktopState, normalizePreferences, useStore } from "./store";
+import { defaultLifecycleConfig, buildJoinLink, managedCluster, normalizeLifecycleConfig, parseCoordinatorInput, prefillCoordinatorNodeIp, validateRoleSetup } from "./roles";
+import { normalizeDashboardUrl, normalizeDesktopState, nodeActivityNotice, normalizePreferences, normalizeRecentCoordinators, useStore } from "./store";
 import type { LifecycleStatus, RayNode } from "./types";
 
 afterEach(() => vi.restoreAllMocks());
@@ -118,6 +118,45 @@ describe("exclusive coordinator and worker setup", () => {
   });
 });
 
+describe("worker join input normalization", () => {
+  it("accepts a plain host untouched", () => {
+    expect(parseCoordinatorInput("10.0.0.20")).toEqual({ host: "10.0.0.20" });
+    expect(parseCoordinatorInput(" head.example.internal ")).toEqual({ host: "head.example.internal" });
+  });
+
+  it("strips schemes, credentials, paths, and ports", () => {
+    expect(parseCoordinatorInput("http://10.0.0.20:8265/jobs")).toEqual({ host: "10.0.0.20", ray_port: 8265 });
+    expect(parseCoordinatorInput("ray://user@10.0.0.20:6379")).toEqual({ host: "10.0.0.20", ray_port: 6379 });
+  });
+
+  it("extracts host and token from coordinator invite links", () => {
+    const link = "raylab://join?host=10.0.0.5&ray_port=6379&dashboard_port=8265&token=abcdef0123456789";
+    expect(parseCoordinatorInput(link)).toEqual({
+      host: "10.0.0.5",
+      ray_port: 6379,
+      dashboard_port: 8265,
+      token: "abcdef0123456789",
+    });
+  });
+
+  it("rejects empty or whitespace-only input", () => {
+    expect(parseCoordinatorInput("")).toBeNull();
+    expect(parseCoordinatorInput("   ")).toBeNull();
+    expect(parseCoordinatorInput("two hosts here")).toBeNull();
+  });
+
+  it("builds invite links that round-trip through the parser", () => {
+    const link = buildJoinLink("10.0.0.5:6379", "abcdef0123456789", { ray_port: 6379, dashboard_port: 8265 });
+    expect(link.startsWith("raylab://join?")).toBe(true);
+    expect(parseCoordinatorInput(link)).toEqual({
+      host: "10.0.0.5",
+      ray_port: 6379,
+      dashboard_port: 8265,
+      token: "abcdef0123456789",
+    });
+  });
+});
+
 describe("cluster topology", () => {
   const head: RayNode = { id: "head-1", name: "head.local", address: "10.0.0.10", status: "ALIVE", is_head: true, cpus: 8, gpus: 1, memory_gb: 32 };
   const worker: RayNode = { id: "worker-1", name: "worker.local", address: "10.0.0.11", status: "ALIVE", is_head: false, cpus: 4, gpus: 0, memory_gb: 16 };
@@ -135,6 +174,47 @@ describe("cluster topology", () => {
       detail: "10.0.0.10:6379",
       statusClass: "warning",
     });
+  });
+});
+
+describe("cluster activity and recent coordinators", () => {
+  const base = { status: "ALIVE", is_head: false, cpus: 4, gpus: 0, memory_gb: 16 };
+  const workerA: RayNode = { id: "worker-a", name: "a.local", address: "10.0.0.11", ...base };
+  const workerB: RayNode = { id: "worker-b", name: "b.local", address: "10.0.0.12", ...base };
+
+  it("announces workers that join or leave between polls", () => {
+    expect(nodeActivityNotice([workerA], [workerA, workerB])).toBe("b.local joined");
+    expect(nodeActivityNotice([workerA, workerB], [workerA])).toBe("b.local left the cluster");
+    expect(nodeActivityNotice([workerA], [workerB])).toBe("b.local joined · a.local left the cluster");
+  });
+
+  it("stays quiet on the first poll and for unchanged inventories", () => {
+    expect(nodeActivityNotice([], [workerA])).toBeNull();
+    expect(nodeActivityNotice([workerA], [workerA])).toBeNull();
+  });
+
+  it("sanitizes remembered coordinators, dedupes, and caps the list", () => {
+    const sanitized = normalizeRecentCoordinators([
+      { host: "10.0.0.5", ray_port: 6379, dashboard_port: 8265 },
+      { host: "10.0.0.5", ray_port: 6379, dashboard_port: 8265 },
+      { host: "http://bad", ray_port: 6379, dashboard_port: 8265 },
+      { host: "10.0.0.9", ray_port: 70000, dashboard_port: 8265 },
+      "junk",
+    ]);
+    expect(sanitized).toEqual([{ host: "10.0.0.5", ray_port: 6379, dashboard_port: 8265 }]);
+    expect(normalizeRecentCoordinators(undefined)).toEqual([]);
+  });
+
+  it("keeps recent coordinators across state migration", () => {
+    const state = normalizeDesktopState({
+      active_view: "overview",
+      selected_cluster_id: null,
+      selected_job_id: null,
+      saved_clusters: [],
+      preferences: { auto_refresh: true, poll_interval_ms: 5000 },
+      recent_coordinators: [{ host: "10.0.0.5", ray_port: 6379, dashboard_port: 8265 }],
+    });
+    expect(state.recent_coordinators).toHaveLength(1);
   });
 });
 

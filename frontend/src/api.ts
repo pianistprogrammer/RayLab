@@ -3,6 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import type {
   AppMode,
   ClusterTokenStatus,
+  ConnectionCheck,
   DesktopState,
   JobAction,
   JobSubmission,
@@ -33,6 +34,8 @@ export const api = {
   listNodes: (cluster: SavedCluster) => invoke<RayNode[]>("list_nodes", { cluster: clusterInput(cluster) }),
   openDashboard: (cluster: SavedCluster) => openUrl(cluster.dashboard_url),
   detectLocalNodeIp: () => invoke<string>("detect_local_node_ip"),
+  checkWorkerConnection: (host: string, rayPort: number, dashboardPort: number, token: string) =>
+    invoke<ConnectionCheck>("check_worker_connection", { host, rayPort, dashboardPort, token }),
   runtimeStatus: () => invoke<RuntimeStatus>("ray_runtime_status"),
   installRuntime: () => invoke<RuntimeStatus>("install_ray_runtime"),
   lifecycleStatus: (config: LifecycleConfig, mode: AppMode) => invoke<LifecycleStatus>("lifecycle_status", { config, mode }),
@@ -41,6 +44,8 @@ export const api = {
   ensureClusterToken: (clusterId: string) => invoke<ClusterTokenStatus>("ensure_cluster_token", { clusterId }),
   saveClusterToken: (clusterId: string, token: string) => invoke<ClusterTokenStatus>("save_cluster_token", { clusterId, token }),
   revealClusterToken: (clusterId: string) => invoke<ClusterTokenStatus>("reveal_cluster_token", { clusterId }),
+  rotateClusterToken: (clusterId: string) => invoke<ClusterTokenStatus>("rotate_cluster_token", { clusterId }),
+  checkLocalPorts: (config: LifecycleConfig) => invoke<number[]>("check_local_ports", { config }),
 };
 
 export function errorMessage(error: unknown, fallback = "Something went wrong") {

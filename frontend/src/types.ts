@@ -10,6 +10,12 @@ export interface SavedCluster {
   managed?: boolean;
 }
 
+export interface RecentCoordinator {
+  host: string;
+  ray_port: number;
+  dashboard_port: number;
+}
+
 export interface Preferences {
   auto_refresh: boolean;
   poll_interval_ms: number;
@@ -23,6 +29,7 @@ export interface DesktopState {
   preferences: Preferences;
   app_mode: AppMode;
   lifecycle: LifecycleConfig;
+  recent_coordinators: RecentCoordinator[];
 }
 
 export interface LifecycleConfig {
@@ -58,6 +65,15 @@ export interface LifecycleStatus {
 export interface ClusterTokenStatus {
   configured: boolean;
   token: string | null;
+}
+
+export type ConnectionCheckStatus = "ok" | "unreachable" | "auth_failed" | "dashboard_error";
+
+export interface ConnectionCheck {
+  status: ConnectionCheckStatus;
+  message: string;
+  coordinator_ray_version: string | null;
+  compatible: boolean | null;
 }
 
 export interface RayApiVersion {

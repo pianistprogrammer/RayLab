@@ -1,7 +1,7 @@
 use tauri::{AppHandle, State};
 
 use crate::lifecycle::{
-    self, ClusterTokenStatus, LifecycleManager, LifecycleStatus, RuntimeStatus,
+    self, ClusterTokenStatus, ConnectionCheck, LifecycleManager, LifecycleStatus, RuntimeStatus,
 };
 use crate::ray_api::{
     ClusterInput, JobAction, JobSubmission, RayApiClient, RayApiVersion, RayJob, RayNode,
@@ -98,6 +98,16 @@ pub fn detect_local_node_ip() -> Result<String, String> {
 }
 
 #[tauri::command]
+pub async fn check_worker_connection(
+    host: String,
+    ray_port: u16,
+    dashboard_port: u16,
+    token: String,
+) -> Result<ConnectionCheck, String> {
+    lifecycle::check_worker_connection(&host, ray_port, dashboard_port, &token).await
+}
+
+#[tauri::command]
 pub async fn install_ray_runtime(
     app: AppHandle,
     manager: State<'_, LifecycleManager>,
@@ -157,6 +167,19 @@ pub fn reveal_cluster_token(
     cluster_id: String,
 ) -> Result<ClusterTokenStatus, String> {
     lifecycle::reveal_cluster_token(&app, &cluster_id)
+}
+
+#[tauri::command]
+pub fn rotate_cluster_token(
+    app: AppHandle,
+    cluster_id: String,
+) -> Result<ClusterTokenStatus, String> {
+    lifecycle::rotate_cluster_token(&app, &cluster_id)
+}
+
+#[tauri::command]
+pub fn check_local_ports(config: LifecycleConfig, mode: AppMode) -> Result<Vec<u16>, String> {
+    Ok(lifecycle::find_busy_ports(&config, mode))
 }
 
 fn ray_client(app: &AppHandle, cluster: &ClusterInput) -> Result<RayApiClient, String> {

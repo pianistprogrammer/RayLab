@@ -205,28 +205,28 @@ tbody tr:hover { background: #f7f9fc; }
 .graph-hit-zone { fill: transparent; }
 .graph-toolbar { position: absolute; z-index: 2; top: 12px; right: 12px; display: flex; gap: 6px; padding: 5px; background: rgba(255,255,255,.9); border: 1px solid rgba(118,139,168,.28); border-radius: 10px; box-shadow: 0 7px 22px rgba(20,42,78,.1); backdrop-filter: blur(8px); }
 .graph-toolbar .icon-button { width: 34px; height: 34px; min-height: 34px; border-radius: 8px; }
-.graph-link { stroke: #7892bb; stroke-width: 2.1; stroke-linecap: round; opacity: .68; vector-effect: non-scaling-stroke; }
+.graph-link { stroke: #8ba0c2; stroke-width: 1.6; stroke-linecap: round; opacity: .55; vector-effect: non-scaling-stroke; transition: stroke-width .16s ease, opacity .16s ease; }
 .graph-link.warning { stroke: #c39745; stroke-dasharray: 5 5; }
 .graph-link.down { stroke: #c05b68; stroke-dasharray: 7 6; }
-.graph-arrow.alive { fill: #7892bb; }
-.graph-arrow.warning { fill: #c39745; }
-.graph-arrow.down { fill: #c05b68; }
 .graph-node { cursor: grab; outline: none; }
 .graph-node.dragging { cursor: grabbing; }
-.graph-node:focus .graph-node-halo, .graph-node:hover .graph-node-halo, .graph-node.dragging .graph-node-halo { opacity: 1; }
+.graph-node:focus .graph-node-halo, .graph-node:hover .graph-node-halo, .graph-node.hovered .graph-node-halo, .graph-node.dragging .graph-node-halo { opacity: 1; }
 .graph-node text { dominant-baseline: middle; pointer-events: none; }
-.graph-node-halo { fill: rgba(45,108,223,.12); opacity: 0; transition: opacity .16s ease; }
-.graph-node-body { fill: url(#graphWorkerFill); stroke: #7896c1; stroke-width: 2.2; filter: drop-shadow(0 8px 13px rgba(25,48,84,.16)); }
-.graph-node-coordinator .graph-node-body { fill: url(#graphCoordinatorFill); stroke: #2d6cdf; stroke-width: 2.8; }
+.graph-node-halo { fill: rgba(45,108,223,.14); opacity: 0; transition: opacity .16s ease; }
+.graph-node-body { fill: url(#graphWorkerFill); stroke: #7896c1; stroke-width: 2; filter: drop-shadow(0 5px 9px rgba(25,48,84,.16)); transition: filter .16s ease, stroke-width .16s ease; }
+.graph-node-coordinator .graph-node-body { fill: url(#graphCoordinatorFill); stroke: #2d6cdf; stroke-width: 2.4; }
 .graph-node.down .graph-node-body { fill: url(#graphDownFill); stroke: #bd5966; }
 .graph-node.warning .graph-node-body { stroke: #c4953d; }
-.graph-status-dot { fill: #22a06b; stroke: white; stroke-width: 2.5; }
+.graph-node.hovered .graph-node-body, .graph-node.dragging .graph-node-body { stroke-width: 3.4; filter: drop-shadow(0 9px 16px rgba(25,48,84,.28)); }
+.graph-status-dot { fill: #22a06b; stroke: white; stroke-width: 2; }
 .graph-node.warning .graph-status-dot { fill: #d39a31; }
 .graph-node.down .graph-status-dot { fill: #c54857; }
-.graph-node-role { fill: #728198; font-size: 8.5px; font-weight: 850; letter-spacing: .1em; }
-.graph-node-title { fill: #172b47; font-size: 12px; font-weight: 850; }
-.graph-node-subtitle { fill: #5c6f89; font-size: 10px; font-weight: 650; }
-.graph-node-metric { fill: #2b5b9e; font-size: 9.5px; font-weight: 800; }
+.graph-node-glyph { fill: #2b5b9e; font-size: 15px; font-weight: 900; }
+.graph-node-coordinator .graph-node-glyph { fill: #1c4fb8; }
+.graph-node-caption { fill: #172b47; font-size: 11px; font-weight: 800; paint-order: stroke; stroke: rgba(255,255,255,.92); stroke-width: 3px; stroke-linejoin: round; }
+.graph-node-coordinator .graph-node-caption { fill: #1c4fb8; }
+.graph-node-caption-sub { fill: #5c6f89; font-size: 9px; font-weight: 650; paint-order: stroke; stroke: rgba(255,255,255,.92); stroke-width: 3px; stroke-linejoin: round; }
+.graph-node-caption-metric { fill: #2b5b9e; font-size: 9px; font-weight: 800; paint-order: stroke; stroke: rgba(255,255,255,.92); stroke-width: 3px; stroke-linejoin: round; }
 .graph-scale { position: absolute; left: 12px; bottom: 12px; display: flex; align-items: center; gap: 6px; padding: 6px 9px; color: #566a84; background: rgba(255,255,255,.82); border: 1px solid rgba(118,139,168,.25); border-radius: 8px; font-size: 10px; font-weight: 700; pointer-events: none; }
 .graph-legend { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 12px; padding: 6px 9px; color: #64758b; background: rgba(255,255,255,.82); border: 1px solid rgba(118,139,168,.25); border-radius: 8px; font-size: 9px; font-weight: 750; pointer-events: none; }
 .graph-legend span { display: inline-flex; align-items: center; gap: 5px; }
@@ -235,6 +235,46 @@ tbody tr:hover { background: #f7f9fc; }
 .graph-legend i.warning { background: #d39a31; }
 .graph-legend i.down { background: #c54857; }
 .graph-empty { position: absolute; left: 50%; bottom: 50px; width: min(520px, calc(100% - 32px)); padding: 7px 10px; transform: translateX(-50%); color: #6d7f96; background: rgba(255,255,255,.82); border-radius: 8px; font-size: 10px; text-align: center; pointer-events: none; }
+
+.field-hint { display: block; margin-top: 4px; color: #7d8ca1; font-size: 9.5px; font-weight: 600; }
+.field-hint code { font-size: 9.5px; }
+.connection-check { display: flex; flex-direction: column; gap: 7px; }
+.connection-check .secondary { align-self: flex-start; }
+.check-result { display: flex; align-items: flex-start; gap: 7px; margin: 0; padding: 8px 11px; border-radius: 9px; border: 1px solid #dbe3ee; background: rgba(255,255,255,.86); color: #43536a; font-size: 10.5px; font-weight: 650; line-height: 1.45; }
+.check-result span { flex: 1; overflow-wrap: anywhere; }
+.check-result svg { margin-top: 1px; flex-shrink: 0; }
+.check-result.ok { border-color: #bfe3cf; background: #f1faf4; color: #1c7c4d; }
+.check-result.auth_failed { border-color: #efc3c9; background: #fdf3f4; color: #ab3a49; }
+.check-result.unreachable { border-color: #efc3c9; background: #fdf3f4; color: #ab3a49; }
+.check-result.dashboard_error { border-color: #ecd6a4; background: #fdf8ec; color: #8a6516; }
+.check-result.warn { border-color: #ecd6a4; background: #fdf8ec; color: #8a6516; }
+
+.invite-panel { display: grid; gap: 9px; padding: 12px 14px; border: 1px dashed #b9c8de; border-radius: 11px; background: rgba(240,246,253,.66); }
+.invite-heading { display: flex; align-items: flex-start; gap: 8px; color: #2b5b9e; }
+.invite-heading span { display: grid; gap: 2px; }
+.invite-heading strong { color: #172b47; font-size: 11.5px; }
+.invite-heading small { color: #64758b; font-size: 10px; font-weight: 600; }
+.invite-link { display: block; padding: 8px 10px; border: 1px solid #d8e1ed; border-radius: 8px; background: white; color: #33415c; font-size: 10px; overflow-wrap: anywhere; user-select: all; }
+.invite-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.lifecycle-timeline { display: grid; gap: 6px; margin: 0; padding: 10px 14px; list-style: none; border: 1px solid #d8e1ed; border-radius: 10px; background: rgba(255,255,255,.72); }
+.timeline-step { display: flex; align-items: center; gap: 8px; color: #7d8ca1; font-size: 11px; font-weight: 700; }
+.timeline-step.done { color: #1c7c4d; }
+.timeline-step.active { color: #2b5b9e; }
+.timeline-step.pending .timeline-dot { width: 8px; height: 8px; margin: 3px; border: 2px solid #c4cfdd; border-radius: 50%; }
+.timeline-dot { display: inline-block; }
+
+.recent-coordinators { display: grid; gap: 5px; }
+.recent-coordinators small { color: #7d8ca1; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.recent-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.recent-chips button { padding: 5px 11px; border: 1px solid #c9d6e8; border-radius: 999px; background: rgba(255,255,255,.85); color: #2b5b9e; font-size: 10.5px; font-weight: 750; }
+.recent-chips button:hover { border-color: #2d6cdf; background: #eef4fd; }
+
+.port-precheck { display: grid; gap: 8px; margin-top: 10px; }
+.port-precheck .secondary { justify-self: start; }
+
+.token-rotation { display: grid; gap: 6px; margin-top: 10px; }
+.token-rotation .secondary { justify-self: start; }
 
 .settings-list { display: grid; gap: 9px; }
 .cluster-editor { padding: 13px; border: 1px solid #e0e6ed; border-radius: 10px; }
